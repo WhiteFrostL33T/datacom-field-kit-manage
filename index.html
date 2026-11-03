@@ -126,6 +126,43 @@
   .flag .fd { font-size:13.5px; margin-top:2px; color:#d6daea; }
   .flag .fd b { font-weight:700; color:#e6e9f5; }
   .foot { color:#8b93b0; font-size:12px; text-align:center; margin-top:18px; }
+  /* nav + timesheets */
+  .mainnav { display:flex; gap:6px; margin-top:12px; }
+  .navtab { background:transparent; border:1px solid #232842; color:#aab1c8; border-radius:10px; padding:8px 18px; font-size:13.5px; font-weight:650; cursor:pointer; font-family:inherit; }
+  .navtab:hover { background:#171a2b; }
+  .navtab.on { background:#6366f1; border-color:#6366f1; color:#fff; }
+  .ts-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:14px 2px 12px; }
+  .segctl { display:flex; border:1px solid #232842; border-radius:10px; overflow:hidden; flex:none; }
+  .segctl button { background:#0b0e1a; color:#aab1c8; border:none; padding:8px 14px; font-size:13px; font-weight:650; cursor:pointer; font-family:inherit; }
+  .segctl button.on { background:#6366f1; color:#fff; }
+  .ts-label { font-size:15px; font-weight:720; color:#e6e9f5; }
+  .ts-anchor { color:#8b93b0; font-size:12.5px; display:flex; align-items:center; gap:6px; }
+  .ts-anchor input { background:#0b0e1a; border:1px solid #232842; border-radius:8px; color:#e6e9f5; padding:6px 8px; font-family:inherit; font-size:12.5px; color-scheme:dark; }
+  .ts-scroll { overflow-x:auto; }
+  table.ts td.num, table.ts th.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  table.ts td.today-col, table.ts th.today-col { background:rgba(99,102,241,.10); }
+  tr.ts-row { cursor:pointer; }
+  tr.ts-row:hover td { background:#171a2b; }
+  tr.ts-zero td { opacity:.45; }
+  tr.ts-foot td { border-top:1px solid #232842; border-bottom:none; font-weight:700; color:#e6e9f5; }
+  .livedot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; vertical-align:1px; }
+  .sof { color:#34d399; font-weight:600; }
+  .otchip { background:rgba(245,158,11,.16); color:#fbbf24; border-radius:999px; padding:3.5px 10px; font-size:12px; font-weight:700; white-space:nowrap; }
+  .chip.blue { background:rgba(59,130,246,.18); color:#93c5fd; }
+  .chip.purple { background:rgba(167,139,250,.18); color:#c4b5fd; }
+  .ts-back { color:#a5b4fc; font-weight:650; font-size:13.5px; cursor:pointer; display:inline-block; margin-bottom:12px; }
+  .ts-strip { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
+  .ts-day-box { flex:1 1 64px; text-align:center; background:#0b0e1a; border:1px solid #232842; border-radius:10px; padding:8px 4px; }
+  .ts-day-box .d { color:#8b93b0; font-size:10.5px; font-weight:650; text-transform:uppercase; letter-spacing:.4px; }
+  .ts-day-box .n { font-size:15px; font-weight:750; margin-top:1px; color:#e6e9f5; }
+  .ts-day-box.today { border-color:#6366f1; }
+  .ts-day { margin-top:16px; }
+  .ts-day h3 { font-size:13.5px; font-weight:720; color:#e6e9f5; display:flex; align-items:baseline; gap:8px; border-bottom:1px solid #1b1f33; padding-bottom:5px; }
+  .ts-day h3 .dt { color:#8b93b0; font-weight:600; margin-left:auto; font-size:13px; }
+  .ts-ent { padding:9px 0 9px 2px; border-bottom:1px solid #1b1f33; }
+  .ts-ent:last-child { border-bottom:none; }
+  .ts-ent .meta { color:#8b93b0; font-size:12.5px; margin-top:2px; }
+  .ts-ent .notes { color:#c3c9de; font-size:13px; margin-top:2px; }
   /* auth */
   .authwrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
   .authcard { background:#11141f; border:1px solid #232842; border-radius:18px; padding:30px 30px 24px; width:100%; max-width:380px; box-shadow:0 10px 40px rgba(0,0,0,.45); }
@@ -150,11 +187,11 @@
   .pal .item .sub2 { color:#8b93b0; font-size:12px; margin-left:auto; flex:none; }
   .pal .none { padding:14px; color:#8b93b0; font-size:13.5px; }
   /* print brief */
-  #brief { display:none; }
+  #brief, #tsprint { display:none; }
   @media print {
     body { background:#fff; }
     .wrap, .authwrap, .palwrap { display:none !important; }
-    #brief { display:block; color:#111; font-size:13.5px; padding:10px 6px; }
+    body:not(.view-ts) #brief { display:block; color:#111; font-size:13.5px; padding:10px 6px; }
     #brief .head { border-bottom:3px solid #6366f1; padding-bottom:12px; display:flex; align-items:baseline; gap:12px; }
     #brief h1 { font-size:23px; font-weight:800; }
     #brief .sub { color:#555; font-size:13px; }
@@ -177,6 +214,22 @@
     #brief .g .v { font-size:19px; font-weight:800; margin-top:2px; }
     #brief .g .s { color:#666; font-size:11.5px; }
     #brief .foot2 { margin-top:24px; border-top:1px solid #ddd; padding-top:9px; color:#888; font-size:11.5px; display:flex; justify-content:space-between; }
+    body.view-ts #tsprint { display:block; color:#111; font-size:13.5px; padding:10px 6px; }
+    #tsprint .head { border-bottom:3px solid #6366f1; padding-bottom:12px; display:flex; align-items:baseline; gap:12px; }
+    #tsprint h1 { font-size:22px; font-weight:800; }
+    #tsprint .sub { color:#555; font-size:13px; }
+    #tsprint .when { margin-left:auto; text-align:right; color:#333; font-size:13px; }
+    #tsprint h2 { font-size:13px; text-transform:uppercase; letter-spacing:1px; color:#4f46e5; margin:22px 0 8px; border-bottom:1px solid #ddd; padding-bottom:4px; }
+    #tsprint .person h2 { text-transform:none; letter-spacing:0; font-size:16px; color:#111; }
+    #tsprint table { margin-top:2px; }
+    #tsprint th { color:#666; border-bottom:1.5px solid #999; }
+    #tsprint td { color:#111; border-bottom:1px solid #e3e3e3; padding:7px 6px; }
+    #tsprint .person { page-break-before:always; }
+    #tsprint .tot { color:#333; margin-bottom:4px; }
+    #tsprint .dayh { font-weight:700; margin:13px 0 3px; }
+    #tsprint .ent { padding:3px 0 3px 14px; }
+    #tsprint .mut { color:#666; }
+    #tsprint .foot2 { margin-top:24px; border-top:1px solid #ddd; padding-top:9px; color:#888; font-size:11.5px; display:flex; justify-content:space-between; }
   }
   @media (max-width:700px) {
     .wrap { padding:12px; }
@@ -198,7 +251,6 @@
   <div class="authcard">
     <div class="logo">FK</div>
     <h1>Field Kit Manage</h1>
-    <p class="sub">MHS Enterprises · Back office</p>
     <form id="loginForm">
       <label for="liEmail">Email</label>
       <input id="liEmail" type="email" autocomplete="username" required>
@@ -226,7 +278,6 @@
       <div class="logo">FK</div>
       <div class="brand">
         <h1>Field Kit Manage</h1>
-        <p>MHS Enterprises · Back office</p>
       </div>
       <div class="spacer"></div>
       <div class="search" id="searchBox">🔍 Jump to a job or tech… <kbd>Ctrl K</kbd></div>
@@ -234,6 +285,10 @@
       <button class="btn" id="printBtn">🖨 Print brief</button>
       <div class="avatar" id="meAvatar">–</div>
       <button class="btn ghost" id="signOutBtn">Sign out</button>
+    </div>
+    <div class="mainnav">
+      <button class="navtab on" id="navHome">Oversight</button>
+      <button class="navtab" id="navTs">Timesheets</button>
     </div>
     <div class="dateline">
       <span class="date" id="dateLine">—</span>
@@ -243,7 +298,8 @@
     </div>
     <div class="warnbar hidden" id="dataWarn"></div>
     <div id="home"></div>
-    <div class="foot">Field Kit Manage v1 · Oversight · Read-only — nothing here changes Field Kit data</div>
+    <div id="tsView" class="hidden"></div>
+    <div class="foot" id="footLine">Field Kit Manage v1.1 · Oversight · Read-only — nothing here changes Field Kit data</div>
   </div>
 </div>
 
@@ -255,6 +311,7 @@
 </div>
 
 <div id="brief"></div>
+<div id="tsprint"></div>
 
 <script>
 'use strict';
@@ -566,6 +623,258 @@ function renderHome() {
   renderBrief(M);
 }
 
+/* ================= timesheets ================= */
+var VIEW = 'home';
+var TS = { mode: 'week', offset: 0, uid: null };
+var tsFetched = {};
+function mondayOf(d) { return addDays(d, -((d.getDay() + 6) % 7)); }
+function tsAnchorKey() { var a = null; try { a = localStorage.getItem('fkm_pp_anchor'); } catch (e) {} return (a && /^\d{4}-\d{2}-\d{2}$/.test(a)) ? a : '2026-01-05'; }
+function tsWindow() {
+  var n = now();
+  if (TS.mode === 'week') { var mon = addDays(mondayOf(n), TS.offset * 7); return { start: mon, end: addDays(mon, 6), days: 7 }; }
+  var aMon = mondayOf(parseLocal(tsAnchorKey() + 'T00:00'));
+  var idxNow = Math.floor(Math.round((mondayOf(n) - aMon) / 86400000) / 14);
+  var start = addDays(aMon, (idxNow + TS.offset) * 14);
+  return { start: start, end: addDays(start, 13), days: 14 };
+}
+function tsOffsetFor(date) {
+  var n = now();
+  if (TS.mode === 'week') return Math.round((mondayOf(date) - mondayOf(n)) / 604800000);
+  var aMon = mondayOf(parseLocal(tsAnchorKey() + 'T00:00'));
+  var idxD = Math.floor(Math.round((mondayOf(date) - aMon) / 86400000) / 14);
+  var idxN = Math.floor(Math.round((mondayOf(n) - aMon) / 86400000) / 14);
+  return idxD - idxN;
+}
+function tsLabel(w) { return (TS.mode === 'week' ? 'Week of ' : 'Pay period ') + fmtDateShort(dayKey(w.start)) + ' – ' + fmtDateShort(dayKey(w.end)); }
+function kindChipColor(kind) { var c = kindClass(kind); return c === 'drive' ? 'amber' : c === 'onsite' ? 'green' : c === 'remote' ? 'blue' : c === 'shop' ? 'purple' : 'gray'; }
+function tsMaybeFetch(w) {
+  if (DEMO || !sb || D.entriesError || !D.entries.length) return;
+  var startK = dayKey(w.start), endK = dayKey(w.end), oldest = null;
+  D.entries.forEach(function (e) { if (e.start_iso) { var k = e.start_iso.slice(0, 10); if (!oldest || k < oldest) oldest = k; } });
+  if (!oldest || startK >= oldest) return;
+  var key = startK + '_' + endK;
+  if (tsFetched[key]) return;
+  tsFetched[key] = 1;
+  var endEx = dayKey(addDays(w.end, 1));
+  sb.from('time_entries').select('*').gte('start_iso', startK + 'T00:00').lt('start_iso', endEx + 'T00:00').then(function (r) {
+    if (!r || r.error || !r.data) return;
+    var seen = {}; D.entries.forEach(function (e) { seen[e.id] = 1; });
+    var added = false;
+    r.data.forEach(function (e) { if (!seen[e.id]) { D.entries.push(e); added = true; } });
+    if (added && VIEW === 'ts') renderTimesheets();
+  });
+}
+function tsModel(w) {
+  var startK = dayKey(w.start), endK = dayKey(w.end), todayK = dayKey(now());
+  var timersByUser = {}; D.timers.forEach(function (t) { timersByUser[t.user_id] = t; });
+  function inWin(k) { return k >= startK && k <= endK; }
+  var rows = D.profiles.map(function (p) {
+    var uid = p.id, dayMin = [], entriesByDay = {}, byKind = { drive: 0, onsite: 0, remote: 0, shop: 0, other: 0 }, total = 0, drive = 0, i, ek;
+    for (i = 0; i < w.days; i++) { dayMin.push(0); entriesByDay[dayKey(addDays(w.start, i))] = []; }
+    D.entries.forEach(function (e) {
+      if (e.deleted_at || e.user_id !== uid || !e.start_iso) return;
+      ek = e.start_iso.slice(0, 10); if (!inWin(ek)) return;
+      var idx = Math.round((parseLocal(ek + 'T00:00') - w.start) / 86400000);
+      var m = entryMinutes(e), kc = kindClass(e.kind);
+      dayMin[idx] += m; total += m; byKind[kc] += m; if (kc === 'drive') drive += m;
+      entriesByDay[ek].push(e);
+    });
+    Object.keys(entriesByDay).forEach(function (kk) { entriesByDay[kk].sort(function (a, b) { return a.start_iso < b.start_iso ? -1 : 1; }); });
+    var timer = timersByUser[uid] || null, runMin = 0, live = false;
+    if (timer && inWin(todayK)) {
+      runMin = timerElapsedMin(timer); live = true;
+      var ti = Math.round((parseLocal(todayK + 'T00:00') - w.start) / 86400000);
+      var tkc = kindClass(timer.kind);
+      dayMin[ti] += runMin; total += runMin; byKind[tkc] += runMin; if (tkc === 'drive') drive += runMin;
+    }
+    var wk = [0, 0]; dayMin.forEach(function (m, ix) { wk[ix < 7 ? 0 : 1] += m; });
+    var ot = 0, wks = TS.mode === 'week' ? 1 : 2;
+    for (i = 0; i < wks; i++) ot += Math.max(0, wk[i] - 2400);
+    return { uid: uid, dayMin: dayMin, entriesByDay: entriesByDay, byKind: byKind, total: total, drive: drive, timer: timer, runMin: runMin, live: live, wk: wk, ot: ot };
+  });
+  rows.sort(function (a, b) { if (b.total !== a.total) return b.total - a.total; return nameOf(a.uid).localeCompare(nameOf(b.uid)); });
+  return { rows: rows, includesToday: inWin(todayK) };
+}
+function renderTSBar(w) {
+  var h = '<div class="ts-bar">';
+  h += '<div class="segctl"><button id="tsModeWeek"' + (TS.mode === 'week' ? ' class="on"' : '') + '>Week</button><button id="tsModePeriod"' + (TS.mode === 'period' ? ' class="on"' : '') + '>Pay period</button></div>';
+  h += '<button class="btn ghost" id="tsPrev" title="Previous">‹</button>';
+  h += '<span class="ts-label">' + esc(tsLabel(w)) + '</span>';
+  h += '<button class="btn ghost" id="tsNext" title="Next">›</button>';
+  if (TS.offset !== 0) h += '<button class="btn ghost" id="tsCurrent">Current</button>';
+  h += '<span style="flex:1"></span>';
+  if (TS.mode === 'period') h += '<label class="ts-anchor">Pay period starts <input type="date" id="tsAnchor" value="' + tsAnchorKey() + '"></label>';
+  h += '<button class="btn ghost" id="tsCsv">⬇ CSV</button>';
+  h += '<button class="btn" id="tsPrint">🖨 Print</button>';
+  return h + '</div>';
+}
+function tsPersonCell(row) {
+  return '<span class="tavatar" style="background:' + colorOf(row.uid) + ';width:30px;height:30px;font-size:11.5px;vertical-align:middle;margin-right:8px">' + initialsOf(row.uid) + '</span>' + esc(nameOf(row.uid)) + (row.live ? ' <span class="livedot" title="On the clock now"></span>' : '');
+}
+function renderTSSummary(w, TM) {
+  var todayK = dayKey(now()), i, d;
+  var h = '<div class="card"><h2>Timesheets <span class="hint">Everyone\'s hours for the period · click a person for their full sheet</span></h2>';
+  h += '<div class="ts-scroll"><table class="ts"><tr><th>Person</th>';
+  if (TS.mode === 'week') { for (i = 0; i < 7; i++) { d = addDays(w.start, i); h += '<th class="num' + (dayKey(d) === todayK ? ' today-col' : '') + '">' + weekdayName(d).slice(0, 3) + ' ' + d.getDate() + '</th>'; } }
+  else h += '<th class="num">Week 1</th><th class="num">Week 2</th>';
+  h += '<th class="num">Total</th><th class="num">Drive</th><th>Overtime</th></tr>';
+  var ncols = TS.mode === 'week' ? 7 : 2, colTotals = [], grand = 0, grandDrive = 0, grandOt = 0;
+  for (i = 0; i < ncols; i++) colTotals.push(0);
+  TM.rows.forEach(function (row) {
+    h += '<tr class="ts-row' + (row.total <= 0 ? ' ts-zero' : '') + '" data-uid="' + row.uid + '"><td>' + tsPersonCell(row) + '</td>';
+    if (TS.mode === 'week') {
+      for (i = 0; i < 7; i++) {
+        var dk = dayKey(addDays(w.start, i)); colTotals[i] += row.dayMin[i];
+        h += '<td class="num' + (dk === todayK ? ' today-col' : '') + '">' + (row.dayMin[i] > 0 ? (row.live && dk === todayK ? '<span class="sof">' + fmtH(row.dayMin[i]) + '</span>' : fmtH(row.dayMin[i])) : '—') + '</td>';
+      }
+    } else {
+      colTotals[0] += row.wk[0]; colTotals[1] += row.wk[1];
+      h += '<td class="num">' + (row.wk[0] > 0 ? fmtH(row.wk[0]) : '—') + '</td><td class="num">' + (row.wk[1] > 0 ? fmtH(row.wk[1]) : '—') + '</td>';
+    }
+    grand += row.total; grandDrive += row.drive; grandOt += row.ot;
+    h += '<td class="num"><b>' + fmtH(row.total) + '</b></td><td class="num">' + (row.drive > 0 ? fmtH(row.drive) : '—') + '</td><td>' + (row.ot > 0 ? '<span class="otchip">OT +' + fmtH(row.ot) + '</span>' : '') + '</td></tr>';
+  });
+  h += '<tr class="ts-foot"><td>Crew total</td>';
+  for (i = 0; i < ncols; i++) h += '<td class="num">' + fmtH(colTotals[i]) + '</td>';
+  h += '<td class="num">' + fmtH(grand) + '</td><td class="num">' + fmtH(grandDrive) + '</td><td>' + (grandOt > 0 ? 'OT +' + fmtH(grandOt) : '') + '</td></tr>';
+  return h + '</table></div></div>';
+}
+function tsEntryHTML(e) {
+  var p = projById(e.project_id);
+  var h = '<div class="ts-ent"><div><span class="jobname">' + esc(jobLabel(p)) + '</span>' + (p && p.ticket ? ' <span class="cust">' + esc(p.ticket) + '</span>' : '') + ' <span class="chip ' + kindChipColor(e.kind) + '">' + esc(e.kind || 'Time') + '</span></div>';
+  h += '<div class="meta">' + fmtClock(parseLocal(e.start_iso)) + ' – ' + fmtClock(parseLocal(e.end_iso)) + ' · ' + fmtH(entryMinutes(e)) + (e.lunch_min ? ' · −' + e.lunch_min + 'm lunch' : '') + '</div>';
+  if (e.notes && String(e.notes).trim()) h += '<div class="notes">' + esc(e.notes) + '</div>';
+  return h + '</div>';
+}
+function renderTSDetail(w, TM, row) {
+  var todayK = dayKey(now()), i, dd, dk;
+  var h = '<div class="card"><span class="ts-back" id="tsBack">‹ All timesheets</span>';
+  h += '<div class="tech-head"><span class="tavatar" style="background:' + colorOf(row.uid) + '">' + initialsOf(row.uid) + '</span><div><div class="tname" style="font-size:16.5px">' + esc(nameOf(row.uid)) + (row.live ? ' <span class="livedot" title="On the clock now"></span>' : '') + '</div><div class="tmeta">' + esc(tsLabel(w)) + '</div></div></div>';
+  h += '<div style="margin-top:12px">';
+  h += '<div class="kv"><span class="k">Period total</span><b>' + fmtH(row.total) + '</b></div>';
+  h += '<div class="kv"><span class="k">On site</span><b>' + fmtH(row.byKind.onsite) + '</b></div>';
+  h += '<div class="kv"><span class="k">Drive</span><b>' + fmtH(row.byKind.drive) + '</b></div>';
+  h += '<div class="kv"><span class="k">Remote</span><b>' + fmtH(row.byKind.remote) + '</b></div>';
+  h += '<div class="kv"><span class="k">Shop</span><b>' + fmtH(row.byKind.shop) + '</b></div>';
+  if (row.byKind.other > 0) h += '<div class="kv"><span class="k">Other</span><b>' + fmtH(row.byKind.other) + '</b></div>';
+  if (row.ot > 0) h += '<div class="kv"><span class="k">Overtime (over 40 h in a week)</span><b>' + fmtH(row.ot) + '</b></div>';
+  h += '</div>';
+  h += '<div class="ts-strip">';
+  for (i = 0; i < w.days; i++) { dd = addDays(w.start, i); h += '<div class="ts-day-box' + (dayKey(dd) === todayK ? ' today' : '') + '"><div class="d">' + weekdayName(dd).slice(0, 3) + ' ' + dd.getDate() + '</div><div class="n">' + (row.dayMin[i] > 0 ? fmtH(row.dayMin[i]) : '—') + '</div></div>'; }
+  h += '</div>';
+  var any = false;
+  for (i = 0; i < w.days; i++) {
+    dd = addDays(w.start, i); dk = dayKey(dd);
+    var ents = row.entriesByDay[dk] || [];
+    var showTimer = row.live && dk === todayK;
+    if (!ents.length && !showTimer) continue;
+    any = true;
+    h += '<div class="ts-day"><h3>' + weekdayName(dd) + ', ' + monthName(dd).slice(0, 3) + ' ' + dd.getDate() + '<span class="dt">' + fmtH(row.dayMin[i]) + '</span></h3>';
+    ents.forEach(function (e) { h += tsEntryHTML(e); });
+    if (showTimer) { var tp = projById(row.timer.project_id); h += '<div class="ts-ent"><div><span class="jobname">' + esc(jobLabel(tp)) + '</span>' + (tp && tp.ticket ? ' <span class="cust">' + esc(tp.ticket) + '</span>' : '') + ' <span class="chip ' + kindChipColor(row.timer.kind) + '">' + esc(row.timer.kind || 'Time') + '</span></div><div class="meta">' + fmtClock(new Date(row.timer.started_at)) + ' – now · <span class="sof">' + fmtHM(row.runMin) + ' so far · on the clock</span></div></div>'; }
+    h += '</div>';
+  }
+  if (!any) h += '<p class="empty" style="margin-top:14px">No time logged in this period.</p>';
+  return h + '</div>';
+}
+function renderTSPrint(w, TM) {
+  var n = now(), i, d;
+  var h = '<div class="head"><div><h1>Timesheets</h1><div class="sub">Field Kit Manage · ' + esc(tsLabel(w)) + '</div></div><div class="when"><b>' + weekdayName(n) + ', ' + monthName(n) + ' ' + n.getDate() + ', ' + n.getFullYear() + '</b><br>Printed ' + fmtClock(n) + '</div></div>';
+  h += '<h2>Crew summary</h2><table><tr><th>Person</th>';
+  if (TS.mode === 'week') { for (i = 0; i < 7; i++) { d = addDays(w.start, i); h += '<th>' + weekdayName(d).slice(0, 3) + ' ' + d.getDate() + '</th>'; } }
+  else h += '<th>Week 1</th><th>Week 2</th>';
+  h += '<th>Total</th><th>Drive</th><th>Overtime</th></tr>';
+  var grand = 0, grandDrive = 0, grandOt = 0;
+  TM.rows.forEach(function (row) {
+    grand += row.total; grandDrive += row.drive; grandOt += row.ot;
+    h += '<tr><td>' + esc(nameOf(row.uid)) + '</td>';
+    if (TS.mode === 'week') { for (i = 0; i < 7; i++) h += '<td>' + (row.dayMin[i] > 0 ? fmtH(row.dayMin[i]) : '—') + '</td>'; }
+    else h += '<td>' + (row.wk[0] > 0 ? fmtH(row.wk[0]) : '—') + '</td><td>' + (row.wk[1] > 0 ? fmtH(row.wk[1]) : '—') + '</td>';
+    h += '<td><b>' + fmtH(row.total) + '</b></td><td>' + (row.drive > 0 ? fmtH(row.drive) : '—') + '</td><td>' + (row.ot > 0 ? 'OT +' + fmtH(row.ot) : '—') + '</td></tr>';
+  });
+  h += '<tr><td><b>Crew total</b></td>';
+  if (TS.mode === 'week') { for (i = 0; i < 7; i++) { var ct = 0; TM.rows.forEach(function (r) { ct += r.dayMin[i]; }); h += '<td><b>' + fmtH(ct) + '</b></td>'; } }
+  else { var c1 = 0, c2 = 0; TM.rows.forEach(function (r) { c1 += r.wk[0]; c2 += r.wk[1]; }); h += '<td><b>' + fmtH(c1) + '</b></td><td><b>' + fmtH(c2) + '</b></td>'; }
+  h += '<td><b>' + fmtH(grand) + '</b></td><td><b>' + fmtH(grandDrive) + '</b></td><td><b>' + (grandOt > 0 ? 'OT +' + fmtH(grandOt) : '—') + '</b></td></tr></table>';
+  var todayK = dayKey(n);
+  TM.rows.filter(function (row) { return row.total > 0; }).forEach(function (row) {
+    h += '<div class="person"><h2>' + esc(nameOf(row.uid)) + '</h2>';
+    h += '<div class="tot">Period total <b>' + fmtH(row.total) + '</b> · On site ' + fmtH(row.byKind.onsite) + ' · Drive ' + fmtH(row.byKind.drive) + ' · Remote ' + fmtH(row.byKind.remote) + ' · Shop ' + fmtH(row.byKind.shop) + (row.ot > 0 ? ' · Overtime ' + fmtH(row.ot) : '') + '</div>';
+    for (i = 0; i < w.days; i++) {
+      var dd = addDays(w.start, i), dk = dayKey(dd), ents = row.entriesByDay[dk] || [];
+      var showTimer = row.live && dk === todayK;
+      if (!ents.length && !showTimer) continue;
+      h += '<div class="dayh">' + weekdayName(dd) + ', ' + monthName(dd).slice(0, 3) + ' ' + dd.getDate() + ' — ' + fmtH(row.dayMin[i]) + '</div>';
+      ents.forEach(function (e) { var p = projById(e.project_id); h += '<div class="ent">' + esc(jobLabel(p)) + (p && p.ticket ? ' (' + esc(p.ticket) + ')' : '') + ' — ' + esc(e.kind || 'Time') + ' · ' + fmtClock(parseLocal(e.start_iso)) + ' – ' + fmtClock(parseLocal(e.end_iso)) + ' · ' + fmtH(entryMinutes(e)) + (e.lunch_min ? ' · −' + e.lunch_min + 'm lunch' : '') + (e.notes && String(e.notes).trim() ? '<br><span class="mut">' + esc(e.notes) + '</span>' : '') + '</div>'; });
+      if (showTimer) { var tp = projById(row.timer.project_id); h += '<div class="ent">' + esc(jobLabel(tp)) + (tp && tp.ticket ? ' (' + esc(tp.ticket) + ')' : '') + ' — ' + esc(row.timer.kind || 'Time') + ' · ' + fmtClock(new Date(row.timer.started_at)) + ' – now · ' + fmtHM(row.runMin) + ' so far (still running)</div>'; }
+    }
+    h += '</div>';
+  });
+  h += '<div class="foot2"><span>Field Kit Manage · Timesheets</span><span>Read-only from Field Kit data</span></div>';
+  $('tsprint').innerHTML = h;
+}
+function csvCell(v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function tsDownloadCSV(w) {
+  var startK = dayKey(w.start), endK = dayKey(w.end);
+  var list = D.entries.filter(function (e) { return !e.deleted_at && e.start_iso && e.start_iso.slice(0, 10) >= startK && e.start_iso.slice(0, 10) <= endK; });
+  list.sort(function (a, b) { if (a.start_iso !== b.start_iso) return a.start_iso < b.start_iso ? -1 : 1; return nameOf(a.user_id).localeCompare(nameOf(b.user_id)); });
+  var lines = ['Tech,Date,Job,Customer,Ticket,Kind,Start,End,Hours,Lunch (min),Notes'];
+  list.forEach(function (e) {
+    var p = projById(e.project_id);
+    lines.push([nameOf(e.user_id), e.start_iso.slice(0, 10), p ? p.name : 'Unknown job', p ? (p.customer || '') : '', p ? (p.ticket || '') : '', e.kind || '', fmtClock(parseLocal(e.start_iso)), fmtClock(parseLocal(e.end_iso)), (entryMinutes(e) / 60).toFixed(2), e.lunch_min || 0, e.notes || ''].map(csvCell).join(','));
+  });
+  var blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'timesheets-' + startK + '_to_' + endK + '.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); if (a.parentNode) a.parentNode.removeChild(a); }, 400);
+}
+function renderTimesheets() {
+  var w = tsWindow();
+  tsMaybeFetch(w);
+  var TM = tsModel(w);
+  var row = null;
+  if (TS.uid) { TM.rows.forEach(function (r) { if (r.uid === TS.uid) row = r; }); if (!row) TS.uid = null; }
+  $('tsView').innerHTML = renderTSBar(w) + (row ? renderTSDetail(w, TM, row) : renderTSSummary(w, TM));
+  renderTSPrint(w, TM);
+  var mw = $('tsModeWeek'), mp = $('tsModePeriod');
+  if (mw) mw.addEventListener('click', function () { tsSetMode('week'); });
+  if (mp) mp.addEventListener('click', function () { tsSetMode('period'); });
+  $('tsPrev').addEventListener('click', function () { TS.offset--; renderTimesheets(); });
+  $('tsNext').addEventListener('click', function () { TS.offset++; renderTimesheets(); });
+  var cur = $('tsCurrent'); if (cur) cur.addEventListener('click', function () { TS.offset = 0; renderTimesheets(); });
+  $('tsPrint').addEventListener('click', function () { window.print(); });
+  $('tsCsv').addEventListener('click', function () { tsDownloadCSV(w); });
+  var anch = $('tsAnchor');
+  if (anch) anch.addEventListener('change', function () {
+    var oldStart = tsWindow().start;
+    try { localStorage.setItem('fkm_pp_anchor', anch.value); } catch (e) {}
+    TS.offset = tsOffsetFor(oldStart);
+    renderTimesheets();
+  });
+  Array.prototype.forEach.call($('tsView').querySelectorAll('tr.ts-row'), function (el) { el.addEventListener('click', function () { TS.uid = el.getAttribute('data-uid'); renderTimesheets(); window.scrollTo(0, 0); }); });
+  var back = $('tsBack'); if (back) back.addEventListener('click', function () { TS.uid = null; renderTimesheets(); });
+}
+function tsSetMode(m) {
+  if (TS.mode === m) return;
+  var start = tsWindow().start;
+  TS.mode = m; TS.offset = tsOffsetFor(start); TS.uid = null;
+  renderTimesheets();
+}
+function showMain(view) {
+  VIEW = view;
+  document.body.classList.toggle('view-ts', view === 'ts');
+  $('home').classList.toggle('hidden', view !== 'home');
+  $('tsView').classList.toggle('hidden', view !== 'ts');
+  $('navHome').classList.toggle('on', view === 'home');
+  $('navTs').classList.toggle('on', view === 'ts');
+  $('printBtn').classList.toggle('hidden', view === 'ts');
+  $('footLine').textContent = 'Field Kit Manage v1.1 · ' + (view === 'ts' ? 'Timesheets' : 'Oversight') + ' · Read-only — nothing here changes Field Kit data';
+  if (view === 'ts') renderTimesheets(); else renderHome();
+}
+function renderCurrent() { if (VIEW === 'ts') renderTimesheets(); else renderHome(); }
+
 /* ================= palette ================= */
 var palList = [];
 function openPal() { $('palView').classList.remove('hidden'); $('palInput').value = ''; buildPal(''); setTimeout(function () { $('palInput').focus(); }, 30); }
@@ -578,7 +887,14 @@ function buildPal(q) {
   $('palItems').innerHTML = palList.length ? palList.map(function (it, i) { return '<div class="item" data-target="' + it.target + '"><span class="tag">' + it.tag + '</span><span>' + esc(it.label) + '</span><span class="sub2">' + esc(it.sub) + '</span></div>'; }).join('') : '<div class="none">No matches.</div>';
   Array.prototype.forEach.call($('palItems').querySelectorAll('.item'), function (el) { el.addEventListener('click', function () { jumpTo(el.getAttribute('data-target')); }); });
 }
-function jumpTo(id) { closePal(); var el = $(id); if (!el) return; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('flash'); setTimeout(function () { el.classList.remove('flash'); }, 1800); }
+function jumpTo(id) {
+  closePal();
+  if (VIEW === 'ts') {
+    if (id.indexOf('crew-') === 0) { TS.uid = id.slice(5); renderTimesheets(); window.scrollTo(0, 0); return; }
+    showMain('home');
+  }
+  var el = $(id); if (!el) return; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('flash'); setTimeout(function () { el.classList.remove('flash'); }, 1800);
+}
 
 /* ================= data ================= */
 function loadAll() {
@@ -597,14 +913,17 @@ function loadAll() {
   });
 }
 var reloadTimer = null;
-function scheduleReload() { if (reloadTimer) return; reloadTimer = setTimeout(function () { reloadTimer = null; loadAll().then(renderHome); }, 1200); }
+function scheduleReload() { if (reloadTimer) return; reloadTimer = setTimeout(function () { reloadTimer = null; loadAll().then(renderCurrent); }, 1200); }
 function subscribeRT() {
   if (!sb || DEMO) return;
   try { var ch = sb.channel('fkm-live'); ['projects', 'time_entries', 'running_timers', 'project_members', 'cable_pulls'].forEach(function (t) { ch.on('postgres_changes', { event: '*', schema: 'public', table: t }, scheduleReload); }); ch.subscribe(); } catch (e) {}
 }
 function startTicks() {
-  setInterval(function () { document.querySelectorAll('[data-elapsed]').forEach(function (el) { el.textContent = fmtHM(timerElapsedMin({ started_at: el.getAttribute('data-elapsed') })); }); }, 30000);
-  setInterval(function () { if ($('palView').classList.contains('hidden') && !$('appView').classList.contains('hidden')) loadAll().then(renderHome); }, 300000);
+  setInterval(function () {
+    document.querySelectorAll('[data-elapsed]').forEach(function (el) { el.textContent = fmtHM(timerElapsedMin({ started_at: el.getAttribute('data-elapsed') })); });
+    if (VIEW === 'ts') { var w = tsWindow(), tk = dayKey(now()); if (dayKey(w.start) <= tk && tk <= dayKey(w.end)) renderTimesheets(); }
+  }, 30000);
+  setInterval(function () { if ($('palView').classList.contains('hidden') && !$('appView').classList.contains('hidden')) loadAll().then(renderCurrent); }, 300000);
 }
 
 /* ================= auth ================= */
@@ -631,6 +950,7 @@ function signOut() { if (sb) sb.auth.signOut().then(function () { location.reloa
 function loadDemo() {
   function L(y, mo, d, h, mi) { return new Date(y, mo, d, h, mi || 0).toISOString(); }
   function E(id, proj, user, kind, s, e, notes, created, updated) { return { id: id, project_id: proj, user_id: user, kind: kind, start_iso: s, end_iso: e, notes: notes, lunch_min: 0, created_at: created, updated_at: updated || created, deleted_at: null }; }
+  function EL(id, proj, user, kind, s, e, notes, created, lunch) { var x = E(id, proj, user, kind, s, e, notes, created, created); x.lunch_min = lunch || 0; return x; }
   function P(id, name, customer, ticket, status, owner, created, updated, ss, se) { return { id: id, name: name, customer: customer, site: '', ticket: ticket, notes: '', status: status, owner_id: owner, created_at: created, updated_at: updated, deleted_at: null, sched_start: ss || null, sched_end: se || null }; }
   D.profiles = [
     { id: 'u-jeremy', email: 'jeremyashley1990@gmail.com', display_name: 'Jeremy Ashley' },
@@ -680,6 +1000,48 @@ function loadDemo() {
     E('e10', 'p-warehouse', 'u-casey', 'On site', '2026-11-02T07:05', '2026-11-02T11:35', '', L(2026, 10, 2, 11, 35)),
     E('e11', 'p-warehouse', 'u-casey', 'On site', '2026-11-02T12:05', '2026-11-02T15:35', '', L(2026, 10, 2, 16, 5))
   ];
+  /* Timesheets backfill: the full week before the demo scene (Mon Oct 26 - Fri Oct 30 2026)
+     plus a Tuesday-morning entry for Casey, so Timesheets has a real week to show.
+     Jordan's week runs 43.4 h so the overtime chip fires; Jeremy logs no field time. */
+  D.entries = D.entries.concat([
+    E('w1', 'p-harbor', 'u-jordan', 'Drive', '2026-10-26T06:45', '2026-10-26T07:15', '', L(2026, 9, 26, 7, 15)),
+    E('w2', 'p-harbor', 'u-jordan', 'On site', '2026-10-26T07:15', '2026-10-26T11:45', 'Intercom head-end swap', L(2026, 9, 26, 11, 45)),
+    E('w3', 'p-harbor', 'u-jordan', 'On site', '2026-10-26T12:15', '2026-10-26T16:15', '', L(2026, 9, 26, 16, 15)),
+    E('w4', 'p-northplant', 'u-jordan', 'Drive', '2026-10-27T06:40', '2026-10-27T07:10', '', L(2026, 9, 27, 7, 10)),
+    EL('w5', 'p-northplant', 'u-jordan', 'On site', '2026-10-27T07:10', '2026-10-27T12:10', 'Fiber pull — riser', L(2026, 9, 27, 12, 10), 30),
+    E('w6', 'p-northplant', 'u-jordan', 'On site', '2026-10-27T12:40', '2026-10-27T16:40', '', L(2026, 9, 27, 16, 40)),
+    E('w7', 'p-southgate', 'u-jordan', 'Drive', '2026-10-28T06:50', '2026-10-28T07:20', '', L(2026, 9, 28, 7, 20)),
+    E('w8', 'p-southgate', 'u-jordan', 'On site', '2026-10-28T07:20', '2026-10-28T11:50', '', L(2026, 9, 28, 11, 50)),
+    E('w9', 'p-riverview', 'u-jordan', 'Remote', '2026-10-28T12:20', '2026-10-28T15:20', 'NVR config and camera naming', L(2026, 9, 28, 15, 20)),
+    E('w10', 'p-southgate', 'u-jordan', 'Drive', '2026-10-29T06:45', '2026-10-29T07:15', '', L(2026, 9, 29, 7, 15)),
+    E('w11', 'p-southgate', 'u-jordan', 'On site', '2026-10-29T07:15', '2026-10-29T12:15', '', L(2026, 9, 29, 12, 15)),
+    E('w12', 'p-southgate', 'u-jordan', 'On site', '2026-10-29T12:45', '2026-10-29T16:45', 'Parking camera conduit', L(2026, 9, 29, 16, 45)),
+    E('w13', 'p-southgate', 'u-jordan', 'Drive', '2026-10-30T06:40', '2026-10-30T07:05', '', L(2026, 9, 30, 7, 5)),
+    E('w14', 'p-southgate', 'u-jordan', 'On site', '2026-10-30T07:05', '2026-10-30T11:35', '', L(2026, 9, 30, 11, 35)),
+    E('w15', 'p-printer', 'u-jordan', 'Shop', '2026-10-30T12:05', '2026-10-30T15:05', 'Bench prep for Monday cutover', L(2026, 9, 30, 15, 5)),
+    E('w16', 'p-harbor', 'u-sam', 'Drive', '2026-10-26T06:55', '2026-10-26T07:25', '', L(2026, 9, 26, 7, 25)),
+    E('w17', 'p-harbor', 'u-sam', 'On site', '2026-10-26T07:25', '2026-10-26T11:55', '', L(2026, 9, 26, 11, 55)),
+    E('w18', 'p-harbor', 'u-sam', 'On site', '2026-10-26T12:25', '2026-10-26T16:25', '', L(2026, 9, 26, 16, 25)),
+    E('w19', 'p-northplant', 'u-sam', 'Drive', '2026-10-27T07:00', '2026-10-27T07:30', '', L(2026, 9, 27, 7, 30)),
+    EL('w20', 'p-northplant', 'u-sam', 'On site', '2026-10-27T07:30', '2026-10-27T12:00', '', L(2026, 9, 27, 12, 0), 30),
+    E('w21', 'p-northplant', 'u-sam', 'On site', '2026-10-27T12:30', '2026-10-27T16:00', '', L(2026, 9, 27, 16, 0)),
+    E('w22', 'p-warehouse', 'u-sam', 'On site', '2026-10-28T07:00', '2026-10-28T11:30', 'Cable run — east wing pulls', L(2026, 9, 28, 11, 30)),
+    E('w23', 'p-warehouse', 'u-sam', 'Drive', '2026-10-28T11:30', '2026-10-28T12:00', '', L(2026, 9, 28, 12, 0)),
+    E('w24', 'p-southgate', 'u-sam', 'On site', '2026-10-28T12:30', '2026-10-28T15:30', '', L(2026, 9, 28, 15, 30)),
+    E('w25', 'p-chaffee', 'u-sam', 'Drive', '2026-10-29T06:50', '2026-10-29T07:20', '', L(2026, 9, 29, 7, 20)),
+    E('w26', 'p-chaffee', 'u-sam', 'On site', '2026-10-29T07:20', '2026-10-29T11:50', '', L(2026, 9, 29, 11, 50)),
+    E('w27', 'p-chaffee', 'u-sam', 'On site', '2026-10-29T12:20', '2026-10-29T15:50', '', L(2026, 9, 29, 15, 50)),
+    E('w28', 'p-southgate', 'u-sam', 'Drive', '2026-10-30T07:05', '2026-10-30T07:30', '', L(2026, 9, 30, 7, 30)),
+    E('w29', 'p-southgate', 'u-sam', 'On site', '2026-10-30T07:30', '2026-10-30T11:00', '', L(2026, 9, 30, 11, 0)),
+    E('w30', 'p-riverview', 'u-sam', 'Remote', '2026-10-30T11:30', '2026-10-30T13:00', '', L(2026, 9, 30, 13, 0)),
+    E('w31', 'p-warehouse', 'u-casey', 'On site', '2026-10-28T07:10', '2026-10-28T11:40', '', L(2026, 9, 28, 11, 40)),
+    E('w32', 'p-warehouse', 'u-casey', 'On site', '2026-10-28T12:10', '2026-10-28T15:40', '', L(2026, 9, 28, 15, 40)),
+    E('w33', 'p-northplant', 'u-casey', 'Drive', '2026-10-29T06:55', '2026-10-29T07:25', '', L(2026, 9, 29, 7, 25)),
+    E('w34', 'p-northplant', 'u-casey', 'On site', '2026-10-29T07:25', '2026-10-29T12:25', 'Fiber backbone terminations', L(2026, 9, 29, 12, 25)),
+    E('w35', 'p-northplant', 'u-casey', 'On site', '2026-10-29T12:55', '2026-10-29T16:25', '', L(2026, 9, 29, 16, 25)),
+    E('w36', 'p-northplant', 'u-casey', 'On site', '2026-10-30T07:15', '2026-10-30T12:15', '', L(2026, 9, 30, 12, 15)),
+    E('w37', 'p-warehouse', 'u-casey', 'Shop', '2026-11-03T06:35', '2026-11-03T07:50', 'Loaded reels for the Warehouse B run', L(2026, 10, 3, 7, 50))
+  ]);
   D.pulls = [
     { id: 'cp1', project_id: 'p-warehouse', user_id: 'u-casey', used: 560, pull_date: '2026-11-02', created_at: L(2026, 10, 2, 10, 0), deleted_at: null },
     { id: 'cp2', project_id: 'p-warehouse', user_id: 'u-sam', used: 300, pull_date: '2026-11-02', created_at: L(2026, 10, 2, 15, 15), deleted_at: null }
@@ -698,8 +1060,10 @@ function init() {
     });
   });
   $('signOutBtn').addEventListener('click', signOut);
+  $('navHome').addEventListener('click', function () { showMain('home'); });
+  $('navTs').addEventListener('click', function () { showMain('ts'); });
   $('gateOut').addEventListener('click', signOut);
-  $('refreshBtn').addEventListener('click', function () { loadAll().then(renderHome); });
+  $('refreshBtn').addEventListener('click', function () { loadAll().then(renderCurrent); });
   $('printBtn').addEventListener('click', function () { window.print(); });
   $('searchBox').addEventListener('click', openPal);
   $('palInput').addEventListener('input', function () { buildPal(this.value); });
