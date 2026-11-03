@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#090d16">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Field Kit Manage — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;550;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -618,7 +620,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.11 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.11.1 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -1934,8 +1936,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.11 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.11 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · Cable lists and the materials catalog, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.11.1 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.11.1 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · Cable lists and the materials catalog, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') renderCustomers(); } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -3885,66 +3887,10 @@ function init() {
   sb.auth.getSession().then(function (r) { var s = r && r.data && r.data.session; if (s) onSignedIn(s.user); else showView('authView'); });
 }
 document.addEventListener('DOMContentLoaded', init);
-/* Install manifest, generated at runtime: the repo's push path carries
-   text only, so no manifest or icon files ship — the icons are drawn
-   here from the app's own logo mark (the same artwork as demoLogoURI:
-   the indigo gradient tile, the white mountain and sun, the mark scaled
-   0.78 about its centre so maskable cropping stays safe) and the
-   manifest goes in as a blob URL, the approach Field Kit proved.
-   Best effort throughout: any failure is silent, and the Install row's
-   fallback instructions still apply. */
-function buildInstallManifest() {
-  try {
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 96 96"><defs><linearGradient id="npg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#4f46e5"/></linearGradient></defs><rect width="96" height="96" fill="url(#npg)"/><g transform="translate(48 45.25) scale(0.78) translate(-48 -45.25)"><circle cx="67" cy="27" r="6" fill="#ffffff" opacity=".9"/><polyline points="14,66 38,32 53,51 63,39 82,66" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g></svg>';
-    var img = new Image();
-    img.onload = function () {
-      try {
-        function mkCanvas(size) {
-          var cv = document.createElement('canvas'); cv.width = size; cv.height = size;
-          var cx = cv.getContext('2d'); if (!cx) return null;
-          cx.drawImage(img, 0, 0, size, size);
-          return cv;
-        }
-        var cv192 = mkCanvas(192), cv512 = mkCanvas(512);
-        if (!cv192 || !cv512) return;
-        var touch = document.querySelector('link[rel="apple-touch-icon"]');
-        if (!touch) { touch = document.createElement('link'); touch.rel = 'apple-touch-icon'; document.head.appendChild(touch); }
-        touch.href = cv192.toDataURL('image/png');
-        var pending = 2, u192 = null, u512 = null;
-        function done() {
-          if (--pending > 0 || !u192 || !u512) return;
-          try {
-            var dir = new URL('.', location.href).href;
-            var man = {
-              name: 'Field Kit Manage', short_name: 'Manage',
-              start_url: dir, scope: dir, display: 'standalone',
-              background_color: '#090d16', theme_color: '#090d16',
-              icons: [
-                { src: u192, sizes: '192x192', type: 'image/png', purpose: 'any' },
-                { src: u512, sizes: '512x512', type: 'image/png', purpose: 'any' },
-                { src: u512, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
-              ]
-            };
-            var url = URL.createObjectURL(new Blob([JSON.stringify(man)], { type: 'application/json' }));
-            var old = document.querySelector('link[rel="manifest"]');
-            if (old) old.remove();
-            var l = document.createElement('link'); l.rel = 'manifest'; l.href = url;
-            document.head.appendChild(l);
-          } catch (e) {}
-        }
-        function toUrl(cv, set) {
-          if (cv.toBlob) { cv.toBlob(function (b) { if (b) set(URL.createObjectURL(b)); done(); }, 'image/png'); }
-          else { var u = null; try { u = cv.toDataURL('image/png'); } catch (e) {} if (u) set(u); done(); }
-        }
-        toUrl(cv192, function (u) { u192 = u; });
-        toUrl(cv512, function (u) { u512 = u; });
-      } catch (e) {}
-    };
-    img.onerror = function () {};
-    img.src = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
-  } catch (e) {}
-}
-buildInstallManifest();
+/* Install manifest + icons ship as real files (manifest.webmanifest,
+   icon-192.png, icon-512.png) linked from the head: the WebAPK
+   minting pipeline needs fetchable icon URLs, which the v1.11
+   runtime-generated blob manifest could not provide. */
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(function () {}); }
 </script>
 </body>
