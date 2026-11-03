@@ -306,7 +306,7 @@
   @media print {
     body { background:#fff; }
     .wrap, .authwrap, .palwrap { display:none !important; }
-    body:not(.view-ts):not(.view-proj):not(.view-sched):not(.view-company) #brief { display:block; color:#111; font-size:13.5px; padding:10px 6px; }
+    body:not(.view-ts):not(.view-proj):not(.view-sched):not(.view-company):not(.view-cust) #brief { display:block; color:#111; font-size:13.5px; padding:10px 6px; }
     #brief .lh, #tsprint .lh { display:flex; align-items:center; gap:9px; padding-bottom:10px; margin-bottom:12px; border-bottom:1px solid #ddd; }
     #brief .lh img, #tsprint .lh img { width:28px; height:28px; border-radius:6px; object-fit:cover; display:block; }
     #brief .lh .lname, #tsprint .lh .lname { font-size:15px; font-weight:800; color:#111; }
@@ -452,6 +452,25 @@
   .set-txt { flex:1; }
   .set-label { font-size:14px; font-weight:700; color:#e6e9f5; }
   .setrow .datein { width:250px; flex:none; }
+  /* customers (v1.7) */
+  .cu-row { display:flex; align-items:center; gap:12px; padding:11px 2px; border-bottom:1px solid #1b1f33; cursor:pointer; }
+  .cu-row:last-child { border-bottom:none; }
+  .cu-row:hover { background:rgba(99,102,241,.05); }
+  .cu-init { width:40px; height:40px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:750; font-size:14px; color:#fff; background:#4f46e5; }
+  .cu-name { font-size:15px; font-weight:700; color:#e6e9f5; }
+  .cu-meta { color:#8b93b0; font-size:12.5px; margin-top:1px; }
+  .cu-right { margin-left:auto; text-align:right; flex:none; }
+  .cu-chip { cursor:pointer; }
+  .cu-sites { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; margin-top:12px; }
+  .cu-site { background:#0b0e1a; border:1px solid #232842; border-radius:12px; padding:13px 14px; }
+  .cu-site .sl { font-size:14.5px; font-weight:700; color:#e6e9f5; display:flex; align-items:flex-start; gap:8px; }
+  .cu-jobrow { display:flex; align-items:center; gap:10px; padding:9px 2px; border-bottom:1px solid #1b1f33; cursor:pointer; font-size:14px; }
+  .cu-jobrow:last-child { border-bottom:none; }
+  .cu-jobrow:hover { background:rgba(99,102,241,.05); }
+  .cu-linkline { font-size:12.5px; font-weight:600; margin-top:8px; }
+  .cu-linkline.ok { color:#34d399; }
+  .cu-linkline.no { color:#8b93b0; }
+  textarea.txtin { font-family:inherit; resize:vertical; }
   @media (max-width:700px) {
     .prof-flex { flex-direction:column; }
     .prof-left { flex:none; width:100%; }
@@ -508,6 +527,7 @@
       <button class="navtab" id="navTs">Timesheets</button>
       <button class="navtab" id="navProj">Projects</button>
       <button class="navtab" id="navSched">Schedule</button>
+      <button class="navtab" id="navCust">Customers</button>
       <div class="navactions">
         <button class="navprint" id="printNav" title="Print brief" aria-label="Print brief"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
         <button class="navprint hidden" id="tsPrintNav" title="Print timesheets" aria-label="Print timesheets"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
@@ -526,7 +546,8 @@
     <div id="pjView" class="hidden"></div>
     <div id="schedView" class="hidden"></div>
     <div id="coView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.6.2 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div id="cuView" class="hidden"></div>
+    <div class="foot" id="footLine">Field Kit Manage v1.7 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -561,6 +582,10 @@
   <div class="pal jobform jbwin" id="muConfirmCard"></div>
 </div>
 
+<div id="cuFormWrap" class="palwrap hidden">
+  <div class="pal jobform jbwin" id="cuFormCard"></div>
+</div>
+
 <div id="brief"></div>
 <div id="tsprint"></div>
 <div id="segtip" class="segtip"><div class="tj" id="segtipJob"></div><div class="tm" id="segtipMeta"></div></div>
@@ -575,7 +600,7 @@ var DEMO_NOW = new Date(2026, 10, 3, 8, 12, 0); /* Tue Nov 3 2026, 8:12 AM — t
 
 /* ================= state ================= */
 var sb = null, me = null, isAdmin = false;
-var D = { profiles: [], projects: [], members: [], timers: [], entries: [], pulls: [], admins: [], entriesError: false, loadedAt: null };
+var D = { profiles: [], projects: [], members: [], timers: [], entries: [], pulls: [], admins: [], entriesError: false, loadedAt: null, customers: [], sites: [], custError: false };
 var lastVisit = null;
 /* ================= company settings (v1.4) =================
    Manage's first write-capable area. COMPANY is the company_settings row
@@ -1355,6 +1380,7 @@ function renderPJDetail(row) {
   if (JB.msg && JB.pid === p.id) h += '<p class="co-msg ' + (JB.err ? 'err' : 'ok') + '" style="margin-top:10px">' + esc(JB.msg) + '</p>';
   var sl = pjSchedLong(row);
   h += '<div class="pmeta">' + (sl ? 'Scheduled: <b>' + esc(sl) + '</b> · ' : '') + 'Started ' + fmtDateShort(row.startedK) + '</div>';
+  if (p.customer_id && custById(p.customer_id)) h += '<div style="margin-top:9px"><span class="chip blue cu-chip" id="pjCustChip" title="Open in Customers">Customer: ' + esc(custById(p.customer_id).name) + '</span></div>';
   h += '<div class="pcrew">';
   if (row.members.length) {
     row.members.forEach(function (u) { h += '<span class="tavatar" style="background:' + colorOf(u) + '">' + initialsOf(u) + '</span>'; });
@@ -1485,6 +1511,10 @@ function jbOpenForm(mode, pid) {
   var h = '<h2>' + (mode === 'edit' ? 'Edit job' : 'New job') + '</h2>';
   h += '<p class="caption">' + (mode === 'edit' ? 'Fields and schedule dates. Crew is managed from the gear menu on the job page.' : 'Created in Field Kit\u2019s shape: you are the job\u2019s owner, and anyone you pick below joins as crew.') + '</p>';
   h += '<div class="jf-field"><label class="flabel" for="jfName">Job name *</label><input class="txtin" id="jfName" value="' + esc(p ? p.name : '') + '" placeholder="e.g. Lobby camera install" autocomplete="off"></div>';
+  JF_LINK = jfInitLink(p);
+  h += '<div class="jf-grid"><div class="jf-field"><label class="flabel" for="jfCustPick">Directory customer</label><select class="txtin" id="jfCustPick">' + jfCustOptions(JF_LINK.cid) + '</select></div>';
+  h += '<div class="jf-field"><label class="flabel" for="jfSitePick">Directory site</label><select class="txtin" id="jfSitePick">' + jfSiteOptions(JF_LINK.cid, JF_LINK.sid) + '</select></div></div>';
+  h += '<p class="cu-linkline ' + (JF_LINK.cid ? 'ok' : 'no') + '" id="jfLinkLine">' + jfLinkText() + '</p>';
   h += '<div class="jf-grid"><div class="jf-field"><label class="flabel" for="jfCustomer">Customer</label><input class="txtin" id="jfCustomer" value="' + esc(p ? (p.customer || '') : '') + '" autocomplete="off"></div>';
   h += '<div class="jf-field"><label class="flabel" for="jfSite">Site</label><input class="txtin" id="jfSite" value="' + esc(p ? (p.site || '') : '') + '" autocomplete="off"></div></div>';
   h += '<div class="jf-field"><label class="flabel" for="jfTicket">Ticket #</label><input class="txtin" id="jfTicket" value="' + esc(p ? (p.ticket || '') : '') + '" autocomplete="off"></div>';
@@ -1503,6 +1533,7 @@ function jbOpenForm(mode, pid) {
   $('jobFormWrap').classList.remove('hidden');
   $('jfCancel').addEventListener('click', jbCloseForm);
   $('jfSave').addEventListener('click', jbFormSave);
+  jfWireLink();
   setTimeout(function () { var n = $('jfName'); if (n) n.focus(); }, 30);
 }
 function jbCloseForm() { var w = $('jobFormWrap'); if (w) w.classList.add('hidden'); }
@@ -1513,7 +1544,7 @@ function jbFormSave() {
   var ss = $('jfStart').value || '', se = $('jfEnd').value || '';
   if (ss) { if (!se) se = ss; if (se < ss) { jbFormFail('End date is before the start date.'); return; } }
   else se = '';
-  var vals = { name: name, customer: $('jfCustomer').value.trim(), site: $('jfSite').value.trim(), ticket: $('jfTicket').value.trim(), sched_start: ss || null, sched_end: ss ? se : null };
+  var vals = { name: name, customer: $('jfCustomer').value.trim(), site: $('jfSite').value.trim(), ticket: $('jfTicket').value.trim(), sched_start: ss || null, sched_end: ss ? se : null, customer_id: JF_LINK.cid, site_id: JF_LINK.sid };
   if (JB.mode === 'edit') { jbEditJob(JB.pid, vals); return; }
   var crew = [];
   Array.prototype.forEach.call(document.querySelectorAll('input[name="jf_crew"]:checked'), function (c) { crew.push(c.value); });
@@ -1522,9 +1553,9 @@ function jbFormSave() {
 
 /* ---------- the writes (the only new write call sites) ---------- */
 function jbCreateJob(vals, crewIds) {
-  var row = { id: jbGenId(), name: vals.name, customer: vals.customer || null, site: vals.site || null, ticket: vals.ticket || null, notes: null, status: 'active', enabled_modules: JB_MODULES.slice(), sched_start: vals.sched_start, sched_end: vals.sched_end, owner_id: me ? me.id : null, updated_by: me ? me.id : null };
+  var row = { id: jbGenId(), name: vals.name, customer: vals.customer || null, site: vals.site || null, ticket: vals.ticket || null, notes: null, status: 'active', enabled_modules: JB_MODULES.slice(), sched_start: vals.sched_start, sched_end: vals.sched_end, customer_id: vals.customer_id || null, site_id: vals.site_id || null, owner_id: me ? me.id : null, updated_by: me ? me.id : null };
   if (DEMO) {
-    D.projects.push({ id: row.id, name: row.name, customer: vals.customer, site: vals.site, ticket: vals.ticket, notes: '', status: 'active', owner_id: row.owner_id, created_at: now().toISOString(), updated_at: now().toISOString(), deleted_at: null, sched_start: row.sched_start, sched_end: row.sched_end });
+    D.projects.push({ id: row.id, name: row.name, customer: vals.customer, site: vals.site, ticket: vals.ticket, notes: '', status: 'active', owner_id: row.owner_id, created_at: now().toISOString(), updated_at: now().toISOString(), deleted_at: null, sched_start: row.sched_start, sched_end: row.sched_end, customer_id: row.customer_id, site_id: row.site_id });
     crewIds.forEach(function (u) { D.members.push({ project_id: row.id, user_id: u, role: 'member' }); });
     jbCloseForm(); PJ.pid = row.id; PJ.filter = 'active'; JB.pid = row.id; JB.msg = ''; JB.err = false;
     renderProjects(); window.scrollTo(0, 0); return;
@@ -1548,10 +1579,10 @@ function jbCreateJob(vals, crewIds) {
 function jbEditJob(pid, vals) {
   if (DEMO) {
     var p = projById(pid);
-    if (p) { p.name = vals.name; p.customer = vals.customer; p.site = vals.site; p.ticket = vals.ticket; p.sched_start = vals.sched_start; p.sched_end = vals.sched_end; p.updated_at = now().toISOString(); }
+    if (p) { p.name = vals.name; p.customer = vals.customer; p.site = vals.site; p.ticket = vals.ticket; p.sched_start = vals.sched_start; p.sched_end = vals.sched_end; p.customer_id = vals.customer_id; p.site_id = vals.site_id; p.updated_at = now().toISOString(); }
     jbCloseForm(); JB.pid = pid; JB.msg = ''; JB.err = false; renderProjects(); return;
   }
-  jbRunUpdate(pid, sb.from('projects').update({ name: vals.name, customer: vals.customer || null, site: vals.site || null, ticket: vals.ticket || null, sched_start: vals.sched_start, sched_end: vals.sched_end, updated_by: me ? me.id : null }).eq('id', pid).select('id'), { form: true });
+  jbRunUpdate(pid, sb.from('projects').update({ name: vals.name, customer: vals.customer || null, site: vals.site || null, ticket: vals.ticket || null, sched_start: vals.sched_start, sched_end: vals.sched_end, customer_id: vals.customer_id || null, site_id: vals.site_id || null, updated_by: me ? me.id : null }).eq('id', pid).select('id'), { form: true });
 }
 function jbSetJobStatus(pid, status) {
   if (DEMO) {
@@ -1624,6 +1655,7 @@ function wirePJDetail(row) {
   var bc = $('jbMenuCrew'); if (bc) bc.addEventListener('click', function () { jbCloseMenu(); jbOpenCrew(row); });
   var bs = $('jbMenuStatus'); if (bs) bs.addEventListener('click', function () { jbCloseMenu(); jbSetJobStatus(pid, row.p.status === 'done' ? 'active' : 'done'); });
   var bd = $('jbMenuDelete'); if (bd) bd.addEventListener('click', function () { jbCloseMenu(); jbOpenDelete(row); });
+  var cc = $('pjCustChip'); if (cc) cc.addEventListener('click', function () { CU.cid = row.p.customer_id; CU.menu = null; showMain('cust'); window.scrollTo(0, 0); });
 }
 
 /* ---------- manage crew (floating window) ---------- */
@@ -1719,24 +1751,27 @@ function showMain(view) {
   document.body.classList.toggle('view-proj', view === 'proj');
   document.body.classList.toggle('view-sched', view === 'sched');
   document.body.classList.toggle('view-company', view === 'company');
+  document.body.classList.toggle('view-cust', view === 'cust');
   $('home').classList.toggle('hidden', view !== 'home');
   $('tsView').classList.toggle('hidden', view !== 'ts');
   $('pjView').classList.toggle('hidden', view !== 'proj');
   $('schedView').classList.toggle('hidden', view !== 'sched');
   $('coView').classList.toggle('hidden', view !== 'company');
+  $('cuView').classList.toggle('hidden', view !== 'cust');
   $('navHome').classList.toggle('on', view === 'home');
   $('navTs').classList.toggle('on', view === 'ts');
   $('navProj').classList.toggle('on', view === 'proj');
   $('navSched').classList.toggle('on', view === 'sched');
+  $('navCust').classList.toggle('on', view === 'cust');
   $('gearBtn').classList.toggle('on', view === 'company');
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.6.2 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.6.2 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : ' · Read-only — the working views never change Field Kit data');
-  if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.7 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.7 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
-function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
+function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') renderCustomers(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
 
 /* ================= schedule ================= */
 var SCHED = { offset: 0 };
@@ -1885,6 +1920,7 @@ function closePal() { $('palView').classList.add('hidden'); }
 function buildPal(q) {
   q = (q || '').toLowerCase(); palList = [];
   D.projects.filter(function (p) { return !p.deleted_at && p.status !== 'done'; }).forEach(function (p) { if (!q || jobLabel(p).toLowerCase().indexOf(q) >= 0 || (p.ticket || '').toLowerCase().indexOf(q) >= 0) palList.push({ tag: 'Job', label: jobLabel(p), sub: p.ticket || '', target: 'job-' + p.id }); });
+  D.customers.filter(function (c) { return !c.deleted_at; }).forEach(function (c) { if (!q || c.name.toLowerCase().indexOf(q) >= 0 || (c.city || '').toLowerCase().indexOf(q) >= 0) palList.push({ tag: 'Customer', label: c.name, sub: [c.city, c.state].filter(Boolean).join(', '), target: 'cust-' + c.id }); });
   D.profiles.forEach(function (p) { if (!q || nameOf(p.id).toLowerCase().indexOf(q) >= 0) palList.push({ tag: 'Tech', label: nameOf(p.id), sub: '', target: 'crew-' + p.id }); });
   palList = palList.slice(0, 14);
   $('palItems').innerHTML = palList.length ? palList.map(function (it, i) { return '<div class="item" data-target="' + it.target + '"><span class="tag">' + it.tag + '</span><span>' + esc(it.label) + '</span><span class="sub2">' + esc(it.sub) + '</span></div>'; }).join('') : '<div class="none">No matches.</div>';
@@ -1892,6 +1928,7 @@ function buildPal(q) {
 }
 function jumpTo(id) {
   closePal();
+  if (id.indexOf('cust-') === 0) { CU.cid = id.slice(5); CU.menu = null; showMain('cust'); window.scrollTo(0, 0); return; }
   if (id.indexOf('job-') === 0) { PJ.pid = id.slice(4); showMain('proj'); window.scrollTo(0, 0); return; }
   if (id.indexOf('crew-') === 0) {
     if (VIEW === 'ts') { TS.uid = id.slice(5); renderTimesheets(); window.scrollTo(0, 0); return; }
@@ -1910,19 +1947,22 @@ function loadAll() {
     sb.from('running_timers').select('*'),
     sb.from('time_entries').select('*').order('start_iso', { ascending: false }).limit(3000),
     sb.from('cable_pulls').select('*').limit(2000),
-    sb.from('admins').select('user_id')
+    sb.from('admins').select('user_id'),
+    sb.from('customers').select('*'),
+    sb.from('customer_sites').select('*')
   ];
   return Promise.all(qs.map(function (p) { return p.then(function (r) { return r; }, function (e) { return { data: null, error: e }; }); })).then(function (rs) {
     D.profiles = rs[0].data || []; D.projects = rs[1].data || []; D.members = rs[2].data || []; D.timers = rs[3].data || [];
     D.entriesError = !!rs[4].error; D.entries = rs[4].data || []; D.pulls = rs[5].data || []; D.loadedAt = new Date();
     D.admins = (rs[6].data || []).map(function (a) { return a.user_id; });
+    D.custError = !!(rs[7].error || rs[8].error); D.customers = rs[7].data || []; D.sites = rs[8].data || [];
   });
 }
 var reloadTimer = null;
 function scheduleReload() { if (reloadTimer) return; reloadTimer = setTimeout(function () { reloadTimer = null; loadAll().then(renderCurrent); }, 1200); }
 function subscribeRT() {
   if (!sb || DEMO) return;
-  try { var ch = sb.channel('fkm-live'); ['projects', 'time_entries', 'running_timers', 'project_members', 'cable_pulls'].forEach(function (t) { ch.on('postgres_changes', { event: '*', schema: 'public', table: t }, scheduleReload); }); ch.subscribe(); } catch (e) {}
+  try { var ch = sb.channel('fkm-live'); ['projects', 'time_entries', 'running_timers', 'project_members', 'cable_pulls', 'customers', 'customer_sites'].forEach(function (t) { ch.on('postgres_changes', { event: '*', schema: 'public', table: t }, scheduleReload); }); ch.subscribe(); } catch (e) {}
 }
 function startTicks() {
   setInterval(function () {
@@ -2510,6 +2550,499 @@ function muSubmitConfirm() {
   });
 }
 
+/* ================= customers (v1.7) =================
+   The customer directory: customers and their site locations, linked
+   to jobs by real ids (projects.customer_id / site_id). The text name
+   on a job stays the display label Field Kit reads; Manage keeps it in
+   step (rename cascades, the job form's link picker). Archiving is a
+   soft delete — nothing here hard-deletes, so a job's link can never
+   dangle into a missing row. */
+var CU = { cid: null, filter: 'active', q: '', msg: '', err: false, menu: null, formKind: null, formId: null, formCid: null, returnToJob: false };
+var JF_LINK = { cid: null, sid: null };
+var CUST_SETUP_HINT = 'The Customers area needs the one-time setup SQL (supabase-customers.sql) — once an admin has run it, this works.';
+function cuErrText(e) {
+  if (!e) return 'check your connection and try again.';
+  var s = (String(e.code || '') + ' ' + String(e.message || '') + ' ' + String(e.details || '')).toLowerCase();
+  if (e.code === '42501' || s.indexOf('row-level security') >= 0 || s.indexOf('permission denied') >= 0 || s.indexOf('policy') >= 0 || s.indexOf('does not exist') >= 0 || s.indexOf('schema cache') >= 0) return CUST_SETUP_HINT;
+  return 'Could not save — ' + (e.message || 'check your connection and try again.');
+}
+function custById(id) { if (!id) return null; for (var i = 0; i < D.customers.length; i++) if (D.customers[i].id === id) return D.customers[i]; return null; }
+function siteById(id) { if (!id) return null; for (var i = 0; i < D.sites.length; i++) if (D.sites[i].id === id) return D.sites[i]; return null; }
+function cuActiveCustomers() { return D.customers.filter(function (c) { return !c.deleted_at; }).sort(function (a, b) { return a.name.localeCompare(b.name); }); }
+function custSites(cid, incArch) { return D.sites.filter(function (s) { return s.customer_id === cid && (incArch || !s.deleted_at); }).sort(function (a, b) { return a.label.localeCompare(b.label); }); }
+function custJobs(cid) { return D.projects.filter(function (p) { return !p.deleted_at && p.customer_id === cid; }); }
+function custKey(s) { return String(s || '').trim().toLowerCase(); }
+function cuInitials(name) { var parts = String(name || '?').trim().split(/\s+/); return ((parts[0] || '?')[0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase(); }
+function cuCityLine(o) { var cs = [o.city, o.state].filter(Boolean).join(', '); return [cs, o.zip].filter(Boolean).join(' '); }
+function cuAddrLines(o) { var out = []; if (o.street) out.push(o.street); var l = cuCityLine(o); if (l) out.push(l); return out; }
+function cuContactHTML(o) {
+  var bits = [];
+  if (o.contact_name) bits.push('<b>' + esc(o.contact_name) + '</b>');
+  if (o.contact_phone) bits.push('<a href="tel:' + esc(String(o.contact_phone).replace(/[^0-9+]/g, '')) + '">' + esc(o.contact_phone) + '</a>');
+  if (o.contact_email) bits.push('<a href="mailto:' + esc(o.contact_email) + '">' + esc(o.contact_email) + '</a>');
+  return bits.join(' · ');
+}
+
+/* ---------- row menus (people-menu idiom from v1.6.2) ---------- */
+function cuMenuHTML(key, items) {
+  var open = CU.menu === key;
+  return '<span class="jb-gearwrap ppl-wrap" data-cuwrap><button type="button" class="gearbtn ppl-dots' + (open ? ' on' : '') + '" data-cumenu-btn="' + key + '" title="Options" aria-label="Options" aria-haspopup="true">' + PPL_DOTS_SVG + '</button>'
+    + '<span class="jb-menu' + (open ? '' : ' hidden') + '" data-cumenu="' + key + '" role="menu">' + items + '</span></span>';
+}
+function cuCloseMenus() {
+  CU.menu = null;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-cumenu]'), function (m) { m.classList.add('hidden'); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-cumenu-btn]'), function (b) { b.classList.remove('on'); });
+}
+function wireCuMenus(el) {
+  Array.prototype.forEach.call(el.querySelectorAll('[data-cumenu-btn]'), function (b) {
+    b.addEventListener('click', function (e) { e.stopPropagation(); var k = b.getAttribute('data-cumenu-btn'); CU.menu = CU.menu === k ? null : k; renderCustomers(); });
+  });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-cuact]'), function (b) {
+    b.addEventListener('click', function () {
+      var act = b.getAttribute('data-cuact'); CU.menu = null;
+      if (act === 'edit-cust') cuOpenCustForm(CU.cid, null);
+      else if (act === 'archive-cust') cuSetCustArchived(CU.cid, true);
+      else if (act === 'edit-site') cuOpenSiteForm(CU.cid, b.getAttribute('data-sid'), null);
+      else if (act === 'archive-site') cuSetSiteArchived(b.getAttribute('data-sid'), true);
+    });
+  });
+}
+
+/* ---------- list ---------- */
+function cuListHTML() {
+  var q = CU.q.trim().toLowerCase();
+  var arch = CU.filter === 'archived';
+  var rows = D.customers.filter(function (c) { return arch ? !!c.deleted_at : !c.deleted_at; });
+  if (q) rows = rows.filter(function (c) { return (c.name + ' ' + (c.city || '') + ' ' + (c.contact_name || '')).toLowerCase().indexOf(q) >= 0; });
+  rows.sort(function (a, b) { return a.name.localeCompare(b.name); });
+  if (!rows.length) {
+    if (!arch && !D.customers.length) return '<div class="card"><h2>No customers yet</h2><p class="caption" style="margin-top:6px">Build the directory from the customer names already on your jobs — addresses and contacts can be fleshed out after — or start fresh with a new customer.</p><div class="btnrow"><button class="btn" id="cuSeed2">Build from existing jobs</button><button class="btn ghost" id="cuNew2">＋ New customer</button></div></div>';
+    return '<div class="card"><p class="empty">' + (arch ? 'No archived customers.' : 'No customers match.') + '</p></div>';
+  }
+  var h = '<div class="card">';
+  rows.forEach(function (c) {
+    if (arch) {
+      h += '<div class="cu-row" style="cursor:default"><div class="cu-init" style="background:#3a3f5c">' + esc(cuInitials(c.name)) + '</div><div><div class="cu-name">' + esc(c.name) + '</div><div class="cu-meta">Archived' + (cuCityLine(c) ? ' · ' + esc(cuCityLine(c)) : '') + '</div></div><div class="cu-right"><button class="btn ghost small" data-curestore="' + c.id + '">Restore</button></div></div>';
+      return;
+    }
+    var sites = custSites(c.id).length;
+    var jobs = custJobs(c.id).filter(function (p) { return p.status !== 'done'; }).length;
+    var meta = [cuCityLine(c), sites + (sites === 1 ? ' site' : ' sites'), jobs + ' active job' + (jobs === 1 ? '' : 's')].filter(Boolean).join(' · ');
+    h += '<div class="cu-row" data-cuid="' + c.id + '"><div class="cu-init">' + esc(cuInitials(c.name)) + '</div><div style="min-width:0"><div class="cu-name">' + esc(c.name) + '</div><div class="cu-meta">' + esc(meta) + '</div></div>'
+      + ((c.contact_name || c.contact_phone) ? '<div class="cu-right"><div class="cu-meta">' + esc(c.contact_name || '') + '</div><div class="cu-meta">' + esc(c.contact_phone || '') + '</div></div>' : '')
+      + '</div>';
+  });
+  return h + '</div>';
+}
+function wireCuList() {
+  var el = $('cuView');
+  Array.prototype.forEach.call(el.querySelectorAll('[data-cuid]'), function (r) { r.addEventListener('click', function () { CU.cid = r.getAttribute('data-cuid'); CU.msg = ''; CU.err = false; CU.menu = null; renderCustomers(); window.scrollTo(0, 0); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-curestore]'), function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); cuSetCustArchived(b.getAttribute('data-curestore'), false); }); });
+  var s2 = $('cuSeed2'); if (s2) s2.addEventListener('click', cuSeed);
+  var n2 = $('cuNew2'); if (n2) n2.addEventListener('click', function () { cuOpenCustForm(null, null); });
+}
+
+/* ---------- detail ---------- */
+function cuDetailHTML(c) {
+  var h = '<span class="ts-back" id="cuBack">‹ All customers</span>';
+  if (CU.msg) h += '<p class="co-msg ' + (CU.err ? 'err' : 'ok') + '" style="margin-bottom:10px">' + esc(CU.msg) + '</p>';
+  var menuItems = '<button type="button" data-cuact="edit-cust">Edit customer</button><span class="jb-mdiv"></span><button type="button" class="danger" data-cuact="archive-cust">Archive customer</button>';
+  h += '<div class="card projhead"><div class="prow"><div><div class="pname">' + esc(c.name) + '</div><div class="pcust">' + esc(cuAddrLines(c).join(' · ') || 'No address yet') + '</div></div><span class="phead-actions">' + cuMenuHTML('cust', menuItems) + '</span></div>';
+  var contact = cuContactHTML(c);
+  if (contact) h += '<div class="pmeta">Contact: ' + contact + '</div>';
+  if (c.notes && String(c.notes).trim()) h += '<p class="notetext" style="margin-top:8px">' + esc(c.notes).replace(/\n/g, '<br>') + '</p>';
+  h += '</div>';
+  var sites = custSites(c.id);
+  var archSites = custSites(c.id, true).filter(function (s) { return !!s.deleted_at; });
+  h += '<div class="card" style="margin-top:14px"><h2>Sites <span class="hint">Where the work happens — each site can carry its own contact and access notes</span></h2>';
+  if (sites.length) {
+    h += '<div class="cu-sites">';
+    sites.forEach(function (s) {
+      var items = '<button type="button" data-cuact="edit-site" data-sid="' + s.id + '">Edit site</button><span class="jb-mdiv"></span><button type="button" class="danger" data-cuact="archive-site" data-sid="' + s.id + '">Archive site</button>';
+      h += '<div class="cu-site"><div class="sl"><span style="flex:1;min-width:0">' + esc(s.label) + '</span>' + cuMenuHTML('site:' + s.id, items) + '</div>';
+      var addr = cuAddrLines(s);
+      if (addr.length) h += '<div class="cu-meta" style="margin-top:4px">' + esc(addr.join(' · ')) + '</div>';
+      var sc = cuContactHTML(s);
+      if (sc) h += '<div class="cu-meta" style="margin-top:4px">' + sc + '</div>';
+      if (s.notes && String(s.notes).trim()) h += '<p class="caption" style="margin-top:6px">' + esc(s.notes).replace(/\n/g, '<br>') + '</p>';
+      h += '</div>';
+    });
+    h += '</div>';
+  } else h += '<p class="empty" style="margin-top:8px">No sites yet — add the first location for this customer.</p>';
+  if (archSites.length) h += '<p class="caption" style="margin-top:10px">Archived sites: ' + archSites.map(function (s) { return esc(s.label) + ' <button class="btn ghost small" data-cusiterestore="' + s.id + '">Restore</button>'; }).join(' · ') + '</p>';
+  h += '<div class="btnrow"><button class="btn" id="cuAddSite">＋ Add site</button></div></div>';
+  var jobs = custJobs(c.id).slice().sort(function (a, b) { var da = a.status === 'done' ? 1 : 0, db = b.status === 'done' ? 1 : 0; if (da !== db) return da - db; return String(b.updated_at || '').localeCompare(String(a.updated_at || '')); });
+  h += '<div class="card" style="margin-top:14px"><h2>Jobs <span class="hint">Linked to this customer</span></h2>';
+  if (jobs.length) jobs.forEach(function (p) {
+    var s = p.site_id ? siteById(p.site_id) : null;
+    h += '<div class="cu-jobrow" data-cujob="' + p.id + '"><span style="flex:1;min-width:0"><span class="jobname">' + esc(p.name) + '</span>' + (s ? '<br><span class="cust">' + esc(s.label) + '</span>' : '') + '</span><span class="chip ' + (p.status === 'done' ? 'gray' : 'green') + '">' + (p.status === 'done' ? 'Closed' : 'Active') + '</span></div>';
+  });
+  else h += '<p class="empty" style="margin-top:8px">No jobs linked yet.</p>';
+  var unlinked = D.projects.filter(function (p) { return !p.deleted_at && !p.customer_id; });
+  if (unlinked.length) {
+    h += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center"><select class="txtin" id="cuLinkSel" style="flex:1;min-width:220px">' + unlinked.map(function (p) { return '<option value="' + p.id + '">' + esc(jobLabel(p)) + '</option>'; }).join('') + '</select>'
+      + '<select class="txtin" id="cuLinkSiteSel" style="flex:1;min-width:180px"><option value="">— No site —</option>' + sites.map(function (s) { return '<option value="' + s.id + '">' + esc(s.label) + '</option>'; }).join('') + '</select>'
+      + '<button class="btn" id="cuLinkBtn">Link job</button></div>';
+  } else h += '<p class="caption" style="margin-top:10px">Every job is linked to a customer.</p>';
+  h += '</div>';
+  return h;
+}
+function wireCuDetail(c) {
+  var el = $('cuView');
+  $('cuBack').addEventListener('click', function () { CU.cid = null; CU.msg = ''; CU.err = false; CU.menu = null; renderCustomers(); });
+  wireCuMenus(el);
+  var as = $('cuAddSite'); if (as) as.addEventListener('click', function () { cuOpenSiteForm(c.id, null, null); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-cujob]'), function (r) { r.addEventListener('click', function () { PJ.pid = r.getAttribute('data-cujob'); JB.msg = ''; JB.err = false; JB.confirmDel = null; showMain('proj'); window.scrollTo(0, 0); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-cusiterestore]'), function (b) { b.addEventListener('click', function () { cuSetSiteArchived(b.getAttribute('data-cusiterestore'), false); }); });
+  var lb = $('cuLinkBtn'); if (lb) lb.addEventListener('click', function () { var js = $('cuLinkSel'), ss = $('cuLinkSiteSel'); if (js && js.value) cuLinkJob(js.value, ss && ss.value ? ss.value : null); });
+}
+
+/* ---------- root render ---------- */
+function renderCustomers() {
+  var el = $('cuView');
+  var head = '<div class="pagetitle-row"><div><div class="pagetitle">Customers</div><div class="pagesub">The customer directory — addresses, contacts, and site locations, linked to jobs.</div></div></div>';
+  if (!DEMO && D.custError) {
+    el.innerHTML = head + '<div class="costack"><div class="card"><h2>One-time setup needed</h2><p class="caption" style="margin-top:8px">The Customers area keeps the directory in two small tables of its own and links jobs to them. An admin runs the one-time setup file <b>supabase-customers.sql</b> in the Supabase Dashboard SQL Editor — it only adds those tables, two link columns on jobs, and their rules; Field Kit is untouched. Run it, then reopen this screen. Until then, everything else in Manage works exactly as before.</p></div></div>';
+    return;
+  }
+  if (CU.cid) {
+    var c = custById(CU.cid);
+    if (c && !c.deleted_at) { el.innerHTML = head + cuDetailHTML(c); wireCuDetail(c); return; }
+    CU.cid = null;
+  }
+  var h = head;
+  h += '<div class="pj-chips"><button class="pj-chip' + (CU.filter === 'active' ? ' on' : '') + '" data-cufilter="active">Active</button><button class="pj-chip' + (CU.filter === 'archived' ? ' on' : '') + '" data-cufilter="archived">Archived</button>'
+    + '<input class="pj-search" id="cuSearch" type="text" placeholder="Search customers…" value="' + esc(CU.q) + '">'
+    + '<button class="btn ghost" id="cuSeed" style="margin-left:auto">Build from existing jobs</button>'
+    + '<button class="btn" id="cuNew">＋ New customer</button></div>';
+  if (CU.msg) h += '<p class="co-msg ' + (CU.err ? 'err' : 'ok') + '" style="margin:2px 2px 10px">' + esc(CU.msg) + '</p>';
+  h += '<div id="cuListWrap">' + cuListHTML() + '</div>';
+  el.innerHTML = h;
+  Array.prototype.forEach.call(el.querySelectorAll('[data-cufilter]'), function (b) { b.addEventListener('click', function () { CU.filter = b.getAttribute('data-cufilter'); CU.msg = ''; renderCustomers(); }); });
+  var si = $('cuSearch');
+  if (si) si.addEventListener('input', function () { CU.q = si.value; var w = $('cuListWrap'); if (w) { w.innerHTML = cuListHTML(); wireCuList(); } });
+  var sd = $('cuSeed'); if (sd) sd.addEventListener('click', cuSeed);
+  var nw = $('cuNew'); if (nw) nw.addEventListener('click', function () { cuOpenCustForm(null, null); });
+  wireCuList();
+}
+
+/* ---------- forms (floating windows, app overlay idiom) ---------- */
+function cuField(id, label, val, ph) { return '<div class="jf-field"><label class="flabel" for="' + id + '">' + label + '</label><input class="txtin" id="' + id + '" value="' + esc(val || '') + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + ' autocomplete="off"></div>'; }
+function cuAddrFields(prefix, o) {
+  return cuField(prefix + 'Street', 'Street', o.street)
+    + '<div class="jf-grid">' + cuField(prefix + 'City', 'City', o.city) + cuField(prefix + 'State', 'State', o.state) + '</div>'
+    + cuField(prefix + 'Zip', 'ZIP', o.zip);
+}
+function cuCloseForm() { var w = $('cuFormWrap'); if (w) w.classList.add('hidden'); }
+function cuFormFail(msg) { var e = $('cuErr'); if (e) { e.textContent = msg; e.classList.remove('hidden'); } }
+function cuVal(id) { var el = $(id); return el ? el.value.trim() : ''; }
+function cuOpt(id) { var v = cuVal(id); return v || null; }
+function cuOpenCustForm(cid, opts) {
+  CU.formKind = 'cust'; CU.formId = cid || null; CU.returnToJob = !!(opts && opts.fromJob);
+  var c = cid ? custById(cid) : null;
+  var o = c || {};
+  var h = '<h2>' + (c ? 'Edit customer' : 'New customer') + '</h2>';
+  h += '<p class="caption">The directory entry jobs link to. Renaming a customer also updates the name shown on its linked jobs.</p>';
+  h += cuField('cfName', 'Customer name *', o.name);
+  h += cuAddrFields('cf', o);
+  h += '<div class="jf-grid">' + cuField('cfCName', 'Contact name', o.contact_name) + cuField('cfCPhone', 'Contact phone', o.contact_phone) + '</div>';
+  h += cuField('cfCEmail', 'Contact email', o.contact_email);
+  h += '<div class="jf-field"><label class="flabel" for="cfNotes">Notes</label><textarea class="txtin" id="cfNotes" rows="3">' + esc(o.notes || '') + '</textarea></div>';
+  h += '<p class="co-msg err hidden" id="cuErr" style="margin-top:12px"></p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="cuCancel">Cancel</button><button class="btn" id="cuSave">' + (c ? 'Save changes' : 'Add customer') + '</button></div>';
+  $('cuFormCard').innerHTML = h;
+  $('cuFormWrap').classList.remove('hidden');
+  $('cuCancel').addEventListener('click', cuCloseForm);
+  $('cuSave').addEventListener('click', cuSaveCustForm);
+  setTimeout(function () { var n = $('cfName'); if (n) n.focus(); }, 30);
+}
+function cuOpenSiteForm(cid, sid, opts) {
+  CU.formKind = 'site'; CU.formId = sid || null; CU.formCid = cid; CU.returnToJob = !!(opts && opts.fromJob);
+  var c = custById(cid);
+  var s = sid ? siteById(sid) : null;
+  var o = s || {};
+  var h = '<h2>' + (s ? 'Edit site' : 'Add site') + '</h2>';
+  h += '<p class="caption">' + (c ? 'A location of ' + esc(c.name) + '. ' : '') + 'Renaming a site also updates the site name shown on its linked jobs.</p>';
+  h += cuField('sfLabel', 'Site label *', o.label, 'e.g. Main office');
+  h += cuAddrFields('sf', o);
+  h += '<div class="jf-grid">' + cuField('sfCName', 'Site contact name (optional)', o.contact_name) + cuField('sfCPhone', 'Site contact phone', o.contact_phone) + '</div>';
+  h += cuField('sfCEmail', 'Site contact email', o.contact_email);
+  h += '<div class="jf-field"><label class="flabel" for="sfNotes">Access notes</label><textarea class="txtin" id="sfNotes" rows="3" placeholder="Gate code, parking, where the rack lives…">' + esc(o.notes || '') + '</textarea></div>';
+  h += '<p class="co-msg err hidden" id="cuErr" style="margin-top:12px"></p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="cuCancel">Cancel</button><button class="btn" id="cuSave">' + (s ? 'Save changes' : 'Add site') + '</button></div>';
+  $('cuFormCard').innerHTML = h;
+  $('cuFormWrap').classList.remove('hidden');
+  $('cuCancel').addEventListener('click', cuCloseForm);
+  $('cuSave').addEventListener('click', cuSaveSiteForm);
+  setTimeout(function () { var n = $('sfLabel'); if (n) n.focus(); }, 30);
+}
+function cuApplyCust(o, vals) { o.name = vals.name; o.street = vals.street; o.city = vals.city; o.state = vals.state; o.zip = vals.zip; o.contact_name = vals.contact_name; o.contact_phone = vals.contact_phone; o.contact_email = vals.contact_email; o.notes = vals.notes; }
+function cuApplySite(o, vals) { o.label = vals.label; o.street = vals.street; o.city = vals.city; o.state = vals.state; o.zip = vals.zip; o.contact_name = vals.contact_name; o.contact_phone = vals.contact_phone; o.contact_email = vals.contact_email; o.notes = vals.notes; }
+function cuSaveCustForm() {
+  var name = cuVal('cfName');
+  if (!name) { cuFormFail('Give the customer a name first.'); return; }
+  var vals = { name: name, street: cuOpt('cfStreet'), city: cuOpt('cfCity'), state: cuOpt('cfState'), zip: cuOpt('cfZip'), contact_name: cuOpt('cfCName'), contact_phone: cuOpt('cfCPhone'), contact_email: cuOpt('cfCEmail'), notes: cuOpt('cfNotes') };
+  var id = CU.formId;
+  if (DEMO) {
+    var saved, cascaded = 0;
+    if (id) {
+      saved = custById(id); var oldName = saved.name;
+      cuApplyCust(saved, vals); saved.updated_at = now().toISOString();
+      if (oldName !== name) D.projects.forEach(function (p) { if (p.customer_id === id && !p.deleted_at) { p.customer = name; cascaded++; } });
+      CU.msg = 'Customer saved.' + (cascaded ? ' Also updated ' + cascaded + ' linked job' + (cascaded === 1 ? '' : 's') + '.' : '');
+    } else {
+      saved = { id: jbGenId(), deleted_at: null, created_at: now().toISOString(), updated_at: now().toISOString() };
+      cuApplyCust(saved, vals); D.customers.push(saved);
+      CU.msg = 'Customer added.';
+    }
+    CU.err = false; cuCloseForm();
+    if (CU.returnToJob) { CU.returnToJob = false; jfQuickReturn('cust', saved); return; }
+    if (!id) CU.cid = saved.id;
+    renderCustomers(); return;
+  }
+  var ts = new Date().toISOString();
+  if (!id) {
+    var row = { id: jbGenId(), created_at: ts, updated_at: ts, deleted_at: null };
+    cuApplyCust(row, vals);
+    sb.from('customers').insert(row).then(function (r) {
+      if (r.error) { cuFormFail(cuErrText(r.error)); return; }
+      cuCloseForm(); CU.msg = 'Customer added.'; CU.err = false;
+      if (CU.returnToJob) { CU.returnToJob = false; loadAll().then(function () { jfQuickReturn('cust', row); }); return; }
+      CU.cid = row.id; loadAll().then(renderCurrent);
+    });
+    return;
+  }
+  var old = custById(id); var oldName = old ? old.name : name;
+  var patch = { updated_at: ts }; cuApplyCust(patch, vals);
+  sb.from('customers').update(patch).eq('id', id).select('id').then(function (r) {
+    if (r.error || !r.data || !r.data.length) { cuFormFail(r.error ? cuErrText(r.error) : CUST_SETUP_HINT); return; }
+    var finish = function (n) { cuCloseForm(); CU.msg = 'Customer saved.' + (n ? ' Also updated ' + n + ' linked job' + (n === 1 ? '' : 's') + '.' : ''); CU.err = false; loadAll().then(renderCurrent); };
+    if (oldName !== name) sb.from('projects').update({ customer: name, updated_by: me ? me.id : null }).eq('customer_id', id).is('deleted_at', null).select('id').then(function (r2) { finish(r2 && !r2.error && r2.data ? r2.data.length : 0); });
+    else finish(0);
+  });
+}
+function cuSaveSiteForm() {
+  var label = cuVal('sfLabel');
+  if (!label) { cuFormFail('Give the site a label first.'); return; }
+  var vals = { label: label, street: cuOpt('sfStreet'), city: cuOpt('sfCity'), state: cuOpt('sfState'), zip: cuOpt('sfZip'), contact_name: cuOpt('sfCName'), contact_phone: cuOpt('sfCPhone'), contact_email: cuOpt('sfCEmail'), notes: cuOpt('sfNotes') };
+  var cid = CU.formCid, id = CU.formId;
+  if (DEMO) {
+    var saved, cascaded = 0;
+    if (id) {
+      saved = siteById(id); var oldLabel = saved.label;
+      cuApplySite(saved, vals); saved.updated_at = now().toISOString();
+      if (oldLabel !== label) D.projects.forEach(function (p) { if (p.site_id === id && !p.deleted_at) { p.site = label; cascaded++; } });
+      CU.msg = 'Site saved.' + (cascaded ? ' Also updated ' + cascaded + ' linked job' + (cascaded === 1 ? '' : 's') + '.' : '');
+    } else {
+      saved = { id: jbGenId(), customer_id: cid, deleted_at: null, created_at: now().toISOString(), updated_at: now().toISOString() };
+      cuApplySite(saved, vals); D.sites.push(saved);
+      CU.msg = 'Site added.';
+    }
+    CU.err = false; cuCloseForm();
+    if (CU.returnToJob) { CU.returnToJob = false; jfQuickReturn('site', saved); return; }
+    renderCustomers(); return;
+  }
+  var ts = new Date().toISOString();
+  if (!id) {
+    var row = { id: jbGenId(), customer_id: cid, created_at: ts, updated_at: ts, deleted_at: null };
+    cuApplySite(row, vals);
+    sb.from('customer_sites').insert(row).then(function (r) {
+      if (r.error) { cuFormFail(cuErrText(r.error)); return; }
+      cuCloseForm(); CU.msg = 'Site added.'; CU.err = false;
+      if (CU.returnToJob) { CU.returnToJob = false; loadAll().then(function () { jfQuickReturn('site', row); }); return; }
+      loadAll().then(renderCurrent);
+    });
+    return;
+  }
+  var old = siteById(id); var oldLabel = old ? old.label : label;
+  var patch = { updated_at: ts }; cuApplySite(patch, vals);
+  sb.from('customer_sites').update(patch).eq('id', id).select('id').then(function (r) {
+    if (r.error || !r.data || !r.data.length) { cuFormFail(r.error ? cuErrText(r.error) : CUST_SETUP_HINT); return; }
+    var finish = function (n) { cuCloseForm(); CU.msg = 'Site saved.' + (n ? ' Also updated ' + n + ' linked job' + (n === 1 ? '' : 's') + '.' : ''); CU.err = false; loadAll().then(renderCurrent); };
+    if (oldLabel !== label) sb.from('projects').update({ site: label, updated_by: me ? me.id : null }).eq('site_id', id).is('deleted_at', null).select('id').then(function (r2) { finish(r2 && !r2.error && r2.data ? r2.data.length : 0); });
+    else finish(0);
+  });
+}
+
+/* ---------- archive / restore (soft delete only) ---------- */
+function cuSetCustArchived(cid, arch) {
+  CU.menu = null;
+  if (DEMO) {
+    var c = custById(cid);
+    if (c) { c.deleted_at = arch ? now().toISOString() : null; c.updated_at = now().toISOString(); }
+    if (arch) CU.cid = null;
+    CU.msg = arch ? 'Customer archived. Its jobs keep their link and their history.' : 'Customer restored.'; CU.err = false;
+    renderCustomers(); return;
+  }
+  sb.from('customers').update({ deleted_at: arch ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq('id', cid).select('id').then(function (r) {
+    if (r.error || !r.data || !r.data.length) { CU.msg = r.error ? cuErrText(r.error) : CUST_SETUP_HINT; CU.err = true; renderCustomers(); return; }
+    if (arch) CU.cid = null;
+    CU.msg = arch ? 'Customer archived. Its jobs keep their link and their history.' : 'Customer restored.'; CU.err = false;
+    loadAll().then(renderCurrent);
+  });
+}
+function cuSetSiteArchived(sid, arch) {
+  CU.menu = null;
+  if (DEMO) {
+    var s = siteById(sid);
+    if (s) { s.deleted_at = arch ? now().toISOString() : null; s.updated_at = now().toISOString(); }
+    CU.msg = arch ? 'Site archived.' : 'Site restored.'; CU.err = false;
+    renderCustomers(); return;
+  }
+  sb.from('customer_sites').update({ deleted_at: arch ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq('id', sid).select('id').then(function (r) {
+    if (r.error || !r.data || !r.data.length) { CU.msg = r.error ? cuErrText(r.error) : CUST_SETUP_HINT; CU.err = true; renderCustomers(); return; }
+    CU.msg = arch ? 'Site archived.' : 'Site restored.'; CU.err = false;
+    loadAll().then(renderCurrent);
+  });
+}
+
+/* ---------- link a job (from the customer detail) ---------- */
+function cuLinkJob(pid, sid) {
+  var c = custById(CU.cid); if (!c) return;
+  var s = sid ? siteById(sid) : null;
+  if (DEMO) {
+    var p = projById(pid);
+    if (p) { p.customer_id = c.id; p.customer = c.name; if (s) { p.site_id = s.id; p.site = s.label; } p.updated_at = now().toISOString(); }
+    CU.msg = 'Job linked to ' + c.name + '.'; CU.err = false; renderCustomers(); return;
+  }
+  var patch = { customer_id: c.id, customer: c.name, updated_by: me ? me.id : null };
+  if (s) { patch.site_id = s.id; patch.site = s.label; }
+  sb.from('projects').update(patch).eq('id', pid).select('id').then(function (r) {
+    if (r.error || !r.data || !r.data.length) { CU.msg = r.error ? cuErrText(r.error) : CUST_SETUP_HINT; CU.err = true; renderCustomers(); return; }
+    CU.msg = 'Job linked to ' + c.name + '.'; CU.err = false; loadAll().then(renderCurrent);
+  });
+}
+
+/* ---------- build from existing jobs ---------- */
+function cuSeed() {
+  var groups = {}, order = [];
+  D.projects.forEach(function (p) {
+    if (p.deleted_at) return;
+    var cname = String(p.customer || '').trim(); if (!cname) return;
+    var k = cname.toLowerCase();
+    var g = groups[k];
+    if (!g) { g = groups[k] = { casings: {}, sites: {}, jobs: [] }; order.push(k); }
+    g.casings[cname] = (g.casings[cname] || 0) + 1; g.jobs.push(p);
+    var sname = String(p.site || '').trim();
+    if (sname) { var sk = sname.toLowerCase(); if (!g.sites[sk]) g.sites[sk] = {}; g.sites[sk][sname] = (g.sites[sk][sname] || 0) + 1; }
+  });
+  function bestCase(map) { var best = null, n = -1; for (var k2 in map) if (map[k2] > n) { n = map[k2]; best = k2; } return best; }
+  var existing = {};
+  D.customers.forEach(function (c) { if (!c.deleted_at) existing[custKey(c.name)] = c; });
+  var newCusts = [], newSites = [], links = [], createdN = 0, createdM = 0;
+  order.forEach(function (k) {
+    var g = groups[k];
+    var cust = existing[k];
+    if (!cust) {
+      cust = { id: jbGenId(), name: bestCase(g.casings), street: null, city: null, state: null, zip: null, contact_name: null, contact_phone: null, contact_email: null, notes: null, deleted_at: null };
+      newCusts.push(cust); existing[k] = cust; createdN++;
+    }
+    var siteMap = {};
+    custSites(cust.id, true).forEach(function (s) { if (!s.deleted_at) siteMap[custKey(s.label)] = s; });
+    newSites.forEach(function (s) { if (s.customer_id === cust.id) siteMap[custKey(s.label)] = s; });
+    for (var sk in g.sites) {
+      if (!siteMap[sk]) {
+        var ns = { id: jbGenId(), customer_id: cust.id, label: bestCase(g.sites[sk]), street: null, city: null, state: null, zip: null, contact_name: null, contact_phone: null, contact_email: null, notes: null, deleted_at: null };
+        newSites.push(ns); siteMap[sk] = ns; createdM++;
+      }
+    }
+    g.jobs.forEach(function (p) {
+      if (p.customer_id) return;
+      var sname2 = String(p.site || '').trim();
+      var site = sname2 ? siteMap[sname2.toLowerCase()] : null;
+      links.push({ p: p, cid: cust.id, sid: site ? site.id : null });
+    });
+  });
+  var totalJobs = D.projects.filter(function (p) { return !p.deleted_at; }).length;
+  var linkedAfter = D.projects.filter(function (p) { return !p.deleted_at && p.customer_id; }).length + links.length;
+  var leftJ = totalJobs - linkedAfter;
+  function resultLine() { return 'Created ' + createdN + ' customer' + (createdN === 1 ? '' : 's') + ' · ' + createdM + ' site' + (createdM === 1 ? '' : 's') + ' · linked ' + links.length + ' job' + (links.length === 1 ? '' : 's') + ' · ' + leftJ + ' left unlinked'; }
+  if (DEMO) {
+    var ts = now().toISOString();
+    newCusts.forEach(function (c) { c.created_at = ts; c.updated_at = ts; D.customers.push(c); });
+    newSites.forEach(function (s) { s.created_at = ts; s.updated_at = ts; D.sites.push(s); });
+    links.forEach(function (l) { l.p.customer_id = l.cid; if (l.sid) l.p.site_id = l.sid; l.p.updated_at = ts; });
+    CU.msg = resultLine(); CU.err = false; renderCustomers(); return;
+  }
+  var tsn = new Date().toISOString();
+  function withTs(o) { var r = { created_at: tsn, updated_at: tsn }; for (var kk in o) r[kk] = o[kk]; return r; }
+  function doLinks() {
+    if (!links.length) { CU.msg = resultLine(); CU.err = false; loadAll().then(renderCurrent); return; }
+    Promise.all(links.map(function (l) { var patch = { customer_id: l.cid, updated_by: me ? me.id : null }; if (l.sid) patch.site_id = l.sid; return sb.from('projects').update(patch).eq('id', l.p.id).select('id'); })).then(function (rs) {
+      var bad = null; rs.forEach(function (r) { if (r.error && !bad) bad = r.error; });
+      if (bad) { CU.msg = cuErrText(bad); CU.err = true; renderCustomers(); return; }
+      CU.msg = resultLine(); CU.err = false; loadAll().then(renderCurrent);
+    });
+  }
+  function doSites() {
+    if (!newSites.length) { doLinks(); return; }
+    sb.from('customer_sites').insert(newSites.map(withTs)).then(function (r) { if (r.error) { CU.msg = cuErrText(r.error); CU.err = true; renderCustomers(); return; } doLinks(); });
+  }
+  if (newCusts.length) sb.from('customers').insert(newCusts.map(withTs)).then(function (r) { if (r.error) { CU.msg = cuErrText(r.error); CU.err = true; renderCustomers(); return; } doSites(); });
+  else doSites();
+}
+
+/* ---------- job form link picker (used by jbOpenForm) ---------- */
+function jfCustOptions(selCid) {
+  var opts = '<option value="">— No link —</option>';
+  cuActiveCustomers().forEach(function (c) { opts += '<option value="' + c.id + '"' + (c.id === selCid ? ' selected' : '') + '>' + esc(c.name) + '</option>'; });
+  return opts + '<option value="__new">＋ New customer…</option>';
+}
+function jfSiteOptions(cid, selSid) {
+  var opts = '<option value="">— No site link —</option>';
+  if (cid) custSites(cid).forEach(function (s) { opts += '<option value="' + s.id + '"' + (s.id === selSid ? ' selected' : '') + '>' + esc(s.label) + '</option>'; });
+  if (cid) opts += '<option value="__new">＋ New site…</option>';
+  return opts;
+}
+function jfInitLink(p) {
+  var cid = null, sid = null;
+  if (p && p.customer_id) { var c = custById(p.customer_id); if (c && !c.deleted_at) cid = c.id; }
+  if (cid && p.site_id) { var s = siteById(p.site_id); if (s && !s.deleted_at && s.customer_id === cid) sid = s.id; }
+  return { cid: cid, sid: sid };
+}
+function jfLinkText() {
+  if (!JF_LINK.cid) return 'Not linked to the directory';
+  var c = custById(JF_LINK.cid); var s = JF_LINK.sid ? siteById(JF_LINK.sid) : null;
+  return 'Linked: ' + (c ? c.name : '') + (s ? ' / ' + s.label : '');
+}
+function jfLinkLine() { var el = $('jfLinkLine'); if (!el) return; el.textContent = jfLinkText(); el.className = 'cu-linkline ' + (JF_LINK.cid ? 'ok' : 'no'); }
+function jfWireLink() {
+  var cp = $('jfCustPick'), sp = $('jfSitePick');
+  if (cp) cp.addEventListener('change', function () {
+    if (cp.value === '__new') { cp.value = JF_LINK.cid || ''; cuOpenCustForm(null, { fromJob: true }); return; }
+    JF_LINK.cid = cp.value || null; JF_LINK.sid = null;
+    var c = JF_LINK.cid ? custById(JF_LINK.cid) : null;
+    if (c) $('jfCustomer').value = c.name;
+    if (sp) sp.innerHTML = jfSiteOptions(JF_LINK.cid, null);
+    jfLinkLine();
+  });
+  if (sp) sp.addEventListener('change', function () {
+    if (sp.value === '__new') { sp.value = JF_LINK.sid || ''; cuOpenSiteForm(JF_LINK.cid, null, { fromJob: true }); return; }
+    JF_LINK.sid = sp.value || null;
+    var s = JF_LINK.sid ? siteById(JF_LINK.sid) : null;
+    if (s) $('jfSite').value = s.label;
+    jfLinkLine();
+  });
+  var ci = $('jfCustomer');
+  if (ci) ci.addEventListener('input', function () { if (JF_LINK.cid) { JF_LINK.cid = null; JF_LINK.sid = null; if (cp) cp.value = ''; if (sp) sp.innerHTML = jfSiteOptions(null, null); jfLinkLine(); } });
+  var si = $('jfSite');
+  if (si) si.addEventListener('input', function () { if (JF_LINK.sid) { JF_LINK.sid = null; if (sp) sp.value = ''; jfLinkLine(); } });
+}
+function jfQuickReturn(kind, row) {
+  if (kind === 'cust') {
+    JF_LINK.cid = row.id; JF_LINK.sid = null;
+    var cp = $('jfCustPick'); if (cp) cp.innerHTML = jfCustOptions(row.id);
+    var ci = $('jfCustomer'); if (ci) ci.value = row.name;
+    var sp = $('jfSitePick'); if (sp) sp.innerHTML = jfSiteOptions(row.id, null);
+  } else {
+    JF_LINK.sid = row.id;
+    var sp2 = $('jfSitePick'); if (sp2) sp2.innerHTML = jfSiteOptions(JF_LINK.cid, row.id);
+    var si = $('jfSite'); if (si) si.value = row.label;
+  }
+  jfLinkLine();
+}
+
 /* ================= auth ================= */
 function showView(id) { ['authView', 'gateView', 'appView'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 function onSignedIn(user) {
@@ -2647,6 +3180,8 @@ function loadDemo() {
     { id: 'cp3', project_id: 'p-riverview', user_id: 'u-jordan', used: 240, pull_date: '2026-11-02', created_at: L(2026, 10, 2, 10, 30), deleted_at: null },
     { id: 'cp4', project_id: 'p-northplant', user_id: 'u-casey', used: 180, pull_date: '2026-10-29', created_at: L(2026, 9, 29, 13, 0), deleted_at: null }
   ];
+  D.customers = [];
+  D.sites = [];
   lastVisit = new Date(2026, 10, 2, 15, 40);
 }
 
@@ -2665,6 +3200,7 @@ function init() {
   $('navTs').addEventListener('click', function () { showMain('ts'); });
   $('navProj').addEventListener('click', function () { showMain('proj'); });
   $('navSched').addEventListener('click', function () { showMain('sched'); });
+  $('navCust').addEventListener('click', function () { showMain('cust'); });
   $('gateOut').addEventListener('click', signOut);
   $('gearBtn').addEventListener('click', function () { showMain('company'); });
   $('refreshBtn').addEventListener('click', function () { loadAll().then(renderCurrent); });
@@ -2684,6 +3220,7 @@ function init() {
   $('muFormWrap').addEventListener('click', function (e) { if (e.target === this) muCloseForm(); });
   $('muTempWrap').addEventListener('click', function (e) { if (e.target === this) muCloseTemp(); });
   $('muConfirmWrap').addEventListener('click', function (e) { if (e.target === this) muCloseConfirm(); });
+  $('cuFormWrap').addEventListener('click', function (e) { if (e.target === this) cuCloseForm(); });
   document.addEventListener('click', function (e) {
     var m = $('jbMenu'); if (!m || m.classList.contains('hidden')) return;
     var gb = $('jbGearBtn');
@@ -2692,13 +3229,18 @@ function init() {
     jbCloseMenu();
   });
   document.addEventListener('click', function (e) {
+    if (!CU.menu) return;
+    if (e.target && e.target.closest && e.target.closest('[data-cuwrap]')) return;
+    cuCloseMenus();
+  });
+  document.addEventListener('click', function (e) {
     if (!pplMenuUid) return;
     if (e.target && e.target.closest && e.target.closest('[data-pwrap]')) return;
     pplCloseMenus();
   });
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); if (!$('appView').classList.contains('hidden')) openPal(); }
-    if (e.key === 'Escape') { closePal(); jbCloseForm(); jbCloseMenu(); pplCloseMenus(); jbCloseCrew(); jbCloseDelete(); muCloseForm(); muCloseTemp(); muCloseConfirm(); }
+    if (e.key === 'Escape') { closePal(); jbCloseForm(); jbCloseMenu(); pplCloseMenus(); jbCloseCrew(); jbCloseDelete(); muCloseForm(); muCloseTemp(); muCloseConfirm(); cuCloseForm(); cuCloseMenus(); }
   });
   if (DEMO) {
     loadDemo();
