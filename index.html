@@ -394,6 +394,26 @@
   .co-msg.ok { color:#34d399; }
   .co-msg.err { color:#f87171; }
   p.co-msg { margin-right:0; }
+  /* jobs management (v1.5) */
+  .jobform { max-width:640px; max-height:calc(100vh - 110px); overflow:auto; padding:20px; }
+  .jobform h2 { margin-bottom:4px; }
+  .jf-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .jf-field { margin-top:12px; }
+  .jf-crewrow { display:flex; align-items:center; gap:10px; padding:7px 2px; cursor:pointer; font-size:14px; }
+  .jf-crewrow input { width:18px; height:18px; margin:0; accent-color:#6366f1; flex:none; }
+  .jb-crewrow { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #1b1f33; }
+  .jb-crewrow.last { border-bottom:none; }
+  .phead-actions { margin-left:auto; flex:none; display:flex; align-items:flex-start; gap:8px; }
+  .phead-actions .chip { margin-left:0; }
+  .jb-gearwrap { position:relative; flex:none; }
+  .jb-menu { position:absolute; right:0; top:calc(100% + 8px); min-width:216px; background:#141828; border:1px solid #2b3052; border-radius:12px; box-shadow:0 18px 44px rgba(0,0,0,.55); padding:6px; z-index:60; }
+  .jb-menu button { display:block; width:100%; background:transparent; border:none; color:#e6e9f5; font-family:inherit; font-size:14px; font-weight:600; padding:9px 10px; border-radius:8px; cursor:pointer; text-align:left; }
+  .jb-menu button:hover { background:#1d2140; }
+  .jb-menu button.danger { color:#f87171; }
+  .jb-menu .jb-mdiv { display:block; height:1px; background:#232842; margin:5px 4px; }
+  .jbwin { max-width:520px; }
+  .timerbadge { background:rgba(52,211,153,.13); color:#34d399; border:1px solid rgba(52,211,153,.35); font-size:11px; font-weight:700; border-radius:999px; padding:2px 8px; white-space:nowrap; }
+  .ownerbadge { background:rgba(99,102,241,.16); color:#a5b4fc; border:1px solid rgba(99,102,241,.4); font-size:11px; font-weight:700; border-radius:999px; padding:2px 8px; white-space:nowrap; }
   .prof-flex { display:flex; gap:24px; margin-top:14px; align-items:flex-start; }
   .prof-left { flex:0 0 440px; }
   .prof-main { display:flex; gap:16px; align-items:flex-start; }
@@ -495,7 +515,7 @@
     <div id="pjView" class="hidden"></div>
     <div id="schedView" class="hidden"></div>
     <div id="coView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.4.1 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.5 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -504,6 +524,18 @@
     <input id="palInput" type="text" placeholder="Jump to a job or tech…" autocomplete="off">
     <div class="items" id="palItems"></div>
   </div>
+</div>
+
+<div id="jobFormWrap" class="palwrap hidden">
+  <div class="pal jobform" id="jobFormCard"></div>
+</div>
+
+<div id="jbCrewWrap" class="palwrap hidden">
+  <div class="pal jobform jbwin" id="jbCrewCard"></div>
+</div>
+
+<div id="jbDelWrap" class="palwrap hidden">
+  <div class="pal jobform jbwin" id="jbDelCard"></div>
 </div>
 
 <div id="brief"></div>
@@ -1293,7 +1325,8 @@ function pjHistoryHTML(row) {
 function renderPJDetail(row) {
   var p = row.p;
   var h = '<span class="ts-back" id="pjBack">‹ All projects</span>';
-  h += '<div class="card projhead"><div class="prow"><div><div class="pname">' + esc(p.name) + '</div><div class="pcust">' + esc([p.customer, p.site, p.ticket].filter(Boolean).join(' · ') || '—') + '</div></div>' + pjStatusChip(row) + '</div>';
+  h += '<div class="card projhead"><div class="prow"><div><div class="pname">' + esc(p.name) + '</div><div class="pcust">' + esc([p.customer, p.site, p.ticket].filter(Boolean).join(' · ') || '—') + '</div></div><span class="phead-actions">' + pjStatusChip(row) + jbGearHTML(p) + '</span></div>';
+  if (JB.msg && JB.pid === p.id) h += '<p class="co-msg ' + (JB.err ? 'err' : 'ok') + '" style="margin-top:10px">' + esc(JB.msg) + '</p>';
   var sl = pjSchedLong(row);
   h += '<div class="pmeta">' + (sl ? 'Scheduled: <b>' + esc(sl) + '</b> · ' : '') + 'Started ' + fmtDateShort(row.startedK) + '</div>';
   h += '<div class="pcrew">';
@@ -1342,7 +1375,7 @@ function pjMaybeFetch(pid) {
 }
 function wirePJRows() {
   Array.prototype.forEach.call($('pjView').querySelectorAll('tr.pj-row'), function (tr) {
-    tr.addEventListener('click', function () { PJ.pid = tr.getAttribute('data-pid'); renderProjects(); window.scrollTo(0, 0); });
+    tr.addEventListener('click', function () { PJ.pid = tr.getAttribute('data-pid'); JB.msg = ''; JB.err = false; JB.confirmDel = null; renderProjects(); window.scrollTo(0, 0); });
   });
 }
 function renderProjects() {
@@ -1353,26 +1386,304 @@ function renderProjects() {
     PM.rows.forEach(function (r) { if (r.p.id === PJ.pid) row = r; });
     if (row) {
       el.innerHTML = renderPJDetail(row);
-      $('pjBack').addEventListener('click', function () { PJ.pid = null; renderProjects(); });
+      $('pjBack').addEventListener('click', function () { PJ.pid = null; JB.msg = ''; JB.err = false; JB.confirmDel = null; renderProjects(); });
+      wirePJDetail(row);
+      jbSyncCrewWin();
       pjMaybeFetch(PJ.pid);
       return;
     }
     PJ.pid = null;
   }
-  var counts = { active: 0, scheduled: 0, open: 0, overdue: 0, closed: 0, all: PM.rows.length };
+  var counts = { active: 0, scheduled: 0, open: 0, overdue: 0, closed: 0, all: PM.rows.length, deleted: 0 };
   PM.rows.forEach(function (r) { counts[r.bucket]++; if (r.bucket !== 'closed') counts.active++; });
-  var chips = [['active', 'Active'], ['scheduled', 'Scheduled'], ['open', 'Open'], ['overdue', 'Overdue'], ['closed', 'Closed'], ['all', 'All']];
+  D.projects.forEach(function (p) { if (p.deleted_at) counts.deleted++; });
+  var chips = [['active', 'Active'], ['scheduled', 'Scheduled'], ['open', 'Open'], ['overdue', 'Overdue'], ['closed', 'Closed'], ['all', 'All'], ['deleted', 'Deleted']];
   var h = '<div class="pj-chips">';
   chips.forEach(function (c) { h += '<button class="pj-chip' + (PJ.filter === c[0] ? ' on' : '') + '" data-filter="' + c[0] + '">' + c[1] + ' <span class="n">' + counts[c[0]] + '</span></button>'; });
   h += '<input class="pj-search" id="pjSearch" type="text" placeholder="Search jobs, customers, tickets…" value="' + esc(PJ.q) + '">';
-  h += '</div><div class="card"><h2>Projects <span class="hint">Every job · click one for its full story</span></h2><div id="pjTableWrap">' + pjTableHTML(PM) + '</div></div>';
+  h += '<button class="btn" id="pjNew" style="margin-left:auto">＋ New job</button>';
+  h += '</div><div class="card"><h2>Projects <span class="hint">Every job · click one for its full story</span></h2><div id="pjTableWrap">' + pjBodyHTML(PM) + '</div></div>';
   el.innerHTML = h;
   Array.prototype.forEach.call(el.querySelectorAll('.pj-chip'), function (btn) {
     btn.addEventListener('click', function () { PJ.filter = btn.getAttribute('data-filter'); renderProjects(); });
   });
   var si = $('pjSearch');
-  si.addEventListener('input', function () { PJ.q = si.value; $('pjTableWrap').innerHTML = pjTableHTML(PJM); wirePJRows(); });
+  si.addEventListener('input', function () { PJ.q = si.value; $('pjTableWrap').innerHTML = pjBodyHTML(PJM); wirePJBody(); });
+  $('pjNew').addEventListener('click', function () { jbOpenForm('new', null); });
+  wirePJBody();
+  jbSyncCrewWin();
+}
+
+
+/* ================= jobs management (v1.5) =================
+   Wave 1 of Manage writes: jobs and their crew, from Projects only.
+   Rows are created in Field Kit's exact shape (see jbCreateJob): the
+   creator is the owner, picked crew become project_members rows with
+   role 'member', and the owner is never a member row. Deleting a job
+   is always a soft delete; there is no permanent delete here. */
+var JB = { mode: null, pid: null, msg: '', err: false, confirmDel: null, listMsg: '', listErr: false, winPid: null };
+var JB_SETUP_HINT = 'Job changes need the one-time setup SQL (supabase-jobs-write.sql) — once an admin has run it, this works.';
+var JB_MODULES = ['time', 'cable', 'materials'];
+function jbGenId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function jbErrText(e) {
+  if (!e) return 'check your connection and try again.';
+  var s = (String(e.code || '') + ' ' + String(e.message || '') + ' ' + String(e.details || '')).toLowerCase();
+  if (e.code === '42501' || s.indexOf('row-level security') >= 0 || s.indexOf('permission denied') >= 0 || s.indexOf('policy') >= 0) return JB_SETUP_HINT;
+  return 'Could not save — ' + (e.message || 'check your connection and try again.');
+}
+function jbAfterWrite() {
+  if (DEMO) { renderCurrent(); return; }
+  loadAll().then(function () { renderCurrent(); });
+}
+function jbRunUpdate(pid, promise, opts) {
+  opts = opts || {};
+  promise.then(function (r) {
+    var bad = null;
+    if (r.error) bad = jbErrText(r.error);
+    else if (!r.data || !r.data.length) bad = JB_SETUP_HINT;
+    if (bad) {
+      if (opts.form) { var e = $('jfErr'); if (e) { e.textContent = bad; e.classList.remove('hidden'); } return; }
+      JB.pid = pid; JB.msg = bad; JB.err = true; renderProjects(); return;
+    }
+    if (opts.form) jbCloseForm();
+    JB.pid = pid; JB.msg = opts.okMsg || ''; JB.err = false;
+    if (opts.after) opts.after();
+    jbAfterWrite();
+  });
+}
+
+/* ---------- create / edit form (overlay, in the palette idiom) ---------- */
+function jbOpenForm(mode, pid) {
+  JB.mode = mode; JB.pid = pid;
+  var p = mode === 'edit' ? projById(pid) : null;
+  var h = '<h2>' + (mode === 'edit' ? 'Edit job' : 'New job') + '</h2>';
+  h += '<p class="caption">' + (mode === 'edit' ? 'Fields and schedule dates. Crew is managed from the gear menu on the job page.' : 'Created in Field Kit\u2019s shape: you are the job\u2019s owner, and anyone you pick below joins as crew.') + '</p>';
+  h += '<div class="jf-field"><label class="flabel" for="jfName">Job name *</label><input class="txtin" id="jfName" value="' + esc(p ? p.name : '') + '" placeholder="e.g. Lobby camera install" autocomplete="off"></div>';
+  h += '<div class="jf-grid"><div class="jf-field"><label class="flabel" for="jfCustomer">Customer</label><input class="txtin" id="jfCustomer" value="' + esc(p ? (p.customer || '') : '') + '" autocomplete="off"></div>';
+  h += '<div class="jf-field"><label class="flabel" for="jfSite">Site</label><input class="txtin" id="jfSite" value="' + esc(p ? (p.site || '') : '') + '" autocomplete="off"></div></div>';
+  h += '<div class="jf-field"><label class="flabel" for="jfTicket">Ticket #</label><input class="txtin" id="jfTicket" value="' + esc(p ? (p.ticket || '') : '') + '" autocomplete="off"></div>';
+  h += '<div class="jf-grid"><div class="jf-field"><label class="flabel" for="jfStart">Scheduled start (optional)</label><input class="txtin" type="date" id="jfStart" value="' + esc(p ? (p.sched_start || '') : '') + '"></div>';
+  h += '<div class="jf-field"><label class="flabel" for="jfEnd">End date</label><input class="txtin" type="date" id="jfEnd" value="' + esc(p ? (p.sched_end || '') : '') + '"></div></div>';
+  if (mode === 'new') {
+    var profs = D.profiles.filter(function (pr) { return !(me && pr.id === me.id); }).sort(function (a, b) { return nameOf(a.id).localeCompare(nameOf(b.id)); });
+    h += '<div class="jf-field"><span class="flabel">Starting crew (optional)</span>';
+    if (profs.length) profs.forEach(function (pr) { h += '<label class="jf-crewrow"><input type="checkbox" name="jf_crew" value="' + pr.id + '"><span class="tavatar" style="background:' + colorOf(pr.id) + '">' + initialsOf(pr.id) + '</span><span>' + esc(nameOf(pr.id)) + '</span></label>'; });
+    else h += '<p class="caption">No other profiles loaded — crew can be added later from the gear menu on the job page.</p>';
+    h += '<p class="caption" style="margin-top:6px">You\u2019ll be the owner — owners aren\u2019t listed as crew.</p></div>';
+  }
+  h += '<p class="co-msg err hidden" id="jfErr" style="margin-top:12px"></p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="jfCancel">Cancel</button><button class="btn" id="jfSave">' + (mode === 'edit' ? 'Save changes' : 'Create job') + '</button></div>';
+  $('jobFormCard').innerHTML = h;
+  $('jobFormWrap').classList.remove('hidden');
+  $('jfCancel').addEventListener('click', jbCloseForm);
+  $('jfSave').addEventListener('click', jbFormSave);
+  setTimeout(function () { var n = $('jfName'); if (n) n.focus(); }, 30);
+}
+function jbCloseForm() { var w = $('jobFormWrap'); if (w) w.classList.add('hidden'); }
+function jbFormFail(msg) { var e = $('jfErr'); if (e) { e.textContent = msg; e.classList.remove('hidden'); } }
+function jbFormSave() {
+  var name = $('jfName').value.trim();
+  if (!name) { jbFormFail('Give the job a name first.'); return; }
+  var ss = $('jfStart').value || '', se = $('jfEnd').value || '';
+  if (ss) { if (!se) se = ss; if (se < ss) { jbFormFail('End date is before the start date.'); return; } }
+  else se = '';
+  var vals = { name: name, customer: $('jfCustomer').value.trim(), site: $('jfSite').value.trim(), ticket: $('jfTicket').value.trim(), sched_start: ss || null, sched_end: ss ? se : null };
+  if (JB.mode === 'edit') { jbEditJob(JB.pid, vals); return; }
+  var crew = [];
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="jf_crew"]:checked'), function (c) { crew.push(c.value); });
+  jbCreateJob(vals, crew);
+}
+
+/* ---------- the writes (the only new write call sites) ---------- */
+function jbCreateJob(vals, crewIds) {
+  var row = { id: jbGenId(), name: vals.name, customer: vals.customer || null, site: vals.site || null, ticket: vals.ticket || null, notes: null, status: 'active', enabled_modules: JB_MODULES.slice(), sched_start: vals.sched_start, sched_end: vals.sched_end, owner_id: me ? me.id : null, updated_by: me ? me.id : null };
+  if (DEMO) {
+    D.projects.push({ id: row.id, name: row.name, customer: vals.customer, site: vals.site, ticket: vals.ticket, notes: '', status: 'active', owner_id: row.owner_id, created_at: now().toISOString(), updated_at: now().toISOString(), deleted_at: null, sched_start: row.sched_start, sched_end: row.sched_end });
+    crewIds.forEach(function (u) { D.members.push({ project_id: row.id, user_id: u, role: 'member' }); });
+    jbCloseForm(); PJ.pid = row.id; PJ.filter = 'active'; JB.pid = row.id; JB.msg = ''; JB.err = false;
+    renderProjects(); window.scrollTo(0, 0); return;
+  }
+  sb.from('projects').insert(row).then(function (r) {
+    if (r.error) { jbFormFail(jbErrText(r.error)); return; }
+    var finish = function (crewErr) {
+      loadAll().then(function () {
+        jbCloseForm(); PJ.pid = row.id; PJ.filter = 'active';
+        if (crewErr) { JB.pid = row.id; JB.msg = 'Job created, but the crew could not be added — ' + jbErrText(crewErr); JB.err = true; }
+        else { JB.pid = row.id; JB.msg = ''; JB.err = false; }
+        if (VIEW !== 'proj') showMain('proj'); else renderProjects();
+        window.scrollTo(0, 0);
+      });
+    };
+    if (!crewIds.length) { finish(null); return; }
+    var rows = crewIds.map(function (u) { return { project_id: row.id, user_id: u, role: 'member' }; });
+    sb.from('project_members').insert(rows).then(function (r2) { finish(r2.error || null); });
+  });
+}
+function jbEditJob(pid, vals) {
+  if (DEMO) {
+    var p = projById(pid);
+    if (p) { p.name = vals.name; p.customer = vals.customer; p.site = vals.site; p.ticket = vals.ticket; p.sched_start = vals.sched_start; p.sched_end = vals.sched_end; p.updated_at = now().toISOString(); }
+    jbCloseForm(); JB.pid = pid; JB.msg = ''; JB.err = false; renderProjects(); return;
+  }
+  jbRunUpdate(pid, sb.from('projects').update({ name: vals.name, customer: vals.customer || null, site: vals.site || null, ticket: vals.ticket || null, sched_start: vals.sched_start, sched_end: vals.sched_end, updated_by: me ? me.id : null }).eq('id', pid).select('id'), { form: true });
+}
+function jbSetJobStatus(pid, status) {
+  if (DEMO) {
+    var p = projById(pid);
+    if (p) { p.status = status; p.updated_at = now().toISOString(); }
+    JB.pid = pid; JB.msg = status === 'done' ? 'Job closed.' : 'Job reopened.'; JB.err = false; renderProjects(); return;
+  }
+  jbRunUpdate(pid, sb.from('projects').update({ status: status, updated_by: me ? me.id : null }).eq('id', pid).select('id'), { okMsg: status === 'done' ? 'Job closed.' : 'Job reopened.' });
+}
+function jbDeleteJob(pid) {
+  if (DEMO) {
+    var p = projById(pid);
+    if (p) { p.deleted_at = now().toISOString(); p.updated_at = now().toISOString(); }
+    PJ.pid = null; JB.msg = ''; JB.err = false; renderProjects(); window.scrollTo(0, 0); return;
+  }
+  jbRunUpdate(pid, sb.from('projects').update({ deleted_at: new Date().toISOString(), updated_by: me ? me.id : null }).eq('id', pid).select('id'), { after: function () { PJ.pid = null; JB.msg = ''; window.scrollTo(0, 0); } });
+}
+function jbRestoreJob(pid) {
+  JB.listMsg = ''; JB.listErr = false;
+  if (DEMO) {
+    var p = projById(pid);
+    if (p) { p.deleted_at = null; p.updated_at = now().toISOString(); }
+    renderProjects(); return;
+  }
+  sb.from('projects').update({ deleted_at: null, updated_by: me ? me.id : null }).eq('id', pid).select('id').then(function (r) {
+    if (r.error || !r.data || !r.data.length) { JB.listMsg = r.error ? jbErrText(r.error) : JB_SETUP_HINT; JB.listErr = true; renderProjects(); return; }
+    loadAll().then(function () { renderProjects(); });
+  });
+}
+function jbAddMember(pid, uid) {
+  if (DEMO) {
+    if (!D.members.some(function (m) { return m.project_id === pid && m.user_id === uid; })) D.members.push({ project_id: pid, user_id: uid, role: 'member' });
+    JB.pid = pid; JB.msg = ''; JB.err = false; renderProjects(); return;
+  }
+  sb.from('project_members').insert({ project_id: pid, user_id: uid, role: 'member' }).then(function (r) {
+    if (r.error && r.error.code !== '23505') { JB.pid = pid; JB.msg = jbErrText(r.error); JB.err = true; renderProjects(); return; }
+    JB.pid = pid; JB.msg = ''; JB.err = false; jbAfterWrite();
+  });
+}
+function jbRemoveMember(pid, uid) {
+  if (DEMO) {
+    D.members = D.members.filter(function (m) { return !(m.project_id === pid && m.user_id === uid); });
+    JB.pid = pid; JB.msg = ''; JB.err = false; renderProjects(); return;
+  }
+  sb.from('project_members').delete().eq('project_id', pid).eq('user_id', uid).select('user_id').then(function (r) {
+    if (r.error || !r.data || !r.data.length) { JB.pid = pid; JB.msg = r.error ? jbErrText(r.error) : JB_SETUP_HINT; JB.err = true; renderProjects(); return; }
+    JB.pid = pid; JB.msg = ''; JB.err = false; jbAfterWrite();
+  });
+}
+
+/* ---------- job detail: gear menu + floating windows ---------- */
+var JB_GEAR_SVG = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>';
+function jbGearHTML(p) {
+  return '<span class="jb-gearwrap"><button class="gearbtn" id="jbGearBtn" title="Job options" aria-label="Job options" aria-haspopup="true">' + JB_GEAR_SVG + '</button>'
+    + '<span class="jb-menu hidden" id="jbMenu" role="menu">'
+    + '<button type="button" id="jbMenuEdit">Edit job</button>'
+    + '<button type="button" id="jbMenuCrew">Manage crew</button>'
+    + '<button type="button" id="jbMenuStatus">' + (p.status === 'done' ? 'Reopen job' : 'Close job') + '</button>'
+    + '<span class="jb-mdiv"></span>'
+    + '<button type="button" class="danger" id="jbMenuDelete">Delete job</button>'
+    + '</span></span>';
+}
+function jbCloseMenu() { var m = $('jbMenu'); if (m) m.classList.add('hidden'); }
+function jbToggleMenu() { var m = $('jbMenu'); if (m) m.classList.toggle('hidden'); }
+function wirePJDetail(row) {
+  var pid = row.p.id;
+  var gb = $('jbGearBtn');
+  if (gb) gb.addEventListener('click', function (e) { e.stopPropagation(); jbToggleMenu(); });
+  var be = $('jbMenuEdit'); if (be) be.addEventListener('click', function () { jbCloseMenu(); jbOpenForm('edit', pid); });
+  var bc = $('jbMenuCrew'); if (bc) bc.addEventListener('click', function () { jbCloseMenu(); jbOpenCrew(row); });
+  var bs = $('jbMenuStatus'); if (bs) bs.addEventListener('click', function () { jbCloseMenu(); jbSetJobStatus(pid, row.p.status === 'done' ? 'active' : 'done'); });
+  var bd = $('jbMenuDelete'); if (bd) bd.addEventListener('click', function () { jbCloseMenu(); jbOpenDelete(row); });
+}
+
+/* ---------- manage crew (floating window) ---------- */
+function jbCrewHTML(row) {
+  var p = row.p;
+  function tBadge(uid) { return row.timers.some(function (t) { return t.user_id === uid; }) ? ' <span class="timerbadge">Timer running</span>' : ''; }
+  function crewRow(uid, removable, last) {
+    return '<div class="jb-crewrow' + (last ? ' last' : '') + '"><span class="tavatar" style="background:' + colorOf(uid) + '">' + initialsOf(uid) + '</span><span style="flex:1;min-width:0">' + esc(nameOf(uid)) + (removable ? '' : ' <span class="ownerbadge">Owner</span>') + tBadge(uid) + '</span>' + (removable ? '<button class="btn ghost small btndanger" data-jbrm="' + uid + '">Remove</button>' : '') + '</div>';
+  }
+  var h = '<h2>Manage crew</h2>';
+  h += '<p class="caption">' + esc(p.name) + ' \u2014 who this job is staffed with.</p>';
+  if (JB.msg && JB.pid === p.id) h += '<p class="co-msg ' + (JB.err ? 'err' : 'ok') + '" style="margin-top:10px">' + esc(JB.msg) + '</p>';
+  h += '<div style="margin-top:8px">';
+  if (p.owner_id) h += crewRow(p.owner_id, false, !row.members.length);
+  row.members.forEach(function (uid, i) { h += crewRow(uid, true, i === row.members.length - 1); });
+  h += '</div>';
+  if (!row.members.length) h += '<p class="caption" style="padding:8px 0 2px">No crew assigned yet' + (p.owner_id ? ' \u2014 the owner always has access; crew is who the job is staffed with.' : '.') + '</p>';
+  var onJob = {}; row.members.forEach(function (u) { onJob[u] = 1; }); if (p.owner_id) onJob[p.owner_id] = 1;
+  var avail = D.profiles.filter(function (pr) { return !onJob[pr.id]; }).sort(function (a, b) { return nameOf(a.id).localeCompare(nameOf(b.id)); });
+  if (avail.length) {
+    h += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><select class="txtin" id="jbAddSel" style="flex:1;min-width:200px">' + avail.map(function (pr) { return '<option value="' + pr.id + '">' + esc(nameOf(pr.id)) + '</option>'; }).join('') + '</select><button class="btn" id="jbAddBtn">Add to crew</button></div>';
+  } else h += '<p class="caption" style="margin-top:10px">Everyone is already on this job.</p>';
+  h += '<p class="caption" style="margin-top:10px">Removing someone never touches their timer or their logged time \u2014 it only changes who the job is staffed with.</p>';
+  h += '<div class="cardfoot"><button class="btn" id="jbCrewDone">Done</button></div>';
+  return h;
+}
+function wireJbCrew(row) {
+  var pid = row.p.id;
+  var ab = $('jbAddBtn'); if (ab) ab.addEventListener('click', function () { var sel = $('jbAddSel'); if (sel && sel.value) jbAddMember(pid, sel.value); });
+  Array.prototype.forEach.call($('jbCrewCard').querySelectorAll('[data-jbrm]'), function (b) {
+    b.addEventListener('click', function () { jbRemoveMember(pid, b.getAttribute('data-jbrm')); });
+  });
+  var dn = $('jbCrewDone'); if (dn) dn.addEventListener('click', jbCloseCrew);
+}
+function jbOpenCrew(row) {
+  JB.winPid = row.p.id;
+  $('jbCrewCard').innerHTML = jbCrewHTML(row);
+  $('jbCrewWrap').classList.remove('hidden');
+  wireJbCrew(row);
+}
+function jbCloseCrew() { var w = $('jbCrewWrap'); if (w) w.classList.add('hidden'); JB.winPid = null; }
+function jbSyncCrewWin() {
+  var w = $('jbCrewWrap');
+  if (!w || w.classList.contains('hidden')) return;
+  if (VIEW !== 'proj' || !PJ.pid || PJ.pid !== JB.winPid) { jbCloseCrew(); return; }
+  var row = null;
+  pjModel().rows.forEach(function (r) { if (r.p.id === PJ.pid) row = r; });
+  if (!row) { jbCloseCrew(); return; }
+  $('jbCrewCard').innerHTML = jbCrewHTML(row);
+  wireJbCrew(row);
+}
+
+/* ---------- delete job (floating confirm window) ---------- */
+function jbOpenDelete(row) {
+  var p = row.p;
+  var h = '<h2>Delete job</h2>';
+  h += '<p class="caption" style="margin-top:6px">Delete \u201C' + esc(p.name) + '\u201D? This is a soft delete \u2014 the job leaves every view and can be restored from Projects \u2192 Deleted. Its time history is kept.</p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="jbDelCancel">Cancel</button><button class="btn ghost btndanger" id="jbDelConfirm">Delete job</button></div>';
+  $('jbDelCard').innerHTML = h;
+  $('jbDelWrap').classList.remove('hidden');
+  $('jbDelCancel').addEventListener('click', jbCloseDelete);
+  $('jbDelConfirm').addEventListener('click', function () { jbCloseDelete(); jbDeleteJob(p.id); });
+}
+function jbCloseDelete() { var w = $('jbDelWrap'); if (w) w.classList.add('hidden'); }
+
+/* ---------- projects list: deleted filter + body wiring ---------- */
+function jbDeletedHTML() {
+  var q = PJ.q.trim().toLowerCase();
+  var rows = D.projects.filter(function (p) { return !!p.deleted_at; });
+  if (q) rows = rows.filter(function (p) { return ((p.name || '') + ' ' + (p.customer || '') + ' ' + (p.ticket || '')).toLowerCase().indexOf(q) >= 0; });
+  rows.sort(function (a, b) { return String(b.deleted_at).localeCompare(String(a.deleted_at)); });
+  var h = '';
+  if (JB.listMsg) h += '<p class="co-msg ' + (JB.listErr ? 'err' : 'ok') + '" style="margin-bottom:10px">' + esc(JB.listMsg) + '</p>';
+  if (!rows.length) return h + '<p class="empty">No deleted jobs. Jobs deleted in Manage land here and can be restored; their time history is kept.</p>';
+  h += '<div class="ts-scroll"><table><tr><th>Job</th><th class="col-cw">Ticket</th><th>Deleted</th><th></th></tr>';
+  rows.forEach(function (p) {
+    h += '<tr><td><span class="jobname">' + esc(p.name) + '</span>' + (p.customer ? '<br><span class="cust">' + esc(p.customer) + '</span>' : '') + '</td><td class="col-cw">' + esc(p.ticket || '—') + '</td><td>' + esc(fmtDateShort(String(p.deleted_at).slice(0, 10))) + '</td><td style="text-align:right"><button class="btn ghost small" data-jbrestore="' + p.id + '">Restore</button></td></tr>';
+  });
+  return h + '</table></div>';
+}
+function pjBodyHTML(PM) { return PJ.filter === 'deleted' ? jbDeletedHTML() : pjTableHTML(PM); }
+function wirePJBody() {
   wirePJRows();
+  Array.prototype.forEach.call($('pjView').querySelectorAll('[data-jbrestore]'), function (b) {
+    b.addEventListener('click', function () { jbRestoreJob(b.getAttribute('data-jbrestore')); });
+  });
 }
 
 function showMain(view) {
@@ -1395,8 +1706,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.4.1 · Company · Company setup is saved to Manage — Field Kit data is never changed here';
-  else $('footLine').textContent = 'Field Kit Manage v1.4.1 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + ' · Read-only — the working views never change Field Kit data';
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.5 · Company · Company setup is saved to Manage — Field Kit data is never changed here';
+  else $('footLine').textContent = 'Field Kit Manage v1.5 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -1969,9 +2280,19 @@ function init() {
   $('palInput').addEventListener('input', function () { buildPal(this.value); });
   $('palInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && palList.length) jumpTo(palList[0].target); });
   $('palView').addEventListener('click', function (e) { if (e.target === this) closePal(); });
+  $('jobFormWrap').addEventListener('click', function (e) { if (e.target === this) jbCloseForm(); });
+  $('jbCrewWrap').addEventListener('click', function (e) { if (e.target === this) jbCloseCrew(); });
+  $('jbDelWrap').addEventListener('click', function (e) { if (e.target === this) jbCloseDelete(); });
+  document.addEventListener('click', function (e) {
+    var m = $('jbMenu'); if (!m || m.classList.contains('hidden')) return;
+    var gb = $('jbGearBtn');
+    if (gb && gb.contains(e.target)) return;
+    if (m.contains(e.target)) return;
+    jbCloseMenu();
+  });
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); if (!$('appView').classList.contains('hidden')) openPal(); }
-    if (e.key === 'Escape') closePal();
+    if (e.key === 'Escape') { closePal(); jbCloseForm(); jbCloseMenu(); jbCloseCrew(); jbCloseDelete(); }
   });
   if (DEMO) {
     loadDemo();
