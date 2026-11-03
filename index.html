@@ -71,7 +71,7 @@
   .seg.other { background:#64748b; }
   .nowmark { position:absolute; top:-2px; bottom:-2px; width:2px; background:#818cf8; }
   .tl-scale { display:flex; justify-content:space-between; color:#8b93b0; font-size:10.5px; margin-top:3px; }
-  .timeline .seg { cursor:pointer; }
+  .timeline .seg { cursor:pointer; box-shadow:inset -2px 0 0 #0b0e1a; }
   .segtip { position:fixed; z-index:80; display:none; max-width:300px; background:#171a2c; border:1px solid #2e3355; border-radius:12px; padding:8px 11px; box-shadow:0 8px 24px rgba(0,0,0,.45); pointer-events:none; }
   .segtip.on { display:block; }
   .segtip .tj { font-weight:700; font-size:13px; color:#e6e9f5; }
@@ -520,7 +520,7 @@
     <div id="pjView" class="hidden"></div>
     <div id="schedView" class="hidden"></div>
     <div id="coView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.6 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.6.1 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -654,7 +654,10 @@ function kindClass(kind) { var k = String(kind || '').toLowerCase(); if (k.index
 function kindPillClass(kind) { var c = kindClass(kind); return c === 'onsite' ? 'on' : c === 'drive' ? 'drive' : c === 'remote' ? 'remote' : 'idle'; }
 /* ================= model ================= */
 function buildModel() {
-  var n = now(), todayK = dayKey(n), ydayK = dayKey(addDays(n, -1));
+  var n = now(), todayK = dayKey(n);
+  /* recap day: the most recent weekday before today (a Monday morning recaps Friday) */
+  var yDate = addDays(n, -1); while (yDate.getDay() === 0 || yDate.getDay() === 6) yDate = addDays(yDate, -1);
+  var ydayK = dayKey(yDate), yIsYday = dayKey(yDate) === dayKey(addDays(n, -1));
   var dow = (n.getDay() + 6) % 7, mon = addDays(n, -dow), monK = dayKey(mon);
   var entries = D.entries.filter(function (e) { return !e.deleted_at; });
   var pulls = D.pulls.filter(function (p) { return !p.deleted_at; });
@@ -712,7 +715,7 @@ function buildModel() {
   var statusRank = { 'In progress': 0, 'Worked today': 1, 'Not started': 2, 'Unstaffed': 3, 'Overdue': 4 };
   todayJobs.sort(function (a, b) { if (statusRank[a.status] !== statusRank[b.status]) return statusRank[a.status] - statusRank[b.status]; return jobLabel(a.p).localeCompare(jobLabel(b.p)); });
 
-  /* yesterday recap */
+  /* last-workday recap */
   var yEntries = entriesOn(ydayK, null, null);
   var yJobsWorked = {}; yEntries.forEach(function (e) { yJobsWorked[e.project_id] = 1; });
   var yByUser = {}; yEntries.forEach(function (e) { if (e.user_id) yByUser[e.user_id] = (yByUser[e.user_id] || 0) + entryMinutes(e); });
@@ -726,7 +729,7 @@ function buildModel() {
   while (ahead.length < 5) { var cd = cursor.getDay(); if (cd !== 0 && cd !== 6) { var ck = dayKey(cursor); ahead.push({ d: new Date(cursor), k: ck, count: active.filter(function (p) { return scheduledOn(p, ck); }).length }); } cursor = addDays(cursor, 1); }
 
   var hoursToday = crew.reduce(function (s, c) { return s + c.todayMin; }, 0);
-  return { n: n, todayK: todayK, ydayK: ydayK, monK: monK, entries: entries, pulls: pulls, timersByUser: timersByUser, membersByProj: membersByProj, projects: projects, active: active, crew: crew, todayJobs: todayJobs, scheduledOn: scheduledOn, isOverdue: isOverdue, minutesOn: minutesOn, entriesOn: entriesOn,
+  return { n: n, todayK: todayK, ydayK: ydayK, yDate: yDate, yIsYday: yIsYday, monK: monK, entries: entries, pulls: pulls, timersByUser: timersByUser, membersByProj: membersByProj, projects: projects, active: active, crew: crew, todayJobs: todayJobs, scheduledOn: scheduledOn, isOverdue: isOverdue, minutesOn: minutesOn, entriesOn: entriesOn,
     yJobsWorked: Object.keys(yJobsWorked).length, yTotalMin: yEntries.reduce(function (s, e) { return s + entryMinutes(e); }, 0), yTopUid: yTopUid, yTopMin: yTopMin, closedYday: closedYday, cableYday: cableYday, cableWeek: cableWeek, ahead: ahead, hoursToday: hoursToday,
     jobsTodayCount: active.filter(function (p) { return scheduledOn(p, todayK); }).length, overdueCount: active.filter(isOverdue).length };
 }
@@ -740,8 +743,8 @@ function renderStats(M) {
   h += statCard('On the clock now', D.timers.length + ' <small>of ' + M.crew.length + ' techs</small>', onNames.length ? esc(onNames.map(function (nm, i) { var c = M.crew.filter(function (x) { return x.timer && firstNameOf(x.uid) === nm; })[0]; return nm + ' ' + String(c.timer.kind || '').toLowerCase(); }).join(' · ')) : 'Nobody on the clock');
   h += statCard('Hours today so far', fmtH(M.hoursToday).replace(' h', ' <small>h</small>'), 'Across ' + M.todayJobs.filter(function (j) { return j.mins > 0; }).length + ' jobs');
   h += statCard('Jobs scheduled today', String(M.jobsTodayCount), M.overdueCount ? '+ ' + M.overdueCount + ' overdue carry-over' + (M.overdueCount > 1 ? 's' : '') : 'No overdue jobs');
-  h += statCard('Finished yesterday', M.closedYday.length + ' <small>jobs</small>', fmtH(M.yTotalMin) + ' logged ' + weekdayName(addDays(M.n, -1)));
-  h += statCard('Cable this week', fmtInt(M.cableWeek) + ' <small>ft</small>', fmtInt(M.cableYday) + ' ft of it yesterday');
+  h += statCard(M.yIsYday ? 'Finished yesterday' : 'Finished ' + weekdayName(M.yDate), M.closedYday.length + ' <small>jobs</small>', fmtH(M.yTotalMin) + ' logged ' + weekdayName(M.yDate));
+  h += statCard('Cable this week', fmtInt(M.cableWeek) + ' <small>ft</small>', fmtInt(M.cableYday) + ' ft of it ' + (M.yIsYday ? 'yesterday' : 'on ' + weekdayName(M.yDate)));
   return h + '</div>';
 }
 function weekdayName(d) { return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()]; }
@@ -805,7 +808,7 @@ function renderCrew(M) {
 }
 function renderRail(M) {
   var h = '<div class="rail">';
-  h += '<div class="card"><h2>Yesterday — ' + weekdayName(addDays(M.n, -1)) + '</h2>';
+  h += '<div class="card"><h2>' + (M.yIsYday ? 'Yesterday — ' : 'Last workday — ') + weekdayName(M.yDate) + '</h2>';
   h += '<div class="kv"><span class="k">Jobs worked</span><b>' + M.yJobsWorked + '</b></div>';
   h += '<div class="kv"><span class="k">Total hours</span><b>' + fmtH(M.yTotalMin) + '</b></div>';
   h += '<div class="kv"><span class="k">Closed</span><b>' + (M.closedYday.length ? esc(M.closedYday.map(function (p) { return jobLabel(p); }).join('; ')) : '—') + '</b></div>';
@@ -860,12 +863,12 @@ function computeFlags(M) {
   if (n.getHours() >= 10) M.todayJobs.forEach(function (j) { if (!j.overdue && j.status === 'Not started' && j.members.length) push('orange', 'No-show check', 'Nobody has logged time on <b>' + esc(jobLabel(j.p)) + '</b> yet today.'); });
   var nn = {};
   M.entriesOn(ydayK, null, null).forEach(function (e) { if (!e.notes || !String(e.notes).trim()) { var k = (e.user_id || '') + '|' + e.project_id; nn[k] = nn[k] || { u: e.user_id, p: e.project_id, c: 0 }; nn[k].c++; } });
-  Object.keys(nn).forEach(function (k) { var g = nn[k]; push('orange', 'No notes', '<b>' + esc(firstNameOf(g.u)) + '</b>\'s ' + g.c + (g.c === 1 ? ' entry' : ' entries') + ' yesterday on ' + esc(jobLabel(projById(g.p))) + ' ' + (g.c === 1 ? 'has' : 'have') + ' no notes.'); });
+  Object.keys(nn).forEach(function (k) { var g = nn[k]; push('orange', 'No notes', '<b>' + esc(firstNameOf(g.u)) + '</b>\'s ' + g.c + (g.c === 1 ? ' entry' : ' entries') + (M.yIsYday ? ' yesterday on ' : ' ' + weekdayName(M.yDate) + ' on ') + esc(jobLabel(projById(g.p))) + ' ' + (g.c === 1 ? 'has' : 'have') + ' no notes.'); });
   M.crew.forEach(function (c) {
     var yE = M.entriesOn(ydayK, c.uid, null);
     var tot = yE.reduce(function (s, e) { return s + entryMinutes(e); }, 0);
     var drv = yE.filter(function (e) { return kindClass(e.kind) === 'drive'; }).reduce(function (s, e) { return s + entryMinutes(e); }, 0);
-    if (tot > 120 && drv / tot > 0.35) push('orange', 'Drive ratio', '<b>' + esc(firstNameOf(c.uid)) + '</b>\'s drive time yesterday was ' + Math.round(drv / tot * 100) + '% of the day (' + fmtH(drv) + ' of ' + fmtH(tot) + ') — over the 35% line.');
+    if (tot > 120 && drv / tot > 0.35) push('orange', 'Drive ratio', '<b>' + esc(firstNameOf(c.uid)) + '</b>\'s drive time ' + (M.yIsYday ? 'yesterday' : weekdayName(M.yDate)) + ' was ' + Math.round(drv / tot * 100) + '% of the day (' + fmtH(drv) + ' of ' + fmtH(tot) + ') — over the 35% line.');
   });
   var edited = 0;
   M.entries.forEach(function (e) {
@@ -873,10 +876,10 @@ function computeFlags(M) {
     var entryDay = e.start_iso.slice(0, 10), upd = new Date(e.updated_at), cre = new Date(e.created_at);
     if (dayKey(upd) > entryDay && (upd - cre) > 3600000 && upd >= addDays(n, -2)) { edited++; push('yellow', 'Edited later', '<b>' + esc(firstNameOf(e.updated_by || e.user_id)) + '</b> edited a ' + fmtDateShort(entryDay) + ' ' + esc(e.kind || '') + ' entry on ' + esc(jobLabel(projById(e.project_id))) + ' ' + agoLabel(upd) + '.'); }
   });
-  var ydayDow = addDays(n, -1).getDay();
+  var ydayDow = M.yDate.getDay();
   if (ydayDow >= 1 && ydayDow <= 5) M.crew.forEach(function (c) {
     var wasScheduled = M.active.some(function (p) { return M.scheduledOn(p, ydayK) && (M.membersByProj[p.id] || []).indexOf(c.uid) >= 0; });
-    if (wasScheduled && M.minutesOn(ydayK, c.uid, null) === 0) push('yellow', 'Zero hours', '<b>' + esc(nameOf(c.uid)) + '</b> was on a job scheduled yesterday but logged no time.');
+    if (wasScheduled && M.minutesOn(ydayK, c.uid, null) === 0) push('yellow', 'Zero hours', '<b>' + esc(nameOf(c.uid)) + '</b> was on a job scheduled ' + (M.yIsYday ? 'yesterday' : 'on ' + weekdayName(M.yDate)) + ' but logged no time.');
   });
   M.active.forEach(function (p) {
     var last = new Date(p.updated_at);
@@ -910,9 +913,9 @@ function renderBrief(M) {
     + '<div class="g"><div class="l">On the clock</div><div class="v">' + D.timers.length + ' of ' + M.crew.length + '</div><div class="s">' + esc(onNames || 'Nobody on the clock') + '</div></div>'
     + '<div class="g"><div class="l">Hours today</div><div class="v">' + fmtH(M.hoursToday) + '</div><div class="s">So far</div></div>'
     + '<div class="g"><div class="l">Jobs today</div><div class="v">' + M.jobsTodayCount + '</div><div class="s">' + (M.overdueCount ? '+ ' + M.overdueCount + ' overdue' : 'No overdue') + '</div></div>'
-    + '<div class="g"><div class="l">Yesterday</div><div class="v">' + M.closedYday.length + ' done</div><div class="s">' + fmtH(M.yTotalMin) + ' logged</div></div>'
-    + '<div class="g"><div class="l">Cable this week</div><div class="v">' + fmtInt(M.cableWeek) + ' ft</div><div class="s">' + fmtInt(M.cableYday) + ' ft yesterday</div></div></div>';
-  h += '<div class="two"><div><h2>Yesterday — ' + weekdayName(addDays(M.n, -1)) + '</h2>'
+    + '<div class="g"><div class="l">' + (M.yIsYday ? 'Yesterday' : weekdayName(M.yDate)) + '</div><div class="v">' + M.closedYday.length + ' done</div><div class="s">' + fmtH(M.yTotalMin) + ' logged</div></div>'
+    + '<div class="g"><div class="l">Cable this week</div><div class="v">' + fmtInt(M.cableWeek) + ' ft</div><div class="s">' + fmtInt(M.cableYday) + ' ft ' + (M.yIsYday ? 'yesterday' : 'on ' + weekdayName(M.yDate)) + '</div></div></div>';
+  h += '<div class="two"><div><h2>' + (M.yIsYday ? 'Yesterday — ' : 'Last workday — ') + weekdayName(M.yDate) + '</h2>'
     + '<div class="kv"><span class="k">Jobs worked</span><b>' + M.yJobsWorked + '</b></div>'
     + '<div class="kv"><span class="k">Total hours</span><b>' + fmtH(M.yTotalMin) + '</b></div>'
     + '<div class="kv"><span class="k">Closed</span><b>' + (M.closedYday.length ? esc(M.closedYday.map(function (p) { return jobLabel(p); }).join('; ')) : '—') + '</b></div>'
@@ -1723,8 +1726,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.6 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.6 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.6.1 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.6.1 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -1883,12 +1886,12 @@ function buildPal(q) {
 }
 function jumpTo(id) {
   closePal();
-  if (VIEW === 'proj' && id.indexOf('job-') === 0) { PJ.pid = id.slice(4); renderProjects(); window.scrollTo(0, 0); return; }
-  if (VIEW === 'ts') {
-    if (id.indexOf('crew-') === 0) { TS.uid = id.slice(5); renderTimesheets(); window.scrollTo(0, 0); return; }
+  if (id.indexOf('job-') === 0) { PJ.pid = id.slice(4); showMain('proj'); window.scrollTo(0, 0); return; }
+  if (id.indexOf('crew-') === 0) {
+    if (VIEW === 'ts') { TS.uid = id.slice(5); renderTimesheets(); window.scrollTo(0, 0); return; }
     showMain('home');
+    var el = $(id); if (!el) return; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('flash'); setTimeout(function () { el.classList.remove('flash'); }, 1800);
   }
-  var el = $(id); if (!el) return; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('flash'); setTimeout(function () { el.classList.remove('flash'); }, 1800);
 }
 
 /* ================= data ================= */
