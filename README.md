@@ -17,7 +17,7 @@ Run `supabase-manage-readonly.sql` (kept with the project plan) once in the Supa
 
 ## Version
 
-v1.1.1 — Oversight home + Timesheets. (v1.1.1: navigation is now a top bar under the header — Jeremy's pick over a sidebar mock.). (Schedule board and job costing are later phases, each approved separately.)
+v1.1.1 — Oversight home + Timesheets. (v1.1.1: navigation is now a top bar under the header.). (Schedule board and job costing are later phases, each approved separately.)
 
 ## Timesheets
 
