@@ -495,7 +495,7 @@
     <div id="pjView" class="hidden"></div>
     <div id="schedView" class="hidden"></div>
     <div id="coView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.4 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.4.1 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -534,8 +534,27 @@ function coName() { return COMPANY && COMPANY.company_name ? String(COMPANY.comp
 function coLogo() { return COMPANY && COMPANY.logo_data ? String(COMPANY.logo_data) : ''; }
 function coAdmins() { return DEMO ? (DEMO_ADMINS || []) : D.admins; }
 function coIsAdmin(uid) { return coAdmins().indexOf(uid) >= 0; }
+/* Favicon follows the company logo (v1.4.1): driven from applyBranding so
+   it tracks the Company Management save flow live. The stock icon reference
+   (none is declared in the head today) is captured on first apply and
+   restored when the logo is cleared — unbranded installs keep today's tab. */
+var FK_ICON_STOCK, FK_ICON_LINK = null;
+function setFavicon(lg) {
+  var link = document.querySelector('link[rel="icon"]');
+  if (typeof FK_ICON_STOCK === 'undefined') { FK_ICON_STOCK = link ? link.getAttribute('href') : null; if (link) FK_ICON_LINK = link; }
+  if (lg) {
+    if (!link) { link = document.createElement('link'); link.setAttribute('rel', 'icon'); document.head.appendChild(link); }
+    FK_ICON_LINK = link;
+    if (link.getAttribute('href') !== lg) link.setAttribute('href', lg);
+  } else if (FK_ICON_STOCK) {
+    if (link && link.getAttribute('href') !== FK_ICON_STOCK) link.setAttribute('href', FK_ICON_STOCK);
+  } else if (FK_ICON_LINK && FK_ICON_LINK.parentNode) {
+    FK_ICON_LINK.parentNode.removeChild(FK_ICON_LINK); FK_ICON_LINK = null;
+  }
+}
 function applyBranding() {
   var nm = coName(), lg = coLogo();
+  setFavicon(lg);
   function setLogo(el) { if (!el) return; if (lg) { el.innerHTML = '<img alt="" src="' + esc(lg) + '">'; el.classList.add('hasimg'); } else { el.textContent = 'FK'; el.classList.remove('hasimg'); } }
   setLogo($('brandLogo')); setLogo($('authLogo'));
   var bt = $('brandTitle'), bs = $('brandSub'), at = $('authTitle'), asub = $('authSub');
@@ -1376,8 +1395,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.4 · Company · Company setup is saved to Manage — Field Kit data is never changed here';
-  else $('footLine').textContent = 'Field Kit Manage v1.4 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + ' · Read-only — the working views never change Field Kit data';
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.4.1 · Company · Company setup is saved to Manage — Field Kit data is never changed here';
+  else $('footLine').textContent = 'Field Kit Manage v1.4.1 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + ' · Read-only — the working views never change Field Kit data';
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
