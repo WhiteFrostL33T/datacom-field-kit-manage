@@ -15,7 +15,7 @@ Back-office companion to **Datacom Field Kit** — an admins-only Dashboard home
 - **Company Management.** A gear icon in the header opens the company using the app — its profile (name + logo), its people, accounts, and admin access, and its settings.
 - **Jump.** Ctrl/Cmd+K jumps to any job, customer, or tech on the page.
 - **Demo.** Add `?demo` to the URL to preview with sample data, no sign-in needed — the demo includes a full previous week so Timesheets has something to show.
-- **On phones.** The desktop layout is the working layout, and it does not change. On a phone-width screen the tab bar folds into a hamburger menu in the header — the six sections as large tap rows, then Company settings and Sign out — the header slims down to the menu button, the company name, a search icon (the same jump-to palette), refresh, and the avatar, filter rows scroll sideways in one line instead of wrapping, wide tables scroll inside their own cards, and floating forms go full-width. Same views, same actions, same data.
+- **On phones.** The desktop layout is the working layout, and it does not change. On a phone-width screen the tab bar folds into a hamburger menu in the header — the six sections as large tap rows, then Company settings and Sign out — the header slims down to the menu button, the company name, a search icon (the same jump-to palette), refresh, and the avatar, filter rows scroll sideways in one line instead of wrapping, wide tables scroll inside their own cards, and floating forms go full-width. Same views, same actions, same data. Since v1.11 the menu also carries an **Install app** row between Company settings and Sign out — see *Install it as an app* below.
 
 ## One-time setup
 
@@ -33,7 +33,21 @@ For the Recycle bin purge (v1.9), re-deploy the same `manage-users` function wit
 
 For Company Management (v1.4), also run `supabase-company.sql` once in the same SQL Editor. It is purely additive: it creates the `company_settings` table (company name, logo, pay-period anchor) with a public read rule (the sign-in screen shows the branding before login) and admin-only write rules, and it lets admins grant or remove admin rights from inside Manage. Until it runs, Company Management shows a one-time-setup note and everything else works exactly as before.
 
+## Install it as an app
+
+Manage is installable on a phone. The entry point is the **Install app** row in the phone hamburger menu, between Company settings and Sign out — a phone-only affordance; the desktop layout gains nothing. What the tap does depends on the browser:
+
+- On Android/Chrome, when the browser has offered its install prompt, the tap fires that native prompt.
+- On iPhone/iPad (Safari has no install prompt), the tap opens a small window with the manual steps: Share, then Add to Home Screen.
+- Anywhere else without a prompt, the same window explains the browser-menu route (Install app / Add to Home screen).
+
+Once Manage is running installed (standalone), the row reads **App installed** and does nothing when tapped. An install opens at the site root — the live app, never the demo.
+
+Two pieces make it work, and both ship as plain text. The first is `sw.js`, the service worker: network-first for same-origin requests — a new release is never trapped behind its cache; the cache is only the offline fallback — and it never intercepts cross-origin traffic (Supabase, fonts). **Standing rule: the CACHE name in `sw.js` (`fkm-v<version>`) is bumped with every release**, in the same commit as the version bump. The second piece ships no file at all: the manifest and the icons are **generated at runtime**. On load, the app draws its own logo mark onto a canvas at 192 and 512 pixels (the full-bleed indigo tile, the mark scaled down with maskable-safe padding), builds the manifest around those images, and swaps it in — the approach Field Kit proved. The repository's push path carries text only, so no icon or manifest files ship; a side benefit is that the home-screen icon follows the logo automatically if the mark ever changes. The generated manifest points at the site root, so an install captured from any page — demo included — opens the live app.
+
 ## Version
+
+v1.11 — **Install app**, on phones. The hamburger menu gains an Install app row between Company settings and Sign out: on Android/Chrome it fires the browser's native install prompt; on iPhone it opens a small window with the Share → Add to Home Screen steps; without a prompt it explains the browser-menu route; and once Manage runs installed, the row reads App installed and sits quiet. Behind it ships one new file, `sw.js` — a network-first service worker whose cache is the offline fallback only, and whose CACHE name (`fkm-v1.11`) **is bumped with every release from now on** (the standing rule lives in *Install it as an app* above) — plus a manifest and icons the app generates at runtime from its own logo mark (full-bleed, maskable-safe): the push path is text-only, so no binary icon files ship. The desktop layout gains no UI at all. No data or write path moved: the write census is still 31 direct-table sites plus the one function invoke.
 
 v1.10 — A mobile layout pass, presentation only. Under the phone breakpoint the six-tab bar folds into a **hamburger menu** in the header: the six sections as large tap rows with the current one highlighted, a divider, then Company settings and Sign out — the same actions the desktop header and tab bar call. The mobile header keeps the company logo and name (ellipsis-safe), a search icon that opens the existing jump-to palette, refresh, and the avatar; the gear and Sign out buttons leave the header for the menu. Cards get slightly more breathing room, the filter-chip rows and the timesheet/schedule control bars become single-line sideways scrollers instead of wrapping, wide tables keep scrolling inside their cards with no page-level sideways movement, and floating form windows go full-width with small margins. The desktop layout is unchanged (verified side by side against v1.9 at desktop width), and no data or write path moved: the write census is still 31 direct-table sites plus the one function invoke.
 
