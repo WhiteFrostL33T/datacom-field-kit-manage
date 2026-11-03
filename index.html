@@ -434,6 +434,11 @@
   .letterhead .lname { font-size:13.5px; font-weight:750; color:#11141f; }
   .letterhead .ldoc { margin-left:auto; font-size:12px; color:#6b7280; font-weight:600; }
   .adminbadge { display:inline-flex; align-items:center; background:rgba(99,102,241,.16); border:1px solid #3730a3; color:#c7d2fe; border-radius:999px; padding:2.5px 9px; font-size:11.5px; font-weight:700; margin-left:8px; vertical-align:1px; white-space:nowrap; }
+  /* users management (v1.6) */
+  .deactbadge { display:inline-flex; align-items:center; background:rgba(245,158,11,.13); border:1px solid rgba(245,158,11,.45); color:#fcd34d; border-radius:999px; padding:2.5px 9px; font-size:11.5px; font-weight:700; margin-left:8px; vertical-align:1px; white-space:nowrap; }
+  .mu-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .mu-actions .btn { min-height:32px; padding:4px 12px; font-size:12.5px; }
+  .tempw { width:100%; text-align:center; font-family:'JetBrains Mono',monospace; font-size:25px; font-weight:700; letter-spacing:1px; padding:13px 10px; border-radius:12px; border:1px solid #2a2f4a; background:#0d1020; color:#e2e8f0; }
   .rowact { margin-left:auto; flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
   .guardnote { color:#8b93b0; font-size:11.5px; }
   .actdot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981; margin-right:5px; vertical-align:1px; }
@@ -515,7 +520,7 @@
     <div id="pjView" class="hidden"></div>
     <div id="schedView" class="hidden"></div>
     <div id="coView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.5 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.6 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -536,6 +541,18 @@
 
 <div id="jbDelWrap" class="palwrap hidden">
   <div class="pal jobform jbwin" id="jbDelCard"></div>
+</div>
+
+<div id="muFormWrap" class="palwrap hidden">
+  <div class="pal jobform jbwin" id="muFormCard"></div>
+</div>
+
+<div id="muTempWrap" class="palwrap hidden">
+  <div class="pal jobform jbwin" id="muTempCard"></div>
+</div>
+
+<div id="muConfirmWrap" class="palwrap hidden">
+  <div class="pal jobform jbwin" id="muConfirmCard"></div>
 </div>
 
 <div id="brief"></div>
@@ -1465,7 +1482,7 @@ function jbOpenForm(mode, pid) {
   h += '<div class="jf-grid"><div class="jf-field"><label class="flabel" for="jfStart">Scheduled start (optional)</label><input class="txtin" type="date" id="jfStart" value="' + esc(p ? (p.sched_start || '') : '') + '"></div>';
   h += '<div class="jf-field"><label class="flabel" for="jfEnd">End date</label><input class="txtin" type="date" id="jfEnd" value="' + esc(p ? (p.sched_end || '') : '') + '"></div></div>';
   if (mode === 'new') {
-    var profs = D.profiles.filter(function (pr) { return !(me && pr.id === me.id); }).sort(function (a, b) { return nameOf(a.id).localeCompare(nameOf(b.id)); });
+    var profs = D.profiles.filter(function (pr) { return !(me && pr.id === me.id) && !MU.off[pr.id]; }).sort(function (a, b) { return nameOf(a.id).localeCompare(nameOf(b.id)); });
     h += '<div class="jf-field"><span class="flabel">Starting crew (optional)</span>';
     if (profs.length) profs.forEach(function (pr) { h += '<label class="jf-crewrow"><input type="checkbox" name="jf_crew" value="' + pr.id + '"><span class="tavatar" style="background:' + colorOf(pr.id) + '">' + initialsOf(pr.id) + '</span><span>' + esc(nameOf(pr.id)) + '</span></label>'; });
     else h += '<p class="caption">No other profiles loaded — crew can be added later from the gear menu on the job page.</p>';
@@ -1616,7 +1633,7 @@ function jbCrewHTML(row) {
   h += '</div>';
   if (!row.members.length) h += '<p class="caption" style="padding:8px 0 2px">No crew assigned yet' + (p.owner_id ? ' \u2014 the owner always has access; crew is who the job is staffed with.' : '.') + '</p>';
   var onJob = {}; row.members.forEach(function (u) { onJob[u] = 1; }); if (p.owner_id) onJob[p.owner_id] = 1;
-  var avail = D.profiles.filter(function (pr) { return !onJob[pr.id]; }).sort(function (a, b) { return nameOf(a.id).localeCompare(nameOf(b.id)); });
+  var avail = D.profiles.filter(function (pr) { return !onJob[pr.id] && !MU.off[pr.id]; }).sort(function (a, b) { return nameOf(a.id).localeCompare(nameOf(b.id)); });
   if (avail.length) {
     h += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><select class="txtin" id="jbAddSel" style="flex:1;min-width:200px">' + avail.map(function (pr) { return '<option value="' + pr.id + '">' + esc(nameOf(pr.id)) + '</option>'; }).join('') + '</select><button class="btn" id="jbAddBtn">Add to crew</button></div>';
   } else h += '<p class="caption" style="margin-top:10px">Everyone is already on this job.</p>';
@@ -1706,8 +1723,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.5 · Company · Company setup is saved to Manage — Field Kit data is never changed here';
-  else $('footLine').textContent = 'Field Kit Manage v1.5 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.6 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.6 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -1958,6 +1975,8 @@ function coPersonRow(p) {
 }
 function renderCompany() {
   var el = $('coView');
+  if (DEMO) { MU.available = true; MU.roster = muDemoRoster(); MU.off = MU.demoOff; }
+  else if (MU.available === null) muLoadRoster();
   var head = '<div class="pagetitle-row"><div><div class="pagetitle">Company Management</div><div class="pagesub">For the company using Field Kit Manage — its profile, people, and settings.</div></div></div>';
   if (!DEMO && companyMissing) {
     el.innerHTML = head + '<div class="costack"><div class="card"><h2>One-time setup needed</h2><p class="caption" style="margin-top:8px">Company Management keeps the company name, logo, and settings in a small table of its own. An admin runs the one-time setup file <b>supabase-company.sql</b> in the Supabase Dashboard SQL Editor — it only adds that table and its rules, and Field Kit is untouched. Run it, then reopen this screen. Until then, everything else in Manage works exactly as before.</p></div></div>';
@@ -1985,10 +2004,21 @@ function renderCompany() {
     + '<div class="letterhead"><div class="llogo" id="coPrevLLogo">' + coLogoTag(CO.logo, 24) + '</div><span class="lname" id="coPrevLName">' + esc(dispName) + '</span><span class="ldoc">Morning brief</span></div>'
     + '</div></div>'
     + '<div class="cardfoot">' + (CO.msg ? '<span class="co-msg ' + (CO.msgErr ? 'err' : 'ok') + '">' + esc(CO.msg) + '</span>' : '') + '<button class="btn" id="coSaveProfile">Save profile</button></div></div>';
+  var muOn = (MU.available === true);
+  var pplHtml;
+  if (muOn) {
+    var ros = muSortedRoster();
+    pplHtml = ros.length ? ros.map(muPersonRow).join('') : '<p class="caption" style="margin-top:8px">No accounts found.</p>';
+  } else {
+    pplHtml = profs.length ? profs.map(coPersonRow).join('') : '<p class="caption" style="margin-top:8px">No user profiles loaded yet.</p>';
+  }
   h += '<div class="card"><h2>People &amp; access</h2><div class="cardsub">Everyone who can sign in to Field Kit. Admins can open Manage.</div>'
     + (CO.pplMsg ? '<p class="co-msg ' + (CO.pplErr ? 'err' : 'ok') + '" style="margin-top:10px">' + esc(CO.pplMsg) + '</p>' : '')
+    + (muOn
+      ? '<div class="btnrow" style="margin-top:12px"><button class="btn" id="coAddPerson">Add person</button></div>'
+      : (DEMO ? '' : '<p class="caption" style="margin-top:10px">Adding people, renaming, deactivating, and deleting accounts turns on once an admin deploys the one-time <b>manage-users</b> function — see the setup notes in the README. Until then, this list and the admin changes work exactly as before.</p>'))
     + '<div style="margin-top:6px">'
-    + (profs.length ? profs.map(coPersonRow).join('') : '<p class="caption" style="margin-top:8px">No user profiles loaded yet.</p>')
+    + pplHtml
     + '</div></div>';
   h += '<div class="card"><h2>Settings</h2><div class="setrow"><div class="set-txt"><div class="set-label">Pay period starts</div><p class="caption" style="margin-top:4px">Timesheets pay periods count in 14-day blocks from this date. Changing it applies to everyone.</p></div>'
     + '<input class="txtin datein" type="date" id="coAnchor" value="' + esc(effectiveAnchor()) + '"></div>'
@@ -2010,6 +2040,10 @@ function coWireCompany() {
       var uid = b.getAttribute('data-uid');
       if (b.getAttribute('data-coact') === 'mk') coMakeAdmin(uid); else coRemoveAdmin(uid);
     });
+  });
+  var ap = $('coAddPerson'); if (ap) ap.addEventListener('click', function () { muOpenForm('add', null); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-muact]'), function (b) {
+    b.addEventListener('click', function () { muAct(b.getAttribute('data-muact'), b.getAttribute('data-uid')); });
   });
 }
 function coHandleFile(file) {
@@ -2112,6 +2146,328 @@ function coRemoveAdmin(uid) {
   });
 }
 
+/* ================= users management (v1.6) =================
+   Account lifecycle — add, rename, deactivate/reactivate, delete, reset
+   password — runs through the manage-users Edge Function, the only place
+   the service-role key exists. The app's direct table writes stay exactly
+   the v1.5 twelve; everything below is function calls or demo memory. */
+var MU = { available: null, roster: null, off: {}, demoOff: {}, mode: null, uid: null, temp: null, busy: false };
+var MU_SETUP_HINT = 'Account management needs the one-time manage-users function deploy — once an admin has deployed it, this works.';
+
+function muRosterEntry(uid) { if (MU.roster) for (var i = 0; i < MU.roster.length; i++) if (MU.roster[i].id === uid) return MU.roster[i]; return null; }
+function muNameOf(uid) { var r = muRosterEntry(uid); if (r) return r.display_name || (r.email ? r.email.split('@')[0] : 'Teammate'); return nameOf(uid); }
+function muSortedRoster() {
+  var ros = (MU.roster || []).slice();
+  ros.sort(function (a, b) {
+    var am = me && a.id === me.id ? 0 : 1, bm = me && b.id === me.id ? 0 : 1;
+    if (am !== bm) return am - bm;
+    var aa = a.is_admin ? 0 : 1, ba = b.is_admin ? 0 : 1;
+    if (aa !== ba) return aa - ba;
+    return muNameOf(a.id).localeCompare(muNameOf(b.id));
+  });
+  return ros;
+}
+function muSigninLine(r) {
+  if (!r.last_sign_in_at) return 'Never signed in';
+  var d = new Date(r.last_sign_in_at);
+  if (isNaN(d)) return 'Never signed in';
+  return 'Last sign-in ' + monthName(d) + ' ' + d.getDate() + ', ' + d.getFullYear();
+}
+function muPersonRow(r) {
+  var uid = r.id, adm = !!r.is_admin, isMe = !!(me && uid === me.id), deact = !!r.deactivated;
+  var lastAdmin = adm && coAdmins().length <= 1;
+  var h = '<div class="tech"><div class="tech-head"><div class="tavatar" style="background:' + colorOf(uid) + '">' + initialsOf(uid) + '</div><div><div class="tname">' + esc(muNameOf(uid))
+    + (adm ? '<span class="adminbadge">Admin' + (isMe ? ' · You' : '') + '</span>' : '')
+    + (deact ? '<span class="deactbadge">Deactivated</span>' : '')
+    + '</div><div class="tmeta">' + esc(r.email || '') + ' · ' + muSigninLine(r) + '</div></div><div class="rowact">';
+  if (adm) {
+    if (coAdmins().length <= 1) h += '<button class="btn ghost btndanger" disabled>Remove admin</button><div class="guardnote">Last admin can’t be removed</div>';
+    else if (isMe && CO.confirmSelf === uid) h += '<button class="btn ghost btndanger" data-coact="rm" data-uid="' + uid + '">Remove your admin? Tap again to confirm</button>';
+    else h += '<button class="btn ghost btndanger" data-coact="rm" data-uid="' + uid + '">Remove admin</button>';
+  } else {
+    h += '<button class="btn ghost" data-coact="mk" data-uid="' + uid + '">Make admin</button>';
+  }
+  h += '</div></div>';
+  h += '<div class="mu-actions">'
+    + '<button class="btn ghost" data-muact="rename" data-uid="' + uid + '">Edit name</button>'
+    + '<button class="btn ghost" data-muact="reset" data-uid="' + uid + '">Reset password</button>';
+  if (deact) h += '<button class="btn ghost" data-muact="react" data-uid="' + uid + '">Reactivate</button>';
+  else if (!isMe && !lastAdmin) h += '<button class="btn ghost" data-muact="deact" data-uid="' + uid + '">Deactivate</button>';
+  if (!isMe && !lastAdmin) h += '<button class="btn ghost btndanger" data-muact="del" data-uid="' + uid + '">Delete</button>';
+  h += '</div>';
+  if (isMe) h += '<div class="guardnote" style="margin-top:6px">This is your account — you can’t deactivate or delete it.</div>';
+  else if (lastAdmin) h += '<div class="guardnote" style="margin-top:6px">Last admin — make someone else an admin before deactivating or deleting this account.</div>';
+  return h + '</div>';
+}
+
+/* ---------- the function bridge ---------- */
+function muErrBody(err) {
+  try {
+    if (err && err.context && typeof err.context.json === 'function') {
+      return err.context.json().then(function (b) { return b; }, function () { return null; });
+    }
+  } catch (e) {}
+  return Promise.resolve(null);
+}
+function muCall(action, payload) {
+  if (DEMO) return muDemo(action, payload || {});
+  if (!sb) return Promise.resolve({ ok: false, code: 'unavailable', error: MU_SETUP_HINT });
+  var body = { action: action };
+  if (payload) for (var k in payload) body[k] = payload[k];
+  return sb.functions.invoke('manage-users', { body: body }).then(function (res) {
+    if (res && !res.error && res.data) {
+      var d = res.data;
+      if (d.ok) { MU.available = true; return d; }
+      return { ok: false, code: d.code || 'failed', error: d.error || 'Something went wrong — try again.' };
+    }
+    var err = (res && res.error) || {};
+    var msg = String(err.message || '');
+    var status = 0;
+    try { status = (err.context && err.context.status) || 0; } catch (e) {}
+    var gone = err.name === 'FunctionsFetchError' || status === 404 || /failed to fetch|network/i.test(msg);
+    return muErrBody(err).then(function (b) {
+      if (gone) { MU.available = false; return { ok: false, code: 'unavailable', error: MU_SETUP_HINT }; }
+      if (b && b.error) return { ok: false, code: b.code || 'http', error: b.error };
+      return { ok: false, code: 'http', error: msg || 'The request failed — try again.' };
+    });
+  }, function () {
+    MU.available = false;
+    return { ok: false, code: 'unavailable', error: MU_SETUP_HINT };
+  });
+}
+function muLoadRoster(force) {
+  if (DEMO) { MU.available = true; MU.roster = muDemoRoster(); MU.off = MU.demoOff; return Promise.resolve(true); }
+  if (!sb || !me) return Promise.resolve(false);
+  if (!force) {
+    if (MU.roster) return Promise.resolve(true);
+    if (MU.available === false) return Promise.resolve(false);
+  }
+  return muCall('list', {}).then(function (r) {
+    if (r.ok && r.people) {
+      MU.available = true;
+      MU.roster = r.people;
+      var off = {};
+      r.people.forEach(function (p) { if (p.deactivated) off[p.id] = 1; });
+      MU.off = off;
+      if (VIEW === 'company') renderCompany();
+      return true;
+    }
+    MU.available = false;
+    if (VIEW === 'company') renderCompany();
+    return false;
+  });
+}
+function muAfterChange(msg) {
+  CO.pplMsg = msg || ''; CO.pplErr = false;
+  if (DEMO) { renderCompany(); return; }
+  loadAll();
+  muLoadRoster(true);
+}
+
+/* ---------- demo mode: the same lifecycle against demo memory ---------- */
+function muDemoRoster() {
+  return D.profiles.map(function (p) {
+    var act = coLastAct(p.id);
+    return { id: p.id, email: p.email || '', display_name: p.display_name || null, is_admin: coIsAdmin(p.id), created_at: null, last_sign_in_at: act.d ? act.d.toISOString() : null, deactivated: !!MU.demoOff[p.id] };
+  });
+}
+function muFakeTemp() {
+  var U = 'ABCDEFGHJKMNPQRSTUVWXYZ', Lw = 'abcdefghjkmnpqrstuvwxyz', Dg = '23456789', A = U + Lw + Dg;
+  function pk(s) { return s[Math.floor(Math.random() * s.length)]; }
+  var out = [pk(U), pk(Lw), pk(Dg)], i, j, t;
+  while (out.length < 16) out.push(pk(A));
+  for (i = out.length - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = out[i]; out[i] = out[j]; out[j] = t; }
+  return out.join('');
+}
+function muDemo(action, pl) {
+  function done(r) { return Promise.resolve(r); }
+  var uid = pl.user_id || '';
+  if (action === 'list') return done({ ok: true, people: muDemoRoster() });
+  if (action === 'create') {
+    var email = String(pl.email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return done({ ok: false, code: 'bad_request', error: 'A valid email address is required.' });
+    var dup = D.profiles.some(function (p) { return (p.email || '').toLowerCase() === email; });
+    if (dup) return done({ ok: false, code: 'create_failed', error: 'A user with this email address has already been registered.' });
+    var np = { id: 'u-' + jbGenId(), email: email, display_name: String(pl.display_name || '').trim() };
+    D.profiles.push(np);
+    return done({ ok: true, person: { id: np.id, email: np.email, display_name: np.display_name, is_admin: false, created_at: null, last_sign_in_at: null, deactivated: false }, temp_password: muFakeTemp() });
+  }
+  if (action === 'rename') {
+    var p = profileById(uid);
+    if (!p) return done({ ok: false, code: 'not_found', error: 'That person was not found.' });
+    p.display_name = String(pl.display_name || '').trim();
+    return done({ ok: true });
+  }
+  if (action === 'reset_password') return done({ ok: true, temp_password: muFakeTemp() });
+  if (action === 'deactivate' || action === 'reactivate' || action === 'delete') {
+    if (action !== 'reactivate') {
+      if (uid === (me && me.id)) return done({ ok: false, code: 'self', error: 'You cannot deactivate or delete your own account.' });
+      if (coIsAdmin(uid) && coAdmins().length <= 1) return done({ ok: false, code: 'last_admin', error: 'That is the last admin — make someone else an admin first.' });
+    }
+    if (action === 'deactivate') MU.demoOff[uid] = 1;
+    if (action === 'reactivate') delete MU.demoOff[uid];
+    if (action === 'delete') {
+      var has = D.entries.some(function (e) { return e.user_id === uid; });
+      if (has) return done({ ok: false, code: 'delete_blocked', error: 'This account has work history and cannot be deleted.' });
+      D.profiles = D.profiles.filter(function (x) { return x.id !== uid; });
+      D.members = D.members.filter(function (m) { return m.user_id !== uid; });
+      if (DEMO_ADMINS) DEMO_ADMINS = DEMO_ADMINS.filter(function (x) { return x !== uid; });
+      delete MU.demoOff[uid];
+    }
+    return done({ ok: true });
+  }
+  return done({ ok: false, code: 'bad_request', error: 'Unknown action' });
+}
+
+/* ---------- windows & actions ---------- */
+function muAct(kind, uid) {
+  if (kind === 'rename') muOpenForm('rename', uid);
+  else if (kind === 'reset') muDoReset(uid);
+  else if (kind === 'deact') muOpenConfirm('deact', uid);
+  else if (kind === 'react') muDoReactivate(uid);
+  else if (kind === 'del') muOpenConfirm('del', uid);
+}
+function muOpenForm(mode, uid) {
+  MU.mode = mode; MU.uid = uid;
+  var isAdd = mode === 'add';
+  var h = '<h2>' + (isAdd ? 'Add person' : 'Edit name') + '</h2>';
+  h += '<p class="caption">' + (isAdd ? 'They get a temporary password to sign in with — you hand it to them. The account works in Field Kit right away.' : 'The name the apps show for this person.') + '</p>';
+  if (isAdd) h += '<div class="jf-field"><label class="flabel" for="muEmail">Email *</label><input class="txtin" id="muEmail" type="email" placeholder="name@example.com" autocomplete="off"></div>';
+  h += '<div class="jf-field"><label class="flabel" for="muName">' + (isAdd ? 'Full name *' : 'Name *') + '</label><input class="txtin" id="muName" value="' + (isAdd ? '' : esc(muNameOf(uid))) + '" autocomplete="off"></div>';
+  h += '<p class="co-msg err hidden" id="muErr" style="margin-top:12px"></p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="muCancel">Cancel</button><button class="btn" id="muSave">' + (isAdd ? 'Create account' : 'Save name') + '</button></div>';
+  $('muFormCard').innerHTML = h;
+  $('muFormWrap').classList.remove('hidden');
+  $('muCancel').addEventListener('click', muCloseForm);
+  $('muSave').addEventListener('click', muSubmitForm);
+  setTimeout(function () { var n = $(isAdd ? 'muEmail' : 'muName'); if (n) n.focus(); }, 30);
+}
+function muCloseForm() { var w = $('muFormWrap'); if (w) w.classList.add('hidden'); }
+function muFormFail(msg) { var e = $('muErr'); if (e) { e.textContent = msg; e.classList.remove('hidden'); } }
+function muSubmitForm() {
+  if (MU.busy) return;
+  var nameEl = $('muName');
+  var name = nameEl ? nameEl.value.trim() : '';
+  if (!name) { muFormFail('Give them a name first.'); return; }
+  if (MU.mode === 'add') {
+    var email = $('muEmail').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { muFormFail('That email doesn’t look right.'); return; }
+    MU.busy = true;
+    muCall('create', { email: email, display_name: name }).then(function (r) {
+      MU.busy = false;
+      if (!r.ok) { muFormFail(r.error || 'The account could not be created.'); return; }
+      muCloseForm();
+      muAfterChange('Account created for ' + name + '.');
+      muOpenTemp(name, r.temp_password, true);
+    });
+  } else {
+    var uid = MU.uid;
+    MU.busy = true;
+    muCall('rename', { user_id: uid, display_name: name }).then(function (r) {
+      MU.busy = false;
+      if (!r.ok) { muFormFail(r.error || 'The name could not be saved.'); return; }
+      var p = profileById(uid); if (p) p.display_name = name;
+      var re = muRosterEntry(uid); if (re) re.display_name = name;
+      muCloseForm();
+      muAfterChange('Name saved.');
+    });
+  }
+}
+function muOpenTemp(name, temp, isNew) {
+  MU.temp = temp || '';
+  var h = '<h2>' + (isNew ? 'Account created' : 'Password reset') + '</h2>';
+  h += '<p class="caption">Temporary password for <b>' + esc(name) + '</b> — they sign in with this, so hand it to them now.</p>';
+  h += '<input class="tempw" id="muTempIn" readonly value="' + esc(MU.temp) + '" style="margin-top:14px">';
+  h += '<p class="caption" style="margin-top:10px"><b>You won’t see this again.</b> It isn’t stored anywhere in Manage — if it’s lost, just reset their password to get a new one.</p>';
+  h += '<div class="cardfoot"><span class="co-msg ok hidden" id="muCopied" style="margin-right:auto">Copied</span><button class="btn ghost" id="muCopy">Copy password</button><button class="btn" id="muTempDone">Done</button></div>';
+  $('muTempCard').innerHTML = h;
+  $('muTempWrap').classList.remove('hidden');
+  $('muTempDone').addEventListener('click', muCloseTemp);
+  $('muCopy').addEventListener('click', function () {
+    var inp = $('muTempIn');
+    function mark() { var c = $('muCopied'); if (c) c.classList.remove('hidden'); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(MU.temp).then(mark, function () { if (inp) { inp.select(); try { document.execCommand('copy'); } catch (e) {} } mark(); });
+    } else if (inp) { inp.select(); try { document.execCommand('copy'); } catch (e) {} mark(); }
+  });
+  setTimeout(function () { var i = $('muTempIn'); if (i) i.select(); }, 30);
+}
+function muCloseTemp() { var w = $('muTempWrap'); if (w) w.classList.add('hidden'); MU.temp = null; }
+function muDoReset(uid) {
+  if (MU.busy) return;
+  MU.busy = true;
+  var nm = muNameOf(uid);
+  muCall('reset_password', { user_id: uid }).then(function (r) {
+    MU.busy = false;
+    if (!r.ok) { CO.pplMsg = r.error || 'The password could not be reset.'; CO.pplErr = true; renderCompany(); return; }
+    muOpenTemp(nm, r.temp_password, false);
+  });
+}
+function muDoReactivate(uid) {
+  muCall('reactivate', { user_id: uid }).then(function (r) {
+    if (!r.ok) { CO.pplMsg = r.error || 'Reactivation failed.'; CO.pplErr = true; renderCompany(); return; }
+    muAfterChange(muNameOf(uid) + ' reactivated — they can sign in again.');
+  });
+}
+function muOwnedActive(uid) {
+  return D.projects.filter(function (p) { return p.owner_id === uid && p.status === 'active' && !p.deleted_at; }).length;
+}
+function muOpenConfirm(mode, uid) {
+  MU.mode = mode; MU.uid = uid;
+  var r = muRosterEntry(uid);
+  var nm = muNameOf(uid);
+  var h = '';
+  if (mode === 'deact') {
+    h += '<h2>Deactivate ' + esc(nm) + '?</h2>';
+    h += '<p class="caption" style="margin-top:6px">They won’t be able to sign in to Field Kit or Manage. Their logged time, jobs, and history stay exactly as they are — and you can reactivate them any time.</p>';
+    var n = muOwnedActive(uid);
+    if (n) h += '<p class="co-msg err" style="margin-top:10px">They own ' + n + ' active job' + (n === 1 ? '' : 's') + ' — those stay under their name.</p>';
+    h += '<div class="cardfoot"><button class="btn ghost" id="muCCancel">Cancel</button><button class="btn ghost btndanger" id="muCGo">Deactivate</button></div>';
+  } else {
+    h += '<h2>Delete ' + esc(nm) + '?</h2>';
+    h += '<p class="caption" style="margin-top:6px">This permanently deletes the account for <b>' + esc(r ? (r.email || '') : '') + '</b> — they can never sign in again, and it can’t be undone.</p>';
+    h += '<p class="caption" style="margin-top:8px">Accounts with work history usually can’t be deleted (the database protects their entries and jobs) — deactivating is the way to close those out.</p>';
+    h += '<div class="cardfoot"><button class="btn ghost" id="muCCancel">Cancel</button><button class="btn ghost btndanger" id="muCGo">Delete account</button></div>';
+  }
+  $('muConfirmCard').innerHTML = h;
+  $('muConfirmWrap').classList.remove('hidden');
+  $('muCCancel').addEventListener('click', muCloseConfirm);
+  $('muCGo').addEventListener('click', muSubmitConfirm);
+}
+function muCloseConfirm() { var w = $('muConfirmWrap'); if (w) w.classList.add('hidden'); }
+function muShowBlocked(uid) {
+  var nm = muNameOf(uid);
+  var h = '<h2>' + esc(nm) + ' can’t be deleted</h2>';
+  h += '<p class="caption" style="margin-top:6px">This account has work history and can’t be deleted. Deactivate it instead — that blocks sign-in and keeps the history.</p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="muCCancel">Keep account</button><button class="btn" id="muCDeact">Deactivate instead</button></div>';
+  $('muConfirmCard').innerHTML = h;
+  $('muCCancel').addEventListener('click', muCloseConfirm);
+  $('muCDeact').addEventListener('click', function () { muDoDeactivate(uid); });
+}
+function muDoDeactivate(uid) {
+  if (MU.busy) return;
+  MU.busy = true;
+  muCall('deactivate', { user_id: uid }).then(function (r) {
+    MU.busy = false;
+    muCloseConfirm();
+    if (!r.ok) { CO.pplMsg = r.error || 'Deactivation failed.'; CO.pplErr = true; renderCompany(); return; }
+    muAfterChange(muNameOf(uid) + ' deactivated — they can’t sign in.');
+  });
+}
+function muSubmitConfirm() {
+  if (MU.mode === 'deact') { muDoDeactivate(MU.uid); return; }
+  if (MU.busy) return;
+  var uid = MU.uid;
+  MU.busy = true;
+  muCall('delete', { user_id: uid }).then(function (r) {
+    MU.busy = false;
+    if (r.ok) { muCloseConfirm(); muAfterChange('Account deleted.'); return; }
+    if (r.code === 'delete_blocked') { muShowBlocked(uid); return; }
+    muCloseConfirm();
+    CO.pplMsg = r.error || 'The account could not be deleted.'; CO.pplErr = true; renderCompany();
+  });
+}
+
 /* ================= auth ================= */
 function showView(id) { ['authView', 'gateView', 'appView'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 function onSignedIn(user) {
@@ -2124,7 +2480,7 @@ function onSignedIn(user) {
     lastVisit = prev ? new Date(prev) : null;
     loadAll().then(function () {
       $('meAvatar').textContent = initialsOf(user.id);
-      showView('appView'); renderHome();
+      showView('appView'); renderHome(); muLoadRoster();
       try { localStorage.setItem(k, new Date().toISOString()); } catch (e) {}
       subscribeRT(); startTicks();
     });
@@ -2283,6 +2639,9 @@ function init() {
   $('jobFormWrap').addEventListener('click', function (e) { if (e.target === this) jbCloseForm(); });
   $('jbCrewWrap').addEventListener('click', function (e) { if (e.target === this) jbCloseCrew(); });
   $('jbDelWrap').addEventListener('click', function (e) { if (e.target === this) jbCloseDelete(); });
+  $('muFormWrap').addEventListener('click', function (e) { if (e.target === this) muCloseForm(); });
+  $('muTempWrap').addEventListener('click', function (e) { if (e.target === this) muCloseTemp(); });
+  $('muConfirmWrap').addEventListener('click', function (e) { if (e.target === this) muCloseConfirm(); });
   document.addEventListener('click', function (e) {
     var m = $('jbMenu'); if (!m || m.classList.contains('hidden')) return;
     var gb = $('jbGearBtn');
@@ -2292,7 +2651,7 @@ function init() {
   });
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); if (!$('appView').classList.contains('hidden')) openPal(); }
-    if (e.key === 'Escape') { closePal(); jbCloseForm(); jbCloseMenu(); jbCloseCrew(); jbCloseDelete(); }
+    if (e.key === 'Escape') { closePal(); jbCloseForm(); jbCloseMenu(); jbCloseCrew(); jbCloseDelete(); muCloseForm(); muCloseTemp(); muCloseConfirm(); }
   });
   if (DEMO) {
     loadDemo();
