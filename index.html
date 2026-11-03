@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090d16">
+<title>Field Kit Manage — Oversight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;550;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:#090d16; color:#e6e9f5; font-size:14px; }
+  .wrap { max-width:1400px; margin:0 auto; padding:18px 22px 30px; }
+  .hidden { display:none !important; }
+  /* header */
+  .topbar { background:#11141f; border:1px solid #232842; border-radius:16px; padding:14px 18px; display:flex; align-items:center; gap:14px; box-shadow:0 1px 2px rgba(0,0,0,.35); }
+  .logo { width:42px; height:42px; border-radius:11px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; letter-spacing:.5px; flex:none; }
+  .brand h1 { font-size:19px; font-weight:750; letter-spacing:-.2px; color:#e6e9f5; }
+  .brand p { color:#8b93b0; font-size:12px; margin-top:1px; }
+  .spacer { flex:1; }
+  .search { display:flex; align-items:center; gap:8px; border:1px solid #232842; background:#0b0e1a; border-radius:10px; padding:8px 12px; color:#8b93b0; min-width:250px; font-size:13px; cursor:pointer; }
+  .search kbd { margin-left:auto; background:#11141f; border:1px solid #232842; border-bottom-width:2px; border-radius:5px; padding:0 5px; font-size:11px; color:#8b93b0; font-family:inherit; }
+  .btn { background:#6366f1; color:#fff; border:none; border-radius:10px; padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer; }
+  .btn:hover { background:#5457e8; }
+  .btn.ghost { background:transparent; border:1px solid #232842; color:#aab1c8; }
+  .btn.ghost:hover { background:#171a2b; }
+  .avatar { width:36px; height:36px; border-radius:50%; background:#1e2040; color:#a5b4fc; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex:none; }
+  .dateline { display:flex; align-items:center; gap:12px; margin:16px 2px 12px; flex-wrap:wrap; }
+  .dateline .date { font-size:16px; font-weight:700; }
+  .live { display:inline-flex; align-items:center; gap:6px; color:#34d399; font-weight:600; font-size:12.5px; }
+  .live i { width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block; }
+  .live.stale { color:#fbbf24; } .live.stale i { background:#f59e0b; }
+  .since-chip { background:rgba(99,102,241,.16); border:1px solid #3730a3; color:#c7d2fe; border-radius:999px; padding:5px 12px; font-size:12.5px; font-weight:550; }
+  .demo-tag { margin-left:auto; color:#8b93b0; font-size:12px; }
+  .warnbar { background:rgba(245,158,11,.12); border:1px solid #92600a; color:#fcd34d; border-radius:12px; padding:11px 14px; margin:0 2px 12px; font-size:13px; }
+  .warnbar b { color:#fde68a; }
+  /* stat strip */
+  .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+  .stat { background:#11141f; border:1px solid #232842; border-radius:14px; padding:13px 15px; }
+  .stat .lbl { color:#8b93b0; font-size:11.5px; font-weight:650; text-transform:uppercase; letter-spacing:.6px; }
+  .stat .val { font-size:23px; font-weight:780; margin-top:3px; color:#e6e9f5; }
+  .stat .val small { font-size:13px; color:#8b93b0; font-weight:600; }
+  .stat .sub { color:#8b93b0; font-size:12px; margin-top:2px; }
+  /* layout */
+  .grid { display:grid; grid-template-columns:1.9fr 1fr; gap:12px; margin-top:12px; align-items:start; }
+  .rail { display:grid; gap:12px; }
+  .card { background:#11141f; border:1px solid #232842; border-radius:14px; padding:16px 18px; box-shadow:0 1px 2px rgba(0,0,0,.3); }
+  .card h2 { font-size:14.5px; font-weight:720; display:flex; align-items:center; gap:8px; color:#e6e9f5; }
+  .card h2 .hint { margin-left:auto; color:#8b93b0; font-size:12px; font-weight:550; }
+  /* crew */
+  .tech { padding:13px 0 15px; border-bottom:1px solid #1b1f33; }
+  .tech:last-child { border-bottom:none; padding-bottom:2px; }
+  .tech-head { display:flex; align-items:center; gap:10px; }
+  .tavatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; color:#fff; flex:none; }
+  .tname { font-weight:700; font-size:14.5px; color:#e6e9f5; }
+  .tjob { color:#c3c9de; font-size:13px; }
+  .tmeta { color:#8b93b0; font-size:12.5px; margin-top:1px; }
+  .pill { margin-left:auto; border-radius:999px; padding:4px 10px; font-size:12px; font-weight:700; flex:none; }
+  .pill.on { background:rgba(16,185,129,.16); color:#34d399; }
+  .pill.drive { background:rgba(245,158,11,.16); color:#fbbf24; }
+  .pill.remote { background:rgba(59,130,246,.18); color:#93c5fd; }
+  .pill.idle { background:rgba(148,163,184,.16); color:#aab1c8; }
+  .elapsed { font-variant-numeric:tabular-nums; font-weight:700; color:#fff; }
+  .timeline { position:relative; height:16px; background:#0b0e1a; border-radius:6px; margin-top:10px; overflow:hidden; }
+  .seg { position:absolute; top:0; bottom:0; }
+  .seg.drive { background:#f59e0b; }
+  .seg.onsite { background:#10b981; }
+  .seg.remote { background:#3b82f6; }
+  .seg.shop { background:#a78bfa; }
+  .seg.other { background:#64748b; }
+  .nowmark { position:absolute; top:-2px; bottom:-2px; width:2px; background:#818cf8; }
+  .tl-scale { display:flex; justify-content:space-between; color:#8b93b0; font-size:10.5px; margin-top:3px; }
+  .week { display:flex; align-items:flex-end; gap:14px; margin-top:9px; }
+  .days { display:flex; gap:5px; align-items:flex-end; }
+  .day { text-align:center; }
+  .day .bar { width:17px; border-radius:3px 3px 0 0; background:#4f46e5; margin:0 auto; }
+  .day .bar.today { background:#818cf8; }
+  .day .bar.empty { background:#232842; }
+  .day span { display:block; color:#8b93b0; font-size:10px; margin-top:2px; }
+  .weektotal { margin-left:auto; text-align:right; }
+  .weektotal .n { font-weight:750; font-size:14px; color:#e6e9f5; }
+  .ot { width:130px; height:5px; background:#232842; border-radius:3px; margin-top:4px; position:relative; }
+  .ot i { position:absolute; left:0; top:0; bottom:0; background:#818cf8; border-radius:3px; }
+  .ot.over i { background:#f87171; }
+  .otlbl { color:#8b93b0; font-size:10.5px; margin-top:2px; }
+  /* rail cards */
+  .kv { display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px dashed #1b1f33; font-size:13px; }
+  .kv:last-child { border-bottom:none; }
+  .kv b { font-weight:700; color:#e6e9f5; text-align:right; }
+  .kv .k { color:#c3c9de; }
+  .ah-cols { display:flex; gap:8px; margin-top:10px; }
+  .ah { flex:1; text-align:center; background:#0b0e1a; border:1px solid #232842; border-radius:10px; padding:9px 4px; }
+  .ah.heavy { background:rgba(245,158,11,.10); border-color:#92600a; }
+  .ah .d { color:#8b93b0; font-size:11px; font-weight:650; text-transform:uppercase; letter-spacing:.4px; }
+  .ah .n { font-size:19px; font-weight:780; margin-top:1px; color:#e6e9f5; }
+  .ah .s { color:#8b93b0; font-size:10.5px; }
+  .ah.heavy .s { color:#fbbf24; font-weight:650; }
+  .since-item { padding:7px 0; border-bottom:1px solid #1b1f33; font-size:13px; color:#d6daea; }
+  .since-item:last-child { border-bottom:none; }
+  .since-item .t { color:#8b93b0; font-size:12px; }
+  .empty { color:#8b93b0; font-size:13px; padding:8px 0 2px; }
+  /* jobs table */
+  table { width:100%; border-collapse:collapse; margin-top:8px; }
+  th { text-align:left; color:#8b93b0; font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; padding:7px 8px; border-bottom:1px solid #232842; }
+  td { padding:10px 8px; border-bottom:1px solid #1b1f33; font-size:13.5px; vertical-align:middle; color:#d6daea; }
+  tr:last-child td { border-bottom:none; }
+  .jobname { font-weight:680; color:#e6e9f5; }
+  .cust { color:#8b93b0; font-size:12.5px; }
+  .chip { border-radius:999px; padding:3.5px 10px; font-size:12px; font-weight:700; white-space:nowrap; }
+  .chip.green { background:rgba(16,185,129,.16); color:#34d399; }
+  .chip.amber { background:rgba(245,158,11,.16); color:#fbbf24; }
+  .chip.gray { background:rgba(148,163,184,.16); color:#aab1c8; }
+  .chip.red { background:rgba(239,68,68,.16); color:#f87171; }
+  .unstaffed { color:#f87171; font-weight:700; }
+  tr.flash td, .tech.flash { outline:2px solid #6366f1; outline-offset:-2px; border-radius:8px; }
+  /* attention */
+  .attn { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:11px; }
+  .flag { border:1px solid #232842; border-left-width:4px; border-radius:10px; padding:10px 13px; background:#11141f; }
+  .flag.red { border-left-color:#dc2626; }
+  .flag.orange { border-left-color:#f59e0b; }
+  .flag.yellow { border-left-color:#eab308; }
+  .flag.info { border-left-color:#6366f1; }
+  .flag .fk { font-size:11px; font-weight:750; text-transform:uppercase; letter-spacing:.5px; }
+  .flag.red .fk { color:#f87171; } .flag.orange .fk { color:#fbbf24; } .flag.yellow .fk { color:#facc15; } .flag.info .fk { color:#a5b4fc; }
+  .flag .fd { font-size:13.5px; margin-top:2px; color:#d6daea; }
+  .flag .fd b { font-weight:700; color:#e6e9f5; }
+  .foot { color:#8b93b0; font-size:12px; text-align:center; margin-top:18px; }
+  /* auth */
+  .authwrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .authcard { background:#11141f; border:1px solid #232842; border-radius:18px; padding:30px 30px 24px; width:100%; max-width:380px; box-shadow:0 10px 40px rgba(0,0,0,.45); }
+  .authcard .logo { margin-bottom:14px; }
+  .authcard h1 { font-size:21px; font-weight:780; }
+  .authcard .sub { color:#8b93b0; font-size:13px; margin:3px 0 20px; }
+  .authcard label { display:block; font-size:12px; font-weight:650; color:#aab1c8; text-transform:uppercase; letter-spacing:.5px; margin:12px 0 5px; }
+  .authcard input { width:100%; background:#0b0e1a; border:1px solid #232842; border-radius:10px; padding:11px 12px; color:#e6e9f5; font-size:14.5px; font-family:inherit; }
+  .authcard input:focus { outline:2px solid #6366f1; border-color:transparent; }
+  .authcard .btn { width:100%; margin-top:18px; padding:12px; font-size:14.5px; }
+  .autherr { color:#f87171; font-size:13px; margin-top:12px; min-height:17px; }
+  .authnote { color:#8b93b0; font-size:12px; text-align:center; margin-top:16px; }
+  /* palette */
+  .palwrap { position:fixed; inset:0; background:rgba(4,6,12,.7); display:flex; align-items:flex-start; justify-content:center; padding:90px 16px 16px; z-index:50; }
+  .pal { background:#141828; border:1px solid #2b3052; border-radius:14px; width:100%; max-width:560px; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,.55); }
+  .pal input { width:100%; background:transparent; border:none; border-bottom:1px solid #232842; padding:15px 16px; color:#e6e9f5; font-size:16px; font-family:inherit; }
+  .pal input:focus { outline:none; }
+  .pal .items { max-height:330px; overflow:auto; padding:6px; }
+  .pal .item { padding:9px 11px; border-radius:9px; cursor:pointer; font-size:14px; display:flex; gap:9px; align-items:baseline; }
+  .pal .item:hover, .pal .item.sel { background:#1d2140; }
+  .pal .item .tag { color:#8b93b0; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; flex:none; }
+  .pal .item .sub2 { color:#8b93b0; font-size:12px; margin-left:auto; flex:none; }
+  .pal .none { padding:14px; color:#8b93b0; font-size:13.5px; }
+  /* print brief */
+  #brief { display:none; }
+  @media print {
+    body { background:#fff; }
+    .wrap, .authwrap, .palwrap { display:none !important; }
+    #brief { display:block; color:#111; font-size:13.5px; padding:10px 6px; }
+    #brief .head { border-bottom:3px solid #6366f1; padding-bottom:12px; display:flex; align-items:baseline; gap:12px; }
+    #brief h1 { font-size:23px; font-weight:800; }
+    #brief .sub { color:#555; font-size:13px; }
+    #brief .when { margin-left:auto; text-align:right; color:#333; font-size:13px; }
+    #brief h2 { font-size:13px; text-transform:uppercase; letter-spacing:1px; color:#4f46e5; margin:22px 0 8px; border-bottom:1px solid #ddd; padding-bottom:4px; }
+    #brief table { margin-top:2px; }
+    #brief th { color:#666; border-bottom:1.5px solid #999; }
+    #brief td { color:#111; border-bottom:1px solid #e3e3e3; padding:7px 6px; }
+    #brief .kv { border-bottom:1px dashed #e3e3e3; }
+    #brief .kv .k { color:#333; } #brief .kv b { color:#111; }
+    #brief ul { list-style:none; }
+    #brief li { padding:6px 0 6px 16px; border-bottom:1px solid #eee; position:relative; }
+    #brief li:before { content:""; position:absolute; left:2px; top:12px; width:7px; height:7px; border-radius:2px; background:#eab308; }
+    #brief li.red:before { background:#dc2626; } #brief li.orange:before { background:#f59e0b; }
+    #brief .fl { font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.5px; margin-right:6px; }
+    #brief .two { display:flex; gap:26px; } #brief .two > div { flex:1; }
+    #brief .glance { display:flex; gap:10px; }
+    #brief .g { flex:1; border:1px solid #ddd; border-radius:8px; padding:9px 11px; }
+    #brief .g .l { color:#666; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; font-weight:700; }
+    #brief .g .v { font-size:19px; font-weight:800; margin-top:2px; }
+    #brief .g .s { color:#666; font-size:11.5px; }
+    #brief .foot2 { margin-top:24px; border-top:1px solid #ddd; padding-top:9px; color:#888; font-size:11.5px; display:flex; justify-content:space-between; }
+  }
+  @media (max-width:700px) {
+    .wrap { padding:12px; }
+    .stats { grid-template-columns:repeat(2,1fr); }
+    .grid { grid-template-columns:1fr; }
+    .attn { grid-template-columns:1fr; }
+    .search { display:none; }
+    .col-cw { display:none; }
+    td, th { padding:7px 4px; font-size:12px; }
+    .chip { font-size:11px; padding:3px 7px; }
+    .jobname { font-size:12.5px; }
+    .brand h1 { font-size:16.5px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="authView" class="authwrap hidden">
+  <div class="authcard">
+    <div class="logo">FK</div>
+    <h1>Field Kit Manage</h1>
+    <p class="sub">MHS Enterprises · Back office</p>
+    <form id="loginForm">
+      <label for="liEmail">Email</label>
+      <input id="liEmail" type="email" autocomplete="username" required>
+      <label for="liPass">Password</label>
+      <input id="liPass" type="password" autocomplete="current-password" required>
+      <button class="btn" type="submit">Sign in</button>
+      <div class="autherr" id="loginErr"></div>
+    </form>
+    <p class="authnote">Same account as Field Kit · Admins only</p>
+  </div>
+</div>
+
+<div id="gateView" class="authwrap hidden">
+  <div class="authcard" style="text-align:center">
+    <div class="logo" style="margin:0 auto 14px">FK</div>
+    <h1>Admins only</h1>
+    <p class="sub" style="margin-bottom:8px">Field Kit Manage is limited to admin accounts.<br><span id="gateEmail"></span></p>
+    <button class="btn ghost" id="gateOut" style="width:100%;margin-top:14px;padding:11px">Sign out</button>
+  </div>
+</div>
+
+<div id="appView" class="hidden">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">FK</div>
+      <div class="brand">
+        <h1>Field Kit Manage</h1>
+        <p>MHS Enterprises · Back office</p>
+      </div>
+      <div class="spacer"></div>
+      <div class="search" id="searchBox">🔍 Jump to a job or tech… <kbd>Ctrl K</kbd></div>
+      <button class="btn ghost" id="refreshBtn" title="Refresh now">↻</button>
+      <button class="btn" id="printBtn">🖨 Print brief</button>
+      <div class="avatar" id="meAvatar">–</div>
+      <button class="btn ghost" id="signOutBtn">Sign out</button>
+    </div>
+    <div class="dateline">
+      <span class="date" id="dateLine">—</span>
+      <span class="live" id="liveLine"><i></i> Live</span>
+      <span class="since-chip hidden" id="sinceChip"></span>
+      <span class="demo-tag" id="modeTag"></span>
+    </div>
+    <div class="warnbar hidden" id="dataWarn"></div>
+    <div id="home"></div>
+    <div class="foot">Field Kit Manage v1 · Oversight · Read-only — nothing here changes Field Kit data</div>
+  </div>
+</div>
+
+<div id="palView" class="palwrap hidden">
+  <div class="pal">
+    <input id="palInput" type="text" placeholder="Jump to a job or tech…" autocomplete="off">
+    <div class="items" id="palItems"></div>
+  </div>
+</div>
+
+<div id="brief"></div>
+
+<script>
+'use strict';
+/* ================= config ================= */
+var SUPABASE_URL = 'https://dsmgmkstxdfohwoujkkw.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzbWdta3N0eGRmb2h3b3Vqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDA5NzcsImV4cCI6MjEwNzcxNjk3N30.FonsXvWywH9zLrQui82l4sqU3GegEMMrH7KWvKffM9A';
+var DEMO = /[?&]demo\b/.test(location.search);
+var DEMO_NOW = new Date(2026, 10, 3, 8, 12, 0); /* Tue Nov 3 2026, 8:12 AM — the mockup scene */
+
+/* ================= state ================= */
+var sb = null, me = null, isAdmin = false;
+var D = { profiles: [], projects: [], members: [], timers: [], entries: [], pulls: [], entriesError: false, loadedAt: null };
+var lastVisit = null;
+
+/* ================= helpers ================= */
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function now() { return DEMO ? new Date(DEMO_NOW.getTime()) : new Date(); }
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function dayKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function addDays(d, n) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; }
+function parseLocal(iso) { if (!iso) return null; var m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(iso); if (!m) { var d = new Date(iso); return isNaN(d) ? null : d; } return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]); }
+function fmtClock(d) { if (!d) return ''; var h = d.getHours(), ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + pad2(d.getMinutes()) + ' ' + ap; }
+function fmtH(mins) { var h = mins / 60; return (Math.round(h * 10) / 10).toString().replace(/\.0$/, '') + ' h'; }
+function fmtHM(mins) { mins = Math.max(0, Math.floor(mins)); return Math.floor(mins / 60) + ':' + pad2(mins % 60); }
+function fmtInt(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function agoLabel(d) { var m = Math.max(0, Math.round((now() - d) / 60000)); if (m < 1) return 'just now'; if (m < 60) return m + ' min ago'; var h = Math.floor(m / 60); if (h < 24) return h + (h === 1 ? ' hr ago' : ' hrs ago'); var dd = Math.floor(h / 24); return dd + (dd === 1 ? ' day ago' : ' days ago'); }
+function entryMinutes(e) { var s = parseLocal(e.start_iso), en = parseLocal(e.end_iso); if (!s || !en) return 0; return Math.max(0, Math.round((en - s) / 60000) - (e.lunch_min || 0)); }
+function timerElapsedMin(t) { return Math.max(0, (now() - new Date(t.started_at)) / 60000); }
+var AV_COLORS = ['#6366f1', '#d97706', '#059669', '#dc2626', '#2563eb', '#7c3aed', '#db2777', '#64748b'];
+function profileById(uid) { for (var i = 0; i < D.profiles.length; i++) if (D.profiles[i].id === uid) return D.profiles[i]; return null; }
+function nameOf(uid) { var p = profileById(uid); if (!p) return 'Teammate'; return p.display_name || (p.email ? p.email.split('@')[0] : 'Teammate'); }
+function firstNameOf(uid) { return nameOf(uid).split(' ')[0]; }
+function initialsOf(uid) { var n = nameOf(uid).trim(); var parts = n.split(/\s+/); return ((parts[0] || '?')[0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase(); }
+function colorOf(uid) { var s = String(uid || ''), h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return AV_COLORS[h % AV_COLORS.length]; }
+function projById(id) { for (var i = 0; i < D.projects.length; i++) if (D.projects[i].id === id) return D.projects[i]; return null; }
+function jobLabel(p) { if (!p) return 'Unknown job'; return (p.customer ? p.customer + ' — ' : '') + p.name; }
+function kindClass(kind) { var k = String(kind || '').toLowerCase(); if (k.indexOf('drive') >= 0) return 'drive'; if (k.indexOf('site') >= 0) return 'onsite'; if (k.indexOf('remote') >= 0) return 'remote'; if (k.indexOf('shop') >= 0) return 'shop'; return 'other'; }
+function kindPillClass(kind) { var c = kindClass(kind); return c === 'onsite' ? 'on' : c === 'drive' ? 'drive' : c === 'remote' ? 'remote' : 'idle'; }
+/* ================= model ================= */
+function buildModel() {
+  var n = now(), todayK = dayKey(n), ydayK = dayKey(addDays(n, -1));
+  var dow = (n.getDay() + 6) % 7, mon = addDays(n, -dow), monK = dayKey(mon);
+  var entries = D.entries.filter(function (e) { return !e.deleted_at; });
+  var pulls = D.pulls.filter(function (p) { return !p.deleted_at; });
+  var timersByUser = {}; D.timers.forEach(function (t) { timersByUser[t.user_id] = t; });
+  var membersByProj = {}; D.members.forEach(function (m) { (membersByProj[m.project_id] = membersByProj[m.project_id] || []).push(m.user_id); });
+  var projects = D.projects.filter(function (p) { return !p.deleted_at; });
+  var active = projects.filter(function (p) { return p.status !== 'done'; });
+
+  function entriesOn(dateK, uid, pid) { return entries.filter(function (e) { return e.start_iso && e.start_iso.slice(0, 10) === dateK && (!uid || e.user_id === uid) && (!pid || e.project_id === pid); }); }
+  function minutesOn(dateK, uid, pid) { return entriesOn(dateK, uid, pid).reduce(function (s, e) { return s + entryMinutes(e); }, 0); }
+  function scheduledOn(p, dateK) { return !!(p.sched_start && p.sched_start <= dateK && (!p.sched_end || p.sched_end >= dateK)); }
+  function isOverdue(p) { return p.status !== 'done' && !!p.sched_end && p.sched_end < todayK; }
+
+  /* crew */
+  var crewSet = {};
+  D.members.forEach(function (m) { crewSet[m.user_id] = 1; });
+  projects.forEach(function (p) { if (p.owner_id) crewSet[p.owner_id] = 1; });
+  D.timers.forEach(function (t) { crewSet[t.user_id] = 1; });
+  entries.forEach(function (e) { if (e.user_id && e.start_iso >= dayKey(addDays(n, -21))) crewSet[e.user_id] = 1; });
+  var crew = D.profiles.filter(function (p) { return crewSet[p.id]; }).map(function (p) {
+    var uid = p.id, t = timersByUser[uid] || null;
+    var runMin = t ? timerElapsedMin(t) : 0;
+    var todayMin = minutesOn(todayK, uid, null) + runMin;
+    var weekDays = [];
+    for (var i = 0; i < 5; i++) { var dk = dayKey(addDays(mon, i)); var mm = minutesOn(dk, uid, null) + (dk === todayK ? runMin : 0); weekDays.push({ k: dk, label: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'][i], mins: mm, today: dk === todayK }); }
+    var weekMin = weekDays.reduce(function (s, d) { return s + d.mins; }, 0);
+    var lastAct = null;
+    entries.forEach(function (e) { if (e.user_id === uid) { var u = new Date(e.updated_at || e.created_at); if (!lastAct || u > lastAct) lastAct = u; } });
+    if (t) { var ts = new Date(t.started_at); if (!lastAct || ts > lastAct) lastAct = ts; }
+    var myJobsToday = active.filter(function (pr) { return scheduledOn(pr, todayK) && (membersByProj[pr.id] || []).indexOf(uid) >= 0; });
+    return { uid: uid, timer: t, runMin: runMin, todayMin: todayMin, weekDays: weekDays, weekMin: weekMin, lastAct: lastAct, entriesToday: entriesOn(todayK, uid, null), myJobsToday: myJobsToday };
+  });
+  crew.sort(function (a, b) { if (!!b.timer - !!a.timer) return (!!b.timer) - (!!a.timer); if (b.todayMin !== a.todayMin) return b.todayMin - a.todayMin; return nameOf(a.uid).localeCompare(nameOf(b.uid)); });
+
+  /* today's jobs */
+  var todayJobs = active.filter(function (p) { return scheduledOn(p, todayK) || isOverdue(p); }).map(function (p) {
+    var mins = minutesOn(todayK, null, p.id);
+    var running = D.timers.filter(function (t) { return t.project_id === p.id; });
+    running.forEach(function (t) { mins += timerElapsedMin(t); });
+    var members = membersByProj[p.id] || [];
+    var status, cls;
+    if (isOverdue(p)) { status = 'Overdue'; cls = 'red'; }
+    else if (!members.length && !minutesOn(todayK, null, p.id) && !running.length) { status = 'Unstaffed'; cls = 'red'; }
+    else if (running.length) { status = 'In progress'; cls = 'green'; }
+    else if (mins > 0) { status = 'Worked today'; cls = 'green'; }
+    else { status = 'Not started'; cls = 'gray'; }
+    var dayX = null;
+    if (p.sched_start && p.sched_end && p.sched_start !== p.sched_end) {
+      var tot = Math.round((parseLocal(p.sched_end + 'T00:00') - parseLocal(p.sched_start + 'T00:00')) / 86400000) + 1;
+      var x = Math.round((parseLocal(todayK + 'T00:00') - parseLocal(p.sched_start + 'T00:00')) / 86400000) + 1;
+      if (x >= 1 && x <= tot) dayX = 'Day ' + x + ' of ' + tot;
+    }
+    return { p: p, members: members, mins: mins, running: running, status: status, cls: cls, dayX: dayX, overdue: isOverdue(p) };
+  });
+  var statusRank = { 'In progress': 0, 'Worked today': 1, 'Not started': 2, 'Unstaffed': 3, 'Overdue': 4 };
+  todayJobs.sort(function (a, b) { if (statusRank[a.status] !== statusRank[b.status]) return statusRank[a.status] - statusRank[b.status]; return jobLabel(a.p).localeCompare(jobLabel(b.p)); });
+
+  /* yesterday recap */
+  var yEntries = entriesOn(ydayK, null, null);
+  var yJobsWorked = {}; yEntries.forEach(function (e) { yJobsWorked[e.project_id] = 1; });
+  var yByUser = {}; yEntries.forEach(function (e) { if (e.user_id) yByUser[e.user_id] = (yByUser[e.user_id] || 0) + entryMinutes(e); });
+  var yTopUid = null, yTopMin = 0; Object.keys(yByUser).forEach(function (u) { if (yByUser[u] > yTopMin) { yTopMin = yByUser[u]; yTopUid = u; } });
+  var closedYday = projects.filter(function (p) { return p.status === 'done' && dayKey(new Date(p.updated_at)) === ydayK; });
+  var cableYday = pulls.filter(function (p) { return p.pull_date === ydayK; }).reduce(function (s, p) { return s + (p.used || 0); }, 0);
+  var cableWeek = pulls.filter(function (p) { return p.pull_date >= monK && p.pull_date <= todayK; }).reduce(function (s, p) { return s + (p.used || 0); }, 0);
+
+  /* week ahead: next 5 weekdays */
+  var ahead = [], cursor = addDays(n, 1);
+  while (ahead.length < 5) { var cd = cursor.getDay(); if (cd !== 0 && cd !== 6) { var ck = dayKey(cursor); ahead.push({ d: new Date(cursor), k: ck, count: active.filter(function (p) { return scheduledOn(p, ck); }).length }); } cursor = addDays(cursor, 1); }
+
+  var hoursToday = crew.reduce(function (s, c) { return s + c.todayMin; }, 0);
+  return { n: n, todayK: todayK, ydayK: ydayK, monK: monK, entries: entries, pulls: pulls, timersByUser: timersByUser, membersByProj: membersByProj, projects: projects, active: active, crew: crew, todayJobs: todayJobs, scheduledOn: scheduledOn, isOverdue: isOverdue, minutesOn: minutesOn, entriesOn: entriesOn,
+    yJobsWorked: Object.keys(yJobsWorked).length, yTotalMin: yEntries.reduce(function (s, e) { return s + entryMinutes(e); }, 0), yTopUid: yTopUid, yTopMin: yTopMin, closedYday: closedYday, cableYday: cableYday, cableWeek: cableWeek, ahead: ahead, hoursToday: hoursToday,
+    jobsTodayCount: active.filter(function (p) { return scheduledOn(p, todayK); }).length, overdueCount: active.filter(isOverdue).length };
+}
+
+/* ================= render: home ================= */
+function statCard(lbl, valHtml, sub) { return '<div class="stat"><div class="lbl">' + lbl + '</div><div class="val">' + valHtml + '</div><div class="sub">' + sub + '</div></div>'; }
+
+function renderStats(M) {
+  var onNames = M.crew.filter(function (c) { return c.timer; }).map(function (c) { return firstNameOf(c.uid); });
+  var h = '<div class="stats">';
+  h += statCard('On the clock now', D.timers.length + ' <small>of ' + M.crew.length + ' techs</small>', onNames.length ? esc(onNames.map(function (nm, i) { var c = M.crew.filter(function (x) { return x.timer && firstNameOf(x.uid) === nm; })[0]; return nm + ' ' + String(c.timer.kind || '').toLowerCase(); }).join(' · ')) : 'Nobody on the clock');
+  h += statCard('Hours today so far', fmtH(M.hoursToday).replace(' h', ' <small>h</small>'), 'Across ' + M.todayJobs.filter(function (j) { return j.mins > 0; }).length + ' jobs');
+  h += statCard('Jobs scheduled today', String(M.jobsTodayCount), M.overdueCount ? '+ ' + M.overdueCount + ' overdue carry-over' + (M.overdueCount > 1 ? 's' : '') : 'No overdue jobs');
+  h += statCard('Finished yesterday', M.closedYday.length + ' <small>jobs</small>', fmtH(M.yTotalMin) + ' logged ' + weekdayName(addDays(M.n, -1)));
+  h += statCard('Cable this week', fmtInt(M.cableWeek) + ' <small>ft</small>', fmtInt(M.cableYday) + ' ft of it yesterday');
+  return h + '</div>';
+}
+function weekdayName(d) { return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()]; }
+function monthName(d) { return ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][d.getMonth()]; }
+
+function timelineHTML(c, M) {
+  var DAY_START = 6 * 60, DAY_SPAN = 12 * 60;
+  function pos(d) { var mins = d.getHours() * 60 + d.getMinutes() - DAY_START; return Math.max(0, Math.min(100, mins / DAY_SPAN * 100)); }
+  var h = '<div class="timeline">';
+  c.entriesToday.forEach(function (e) { var s = parseLocal(e.start_iso), en = parseLocal(e.end_iso); if (!s || !en) return; h += '<div class="seg ' + kindClass(e.kind) + '" style="left:' + pos(s) + '%;width:' + Math.max(0.8, pos(en) - pos(s)) + '%"></div>'; });
+  if (c.timer) { var st = new Date(c.timer.started_at); h += '<div class="seg ' + kindClass(c.timer.kind) + '" style="left:' + pos(st) + '%;width:' + Math.max(0.8, pos(M.n) - pos(st)) + '%"></div>'; }
+  h += '<div class="nowmark" style="left:' + pos(M.n) + '%"></div></div>';
+  h += '<div class="tl-scale"><span>6 AM</span><span>9 AM</span><span>12 PM</span><span>3 PM</span><span>6 PM</span></div>';
+  return h;
+}
+function weekHTML(c) {
+  var maxMin = 10 * 60;
+  var h = '<div class="week"><div class="days">';
+  c.weekDays.forEach(function (d) { var ht = d.mins > 0 ? Math.max(3, Math.round(d.mins / maxMin * 22)) : 3; h += '<div class="day"><div class="bar' + (d.today ? ' today' : d.mins > 0 ? '' : ' empty') + '" style="height:' + ht + 'px"></div><span>' + d.label + (d.mins > 0 ? ' ' + (Math.round(d.mins / 6) / 10) : '') + '</span></div>'; });
+  h += '</div><div class="weektotal"><span class="n">' + fmtH(c.weekMin) + '</span> this week<div class="ot' + (c.weekMin > 40 * 60 ? ' over' : '') + '"><i style="width:' + Math.min(100, c.weekMin / (40 * 60) * 100) + '%"></i></div><div class="otlbl">of 40 h overtime line</div></div></div>';
+  return h;
+}
+function renderCrew(M) {
+  var h = '<div class="card"><h2>Live crew <span class="hint">Updates as the crew works</span></h2>';
+  if (!M.crew.length) h += '<p class="empty">No crew found yet — techs appear here once they are on a project, have a timer, or log time.</p>';
+  M.crew.forEach(function (c) {
+    h += '<div class="tech" id="crew-' + c.uid + '"><div class="tech-head"><div class="tavatar" style="background:' + colorOf(c.uid) + '">' + initialsOf(c.uid) + '</div><div>';
+    h += '<div class="tname">' + esc(nameOf(c.uid)) + '</div>';
+    if (c.timer) { var p = projById(c.timer.project_id); h += '<div class="tjob">' + esc(jobLabel(p)) + '</div>'; h += '<div class="tmeta">' + esc(c.timer.kind) + ' since ' + fmtClock(new Date(c.timer.started_at)) + ' · <span class="elapsed" data-elapsed="' + c.timer.started_at + '">' + fmtHM(c.runMin) + '</span> elapsed · ' + fmtH(c.todayMin) + ' today · last activity ' + (c.lastAct ? agoLabel(c.lastAct) : '—') + '</div>'; }
+    else if (c.myJobsToday.length) { h += '<div class="tjob">Scheduled today — ' + esc(jobLabel(c.myJobsToday[0])) + (c.myJobsToday.length > 1 ? ' +' + (c.myJobsToday.length - 1) + ' more' : '') + '</div>'; h += '<div class="tmeta">Not on the clock yet · ' + fmtH(c.todayMin) + ' today · last activity ' + (c.lastAct ? agoLabel(c.lastAct) : '—') + '</div>'; }
+    else { h += '<div class="tjob">No jobs scheduled today</div>'; h += '<div class="tmeta">Not on the clock · ' + fmtH(c.todayMin) + ' today · last activity ' + (c.lastAct ? agoLabel(c.lastAct) : '—') + '</div>'; }
+    h += '</div>';
+    h += c.timer ? '<span class="pill ' + kindPillClass(c.timer.kind) + '">● ' + esc(c.timer.kind) + '</span>' : '<span class="pill idle">Not started</span>';
+    h += '</div>' + timelineHTML(c, M) + weekHTML(c) + '</div>';
+  });
+  return h + '</div>';
+}
+function renderRail(M) {
+  var h = '<div class="rail">';
+  h += '<div class="card"><h2>Yesterday — ' + weekdayName(addDays(M.n, -1)) + '</h2>';
+  h += '<div class="kv"><span class="k">Jobs worked</span><b>' + M.yJobsWorked + '</b></div>';
+  h += '<div class="kv"><span class="k">Total hours</span><b>' + fmtH(M.yTotalMin) + '</b></div>';
+  h += '<div class="kv"><span class="k">Closed</span><b>' + (M.closedYday.length ? esc(M.closedYday.map(function (p) { return jobLabel(p); }).join('; ')) : '—') + '</b></div>';
+  h += '<div class="kv"><span class="k">Cable pulled</span><b>' + fmtInt(M.cableYday) + ' ft</b></div>';
+  h += '<div class="kv"><span class="k">Most hours</span><b>' + (M.yTopUid ? esc(firstNameOf(M.yTopUid)) + ' · ' + fmtH(M.yTopMin) : '—') + '</b></div></div>';
+  h += '<div class="card"><h2>Week ahead</h2><div class="ah-cols">';
+  M.ahead.forEach(function (a) { h += '<div class="ah' + (a.count >= 5 ? ' heavy' : '') + '"><div class="d">' + weekdayName(a.d).slice(0, 3) + ' ' + a.d.getDate() + '</div><div class="n">' + a.count + '</div><div class="s">' + (a.count >= 5 ? 'heavy day' : 'jobs') + '</div></div>'; });
+  h += '</div></div>';
+  h += '<div class="card"><h2>Since your last visit</h2>' + sinceHTML(M) + '</div>';
+  return h + '</div>';
+}
+function sinceItems(M) {
+  if (!lastVisit) return null;
+  var items = [];
+  M.entries.forEach(function (e) { var c = new Date(e.created_at); if (c > lastVisit) items.push({ t: c, html: '<b>' + esc(firstNameOf(e.user_id)) + '</b> logged ' + fmtH(entryMinutes(e)) + ' ' + esc(e.kind || '') + ' on ' + esc(jobLabel(projById(e.project_id))) }); });
+  M.pulls.forEach(function (p) { var c = new Date(p.created_at); if (c > lastVisit) items.push({ t: c, html: '<b>' + esc(firstNameOf(p.user_id)) + '</b> logged ' + fmtInt(p.used || 0) + ' ft of cable on ' + esc(jobLabel(projById(p.project_id))) }); });
+  M.projects.forEach(function (p) { if (p.status === 'done') { var u = new Date(p.updated_at); if (u > lastVisit) items.push({ t: u, html: '<b>' + esc(jobLabel(p)) + '</b> was closed' }); } });
+  D.timers.forEach(function (t) { var s = new Date(t.started_at); if (s > lastVisit) items.push({ t: s, html: '<b>' + esc(firstNameOf(t.user_id)) + '</b> started ' + esc(t.kind || '') + ' on ' + esc(jobLabel(projById(t.project_id))) }); });
+  items.sort(function (a, b) { return b.t - a.t; });
+  return items;
+}
+function sinceHTML(M) {
+  var items = sinceItems(M);
+  if (!items) return '<p class="empty">First visit from this device — changes will collect here from now on.</p>';
+  if (!items.length) return '<p class="empty">Nothing new since ' + fmtClock(lastVisit) + '.</p>';
+  return items.slice(0, 5).map(function (i) { return '<div class="since-item">' + i.html + ' <span class="t">· ' + agoLabel(i.t) + '</span></div>'; }).join('');
+}
+function renderJobs(M) {
+  var h = '<div class="card" style="margin-top:12px"><h2>Today\'s jobs <span class="hint">' + M.jobsTodayCount + ' scheduled' + (M.overdueCount ? ' + ' + M.overdueCount + ' overdue' : '') + '</span></h2>';
+  if (!M.todayJobs.length) { h += '<p class="empty">Nothing scheduled for today.</p></div>'; return h; }
+  h += '<table><tr><th>Job</th><th class="col-cw">Ticket</th><th>Crew</th><th>Hours today</th><th>Schedule</th><th>Status</th></tr>';
+  M.todayJobs.forEach(function (j) {
+    var crewTxt = j.members.length ? esc(j.members.map(function (u) { return firstNameOf(u); }).join(' · ')) : (j.status === 'Unstaffed' ? '<span class="unstaffed">— nobody assigned —</span>' : '—');
+    var sched = j.overdue ? 'Ended ' + fmtDateShort(j.p.sched_end) : (j.dayX || 'Today');
+    h += '<tr id="job-' + j.p.id + '"><td><span class="jobname">' + esc(j.p.name) + '</span>' + (j.p.customer ? '<br><span class="cust">' + esc(j.p.customer) + '</span>' : '') + '</td><td class="col-cw">' + esc(j.p.ticket || '—') + '</td><td>' + crewTxt + '</td><td>' + fmtH(j.mins) + '</td><td>' + sched + '</td><td><span class="chip ' + j.cls + '">' + (j.cls === 'red' ? '⚠ ' : j.cls === 'green' ? '● ' : '') + j.status + '</span></td></tr>';
+  });
+  return h + '</table></div>';
+}
+function fmtDateShort(k) { var d = parseLocal(k + 'T00:00'); return d ? weekdayName(d).slice(0, 3) + ' ' + monthName(d).slice(0, 3) + ' ' + d.getDate() : k; }
+/* ================= attention flags ================= */
+function computeFlags(M) {
+  var F = [], n = M.n, todayK = M.todayK, ydayK = M.ydayK;
+  function push(sev, kind, html) { F.push({ sev: sev, kind: kind, html: html }); }
+  M.active.filter(M.isOverdue).sort(function (a, b) { return a.sched_end < b.sched_end ? -1 : 1; }).forEach(function (p) {
+    push('red', 'Overdue', '<b>' + esc(jobLabel(p)) + '</b> ended ' + fmtDateShort(p.sched_end) + ' and is still open.');
+  });
+  M.todayJobs.filter(function (j) { return j.status === 'Unstaffed'; }).forEach(function (j) {
+    push('red', 'Unstaffed', '<b>' + esc(jobLabel(j.p)) + '</b> is scheduled today with nobody assigned.');
+  });
+  var longTimers = D.timers.filter(function (t) { return timerElapsedMin(t) > 600; });
+  longTimers.forEach(function (t) { push('red', 'Forgotten timer', '<b>' + esc(firstNameOf(t.user_id)) + '</b> has a ' + esc(t.kind || 'timer') + ' running for ' + fmtHM(timerElapsedMin(t)) + ' on ' + esc(jobLabel(projById(t.project_id))) + '.'); });
+  if (n.getHours() >= 10) M.todayJobs.forEach(function (j) { if (!j.overdue && j.status === 'Not started' && j.members.length) push('orange', 'No-show check', 'Nobody has logged time on <b>' + esc(jobLabel(j.p)) + '</b> yet today.'); });
+  var nn = {};
+  M.entriesOn(ydayK, null, null).forEach(function (e) { if (!e.notes || !String(e.notes).trim()) { var k = (e.user_id || '') + '|' + e.project_id; nn[k] = nn[k] || { u: e.user_id, p: e.project_id, c: 0 }; nn[k].c++; } });
+  Object.keys(nn).forEach(function (k) { var g = nn[k]; push('orange', 'No notes', '<b>' + esc(firstNameOf(g.u)) + '</b>\'s ' + g.c + (g.c === 1 ? ' entry' : ' entries') + ' yesterday on ' + esc(jobLabel(projById(g.p))) + ' ' + (g.c === 1 ? 'has' : 'have') + ' no notes.'); });
+  M.crew.forEach(function (c) {
+    var yE = M.entriesOn(ydayK, c.uid, null);
+    var tot = yE.reduce(function (s, e) { return s + entryMinutes(e); }, 0);
+    var drv = yE.filter(function (e) { return kindClass(e.kind) === 'drive'; }).reduce(function (s, e) { return s + entryMinutes(e); }, 0);
+    if (tot > 120 && drv / tot > 0.35) push('orange', 'Drive ratio', '<b>' + esc(firstNameOf(c.uid)) + '</b>\'s drive time yesterday was ' + Math.round(drv / tot * 100) + '% of the day (' + fmtH(drv) + ' of ' + fmtH(tot) + ') — over the 35% line.');
+  });
+  var edited = 0;
+  M.entries.forEach(function (e) {
+    if (edited >= 3 || !e.start_iso || !e.updated_at || !e.created_at) return;
+    var entryDay = e.start_iso.slice(0, 10), upd = new Date(e.updated_at), cre = new Date(e.created_at);
+    if (dayKey(upd) > entryDay && (upd - cre) > 3600000 && upd >= addDays(n, -2)) { edited++; push('yellow', 'Edited later', '<b>' + esc(firstNameOf(e.updated_by || e.user_id)) + '</b> edited a ' + fmtDateShort(entryDay) + ' ' + esc(e.kind || '') + ' entry on ' + esc(jobLabel(projById(e.project_id))) + ' ' + agoLabel(upd) + '.'); }
+  });
+  var ydayDow = addDays(n, -1).getDay();
+  if (ydayDow >= 1 && ydayDow <= 5) M.crew.forEach(function (c) {
+    var wasScheduled = M.active.some(function (p) { return M.scheduledOn(p, ydayK) && (M.membersByProj[p.id] || []).indexOf(c.uid) >= 0; });
+    if (wasScheduled && M.minutesOn(ydayK, c.uid, null) === 0) push('yellow', 'Zero hours', '<b>' + esc(nameOf(c.uid)) + '</b> was on a job scheduled yesterday but logged no time.');
+  });
+  M.active.forEach(function (p) {
+    var last = new Date(p.updated_at);
+    M.entries.forEach(function (e) { if (e.project_id === p.id) { var u = new Date(e.updated_at || e.created_at); if (u > last) last = u; } });
+    var ageDays = Math.floor((n - new Date(p.created_at)) / 86400000);
+    var idleDays = Math.floor((n - last) / 86400000);
+    var futureSched = p.sched_start && p.sched_start > todayK;
+    if (!futureSched && idleDays >= 7 && ageDays >= 7) push('yellow', 'Stalled', '<b>' + esc(jobLabel(p)) + '</b> has had no activity in ' + idleDays + ' days.');
+    if (ageDays >= 30) push('yellow', 'Aging', '<b>' + esc(jobLabel(p)) + '</b> has been open ' + ageDays + ' days.');
+  });
+  if (!longTimers.length && D.timers.length) { var lt = D.timers.slice().sort(function (a, b) { return timerElapsedMin(b) - timerElapsedMin(a); })[0]; push('info', 'Forgotten timer check', 'No timers over 10 hours. Longest running right now: <b>' + esc(firstNameOf(lt.user_id)) + ', ' + fmtHM(timerElapsedMin(lt)) + '</b>.'); }
+  var rank = { red: 0, orange: 1, yellow: 2, info: 3 };
+  F.sort(function (a, b) { return rank[a.sev] - rank[b.sev]; });
+  return F;
+}
+function renderFlags(M) {
+  var F = computeFlags(M);
+  var real = F.filter(function (f) { return f.sev !== 'info'; }).length;
+  var h = '<div class="card" style="margin-top:12px"><h2>Needs attention <span class="hint">' + (real ? F.length + ' flags · worst first' : 'All clear') + '</span></h2>';
+  if (!F.length) { h += '<p class="empty">Nothing needs attention right now.</p></div>'; return h; }
+  h += '<div class="attn">' + F.map(function (f) { return '<div class="flag ' + f.sev + '"><div class="fk">' + f.kind + '</div><div class="fd">' + f.html + '</div></div>'; }).join('') + '</div></div>';
+  return h;
+}
+
+/* ================= print brief ================= */
+function renderBrief(M) {
+  var flags = computeFlags(M).filter(function (f) { return f.sev !== 'info'; });
+  var onNames = M.crew.filter(function (c) { return c.timer; }).map(function (c) { return firstNameOf(c.uid) + ' ' + String(c.timer.kind || '').toLowerCase(); }).join(' · ');
+  var h = '<div class="head"><div><h1>Morning Brief</h1><div class="sub">Field Kit Manage · MHS Enterprises</div></div><div class="when"><b>' + weekdayName(M.n) + ', ' + monthName(M.n) + ' ' + M.n.getDate() + ', ' + M.n.getFullYear() + '</b><br>Printed ' + fmtClock(M.n) + '</div></div>';
+  h += '<h2>At a glance</h2><div class="glance">'
+    + '<div class="g"><div class="l">On the clock</div><div class="v">' + D.timers.length + ' of ' + M.crew.length + '</div><div class="s">' + esc(onNames || 'Nobody on the clock') + '</div></div>'
+    + '<div class="g"><div class="l">Hours today</div><div class="v">' + fmtH(M.hoursToday) + '</div><div class="s">So far</div></div>'
+    + '<div class="g"><div class="l">Jobs today</div><div class="v">' + M.jobsTodayCount + '</div><div class="s">' + (M.overdueCount ? '+ ' + M.overdueCount + ' overdue' : 'No overdue') + '</div></div>'
+    + '<div class="g"><div class="l">Yesterday</div><div class="v">' + M.closedYday.length + ' done</div><div class="s">' + fmtH(M.yTotalMin) + ' logged</div></div>'
+    + '<div class="g"><div class="l">Cable this week</div><div class="v">' + fmtInt(M.cableWeek) + ' ft</div><div class="s">' + fmtInt(M.cableYday) + ' ft yesterday</div></div></div>';
+  h += '<div class="two"><div><h2>Yesterday — ' + weekdayName(addDays(M.n, -1)) + '</h2>'
+    + '<div class="kv"><span class="k">Jobs worked</span><b>' + M.yJobsWorked + '</b></div>'
+    + '<div class="kv"><span class="k">Total hours</span><b>' + fmtH(M.yTotalMin) + '</b></div>'
+    + '<div class="kv"><span class="k">Closed</span><b>' + (M.closedYday.length ? esc(M.closedYday.map(function (p) { return jobLabel(p); }).join('; ')) : '—') + '</b></div>'
+    + '<div class="kv"><span class="k">Cable pulled</span><b>' + fmtInt(M.cableYday) + ' ft</b></div>'
+    + '<div class="kv"><span class="k">Most hours</span><b>' + (M.yTopUid ? esc(firstNameOf(M.yTopUid)) + ' · ' + fmtH(M.yTopMin) : '—') + '</b></div></div>';
+  h += '<div><h2>Week ahead</h2>' + M.ahead.map(function (a) { return '<div class="kv"><span class="k">' + weekdayName(a.d).slice(0, 3) + ', ' + monthName(a.d).slice(0, 3) + ' ' + a.d.getDate() + '</span><b>' + a.count + ' jobs' + (a.count >= 5 ? ' — heavy day' : '') + '</b></div>'; }).join('') + '</div></div>';
+  h += '<h2>Today\'s jobs</h2><table><tr><th>Job</th><th>Ticket</th><th>Crew</th><th>Hours</th><th>Schedule</th><th>Status</th></tr>';
+  M.todayJobs.forEach(function (j) { h += '<tr><td><b>' + esc(j.p.name) + '</b>' + (j.p.customer ? ' · ' + esc(j.p.customer) : '') + '</td><td>' + esc(j.p.ticket || '—') + '</td><td>' + (j.members.length ? esc(j.members.map(function (u) { return firstNameOf(u); }).join(' · ')) : 'Nobody assigned') + '</td><td>' + fmtH(j.mins) + '</td><td>' + (j.overdue ? 'Ended ' + fmtDateShort(j.p.sched_end) : (j.dayX || 'Today')) + '</td><td>' + j.status + '</td></tr>'; });
+  h += '</table><h2>Needs attention</h2><ul>';
+  if (!flags.length) h += '<li>All clear — nothing needs attention right now.</li>';
+  flags.forEach(function (f) { h += '<li class="' + f.sev + '"><span class="fl">' + f.kind + '</span>' + f.html + '</li>'; });
+  h += '</ul><div class="foot2"><span>Field Kit Manage · Morning brief</span><span>Read-only from Field Kit data</span></div>';
+  $('brief').innerHTML = h;
+}
+
+/* ================= render root ================= */
+function renderHome() {
+  var M = buildModel();
+  $('dateLine').textContent = weekdayName(M.n) + ', ' + monthName(M.n) + ' ' + M.n.getDate() + ', ' + M.n.getFullYear();
+  $('liveLine').innerHTML = '<i></i> ' + (DEMO ? 'Demo · ' : 'Live · ') + fmtClock(M.n);
+  $('modeTag').textContent = DEMO ? 'Demo — sample data' : '';
+  var chip = $('sinceChip');
+  if (lastVisit) {
+    var ne = M.entries.filter(function (e) { return new Date(e.created_at) > lastVisit; }).length;
+    var nc = M.projects.filter(function (p) { return p.status === 'done' && new Date(p.updated_at) > lastVisit; }).length;
+    if (ne || nc) { chip.textContent = 'Since your last visit: ' + ne + ' new entr' + (ne === 1 ? 'y' : 'ies') + ' · ' + nc + ' job' + (nc === 1 ? '' : 's') + ' closed'; chip.classList.remove('hidden'); }
+    else chip.classList.add('hidden');
+  } else chip.classList.add('hidden');
+  var warn = $('dataWarn');
+  if (D.entriesError) { warn.innerHTML = '<b>Crew time is not readable yet.</b> Manage needs the one-time read-only SQL (admins read time entries + cable pulls) — see the setup note. Projects, timers, and schedules below are live; hours and time-based flags appear once the SQL is run.'; warn.classList.remove('hidden'); }
+  else warn.classList.add('hidden');
+  $('home').innerHTML = renderStats(M) + '<div class="grid"><div>' + renderCrew(M) + '</div>' + renderRail(M) + '</div>' + renderJobs(M) + renderFlags(M);
+  renderBrief(M);
+}
+
+/* ================= palette ================= */
+var palList = [];
+function openPal() { $('palView').classList.remove('hidden'); $('palInput').value = ''; buildPal(''); setTimeout(function () { $('palInput').focus(); }, 30); }
+function closePal() { $('palView').classList.add('hidden'); }
+function buildPal(q) {
+  q = (q || '').toLowerCase(); palList = [];
+  D.projects.filter(function (p) { return !p.deleted_at && p.status !== 'done'; }).forEach(function (p) { if (!q || jobLabel(p).toLowerCase().indexOf(q) >= 0 || (p.ticket || '').toLowerCase().indexOf(q) >= 0) palList.push({ tag: 'Job', label: jobLabel(p), sub: p.ticket || '', target: 'job-' + p.id }); });
+  D.profiles.forEach(function (p) { if (!q || nameOf(p.id).toLowerCase().indexOf(q) >= 0) palList.push({ tag: 'Tech', label: nameOf(p.id), sub: '', target: 'crew-' + p.id }); });
+  palList = palList.slice(0, 14);
+  $('palItems').innerHTML = palList.length ? palList.map(function (it, i) { return '<div class="item" data-target="' + it.target + '"><span class="tag">' + it.tag + '</span><span>' + esc(it.label) + '</span><span class="sub2">' + esc(it.sub) + '</span></div>'; }).join('') : '<div class="none">No matches.</div>';
+  Array.prototype.forEach.call($('palItems').querySelectorAll('.item'), function (el) { el.addEventListener('click', function () { jumpTo(el.getAttribute('data-target')); }); });
+}
+function jumpTo(id) { closePal(); var el = $(id); if (!el) return; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('flash'); setTimeout(function () { el.classList.remove('flash'); }, 1800); }
+
+/* ================= data ================= */
+function loadAll() {
+  if (DEMO) return Promise.resolve();
+  var qs = [
+    sb.from('profiles').select('id,email,display_name'),
+    sb.from('projects').select('*'),
+    sb.from('project_members').select('*'),
+    sb.from('running_timers').select('*'),
+    sb.from('time_entries').select('*').order('start_iso', { ascending: false }).limit(3000),
+    sb.from('cable_pulls').select('*').limit(2000)
+  ];
+  return Promise.all(qs.map(function (p) { return p.then(function (r) { return r; }, function (e) { return { data: null, error: e }; }); })).then(function (rs) {
+    D.profiles = rs[0].data || []; D.projects = rs[1].data || []; D.members = rs[2].data || []; D.timers = rs[3].data || [];
+    D.entriesError = !!rs[4].error; D.entries = rs[4].data || []; D.pulls = rs[5].data || []; D.loadedAt = new Date();
+  });
+}
+var reloadTimer = null;
+function scheduleReload() { if (reloadTimer) return; reloadTimer = setTimeout(function () { reloadTimer = null; loadAll().then(renderHome); }, 1200); }
+function subscribeRT() {
+  if (!sb || DEMO) return;
+  try { var ch = sb.channel('fkm-live'); ['projects', 'time_entries', 'running_timers', 'project_members', 'cable_pulls'].forEach(function (t) { ch.on('postgres_changes', { event: '*', schema: 'public', table: t }, scheduleReload); }); ch.subscribe(); } catch (e) {}
+}
+function startTicks() {
+  setInterval(function () { document.querySelectorAll('[data-elapsed]').forEach(function (el) { el.textContent = fmtHM(timerElapsedMin({ started_at: el.getAttribute('data-elapsed') })); }); }, 30000);
+  setInterval(function () { if ($('palView').classList.contains('hidden') && !$('appView').classList.contains('hidden')) loadAll().then(renderHome); }, 300000);
+}
+
+/* ================= auth ================= */
+function showView(id) { ['authView', 'gateView', 'appView'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
+function onSignedIn(user) {
+  me = user;
+  sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle().then(function (r) {
+    isAdmin = !!(r && r.data);
+    if (!isAdmin) { $('gateEmail').textContent = user.email || ''; showView('gateView'); return; }
+    var k = 'fkm_last_visit_' + user.id, prev = null;
+    try { prev = localStorage.getItem(k); } catch (e) {}
+    lastVisit = prev ? new Date(prev) : null;
+    loadAll().then(function () {
+      $('meAvatar').textContent = initialsOf(user.id);
+      showView('appView'); renderHome();
+      try { localStorage.setItem(k, new Date().toISOString()); } catch (e) {}
+      subscribeRT(); startTicks();
+    });
+  }, function () { $('gateEmail').textContent = user.email || ''; showView('gateView'); });
+}
+function signOut() { if (sb) sb.auth.signOut().then(function () { location.reload(); }); else location.reload(); }
+
+/* ================= demo data (the mockup scene) ================= */
+function loadDemo() {
+  function L(y, mo, d, h, mi) { return new Date(y, mo, d, h, mi || 0).toISOString(); }
+  function E(id, proj, user, kind, s, e, notes, created, updated) { return { id: id, project_id: proj, user_id: user, kind: kind, start_iso: s, end_iso: e, notes: notes, lunch_min: 0, created_at: created, updated_at: updated || created, deleted_at: null }; }
+  function P(id, name, customer, ticket, status, owner, created, updated, ss, se) { return { id: id, name: name, customer: customer, site: '', ticket: ticket, notes: '', status: status, owner_id: owner, created_at: created, updated_at: updated, deleted_at: null, sched_start: ss || null, sched_end: se || null }; }
+  D.profiles = [
+    { id: 'u-jeremy', email: 'jeremyashley1990@gmail.com', display_name: 'Jeremy Ashley' },
+    { id: 'u-jordan', email: 'lead@mhs-ent.com', display_name: 'Jordan Ellis' },
+    { id: 'u-sam', email: 'tech1@mhs-ent.com', display_name: 'Sam Rivera' },
+    { id: 'u-casey', email: 'tech2@mhs-ent.com', display_name: 'Casey Brooks' }
+  ];
+  D.projects = [
+    P('p-riverview', 'Camera adds', 'Riverview Clinic', 'CW #1042', 'active', 'u-jordan', L(2026, 9, 28, 9, 0), L(2026, 10, 2, 15, 0), '2026-11-03', '2026-11-03'),
+    P('p-chaffee', 'AP swap', 'Chaffee School', 'CW #1043', 'active', 'u-sam', L(2026, 9, 29, 9, 0), L(2026, 10, 2, 15, 30), '2026-11-03', '2026-11-03'),
+    P('p-warehouse', 'Cable run', 'Warehouse B', 'CW #1039', 'active', 'u-casey', L(2026, 9, 27, 8, 0), L(2026, 10, 2, 16, 5), '2026-11-02', '2026-11-04'),
+    P('p-door', 'Door controller', 'Main Office', 'CW #1044', 'active', 'u-jordan', L(2026, 10, 1, 10, 0), L(2026, 10, 2, 17, 2), '2026-11-03', '2026-11-03'),
+    P('p-southgate', 'Parking cameras', 'Southgate Plaza', 'CW #1027', 'active', 'u-sam', L(2026, 9, 27, 9, 0), L(2026, 9, 30, 16, 0), '2026-10-29', '2026-10-30'),
+    P('p-printer', 'Printer VLAN', 'Main Office', 'CW #1036', 'done', 'u-jordan', L(2026, 9, 30, 8, 0), L(2026, 10, 2, 16, 48), '2026-11-02', '2026-11-02'),
+    P('p-harbor', 'Intercom repair', 'Harbor Point', 'CW #1019', 'active', 'u-sam', L(2026, 9, 20, 9, 0), L(2026, 9, 25, 9, 0), null, null),
+    P('p-northplant', 'Fiber backbone', 'North Plant', 'CW #1004', 'active', 'u-casey', L(2026, 8, 30, 8, 0), L(2026, 10, 1, 11, 0), null, null)
+  ];
+  var fillers = [
+    ['2026-11-04', ['Lobby cameras|Riverview Clinic', 'POS drops|City Mart', 'Intercom add|Chaffee School', 'Fiber test|North Plant']],
+    ['2026-11-05', ['Camera refresh|Southgate Plaza', 'Door adds|Main Office', 'AP install|Public Library', 'Switch swap|Warehouse B', 'Cable cert|Harbor Point', 'NVR upgrade|Riverview Clinic']],
+    ['2026-11-06', ['Punch list|Warehouse B', 'Camera aiming|City Mart']],
+    ['2026-11-09', ['Walkthrough|Elm Street Offices', 'Rack build|Main Office', 'Camera install|Public Library']],
+    ['2026-11-10', ['Access control|Elm Street Offices', 'Fiber run|North Plant', 'Final testing|Warehouse B']]
+  ];
+  var fi = 0;
+  fillers.forEach(function (grp) { grp[1].forEach(function (nm) { fi++; var parts = nm.split('|'); D.projects.push(P('p-f' + fi, parts[0], parts[1], 'CW #11' + (10 + fi), 'active', 'u-jordan', L(2026, 9, 30, 9, 0), L(2026, 10, 1, 9, 0), grp[0], grp[0])); }); });
+  D.members = [
+    { project_id: 'p-riverview', user_id: 'u-jordan', role: 'member' }, { project_id: 'p-chaffee', user_id: 'u-sam', role: 'member' },
+    { project_id: 'p-warehouse', user_id: 'u-casey', role: 'member' }, { project_id: 'p-southgate', user_id: 'u-sam', role: 'member' },
+    { project_id: 'p-southgate', user_id: 'u-casey', role: 'member' }, { project_id: 'p-printer', user_id: 'u-jordan', role: 'member' },
+    { project_id: 'p-harbor', user_id: 'u-sam', role: 'member' }, { project_id: 'p-northplant', user_id: 'u-casey', role: 'member' }
+  ];
+  D.timers = [
+    { user_id: 'u-jordan', project_id: 'p-riverview', kind: 'On site', started_at: L(2026, 10, 3, 7, 5) },
+    { user_id: 'u-sam', project_id: 'p-chaffee', kind: 'Drive', started_at: L(2026, 10, 3, 7, 50) }
+  ];
+  D.entries = [
+    E('e1', 'p-printer', 'u-jordan', 'Drive', '2026-11-02T06:40', '2026-11-02T07:00', 'Drive to Main Office', L(2026, 10, 2, 7, 0), L(2026, 10, 3, 7, 2)),
+    E('e2', 'p-printer', 'u-jordan', 'On site', '2026-11-02T07:00', '2026-11-02T11:40', 'VLAN config and testing', L(2026, 10, 2, 11, 40)),
+    E('e3', 'p-printer', 'u-jordan', 'On site', '2026-11-02T12:10', '2026-11-02T15:40', 'Printer VLAN cutover', L(2026, 10, 2, 15, 40)),
+    E('e4', 'p-riverview', 'u-jordan', 'Drive', '2026-11-03T06:40', '2026-11-03T07:05', '', L(2026, 10, 3, 7, 5)),
+    E('e5', 'p-chaffee', 'u-sam', 'Drive', '2026-11-02T06:50', '2026-11-02T08:20', 'Drive to Chaffee School', L(2026, 10, 2, 8, 20)),
+    E('e6', 'p-chaffee', 'u-sam', 'On site', '2026-11-02T08:20', '2026-11-02T11:50', 'AP swap — gym and office', L(2026, 10, 2, 11, 50)),
+    E('e7', 'p-chaffee', 'u-sam', 'Drive', '2026-11-02T11:50', '2026-11-02T12:35', 'Drive to Southgate', L(2026, 10, 2, 12, 35)),
+    E('e8', 'p-southgate', 'u-sam', 'On site', '2026-11-02T12:35', '2026-11-02T13:41', 'Parking camera aiming', L(2026, 10, 2, 13, 41)),
+    E('e9', 'p-southgate', 'u-sam', 'Drive', '2026-11-02T13:41', '2026-11-02T14:38', 'Drive back', L(2026, 10, 2, 14, 38)),
+    E('e10', 'p-warehouse', 'u-casey', 'On site', '2026-11-02T07:05', '2026-11-02T11:35', '', L(2026, 10, 2, 11, 35)),
+    E('e11', 'p-warehouse', 'u-casey', 'On site', '2026-11-02T12:05', '2026-11-02T15:35', '', L(2026, 10, 2, 16, 5))
+  ];
+  D.pulls = [
+    { id: 'cp1', project_id: 'p-warehouse', user_id: 'u-casey', used: 560, pull_date: '2026-11-02', created_at: L(2026, 10, 2, 10, 0), deleted_at: null },
+    { id: 'cp2', project_id: 'p-warehouse', user_id: 'u-sam', used: 300, pull_date: '2026-11-02', created_at: L(2026, 10, 2, 15, 15), deleted_at: null }
+  ];
+  lastVisit = new Date(2026, 10, 2, 15, 40);
+}
+
+/* ================= init ================= */
+function init() {
+  $('loginForm').addEventListener('submit', function (ev) {
+    ev.preventDefault(); $('loginErr').textContent = '';
+    if (!sb) { $('loginErr').textContent = 'Sign-in is unavailable — check your connection and reload.'; return; }
+    sb.auth.signInWithPassword({ email: $('liEmail').value.trim(), password: $('liPass').value }).then(function (r) {
+      if (r.error) { $('loginErr').textContent = r.error.message || 'Sign-in failed.'; return; }
+      onSignedIn(r.data.user);
+    });
+  });
+  $('signOutBtn').addEventListener('click', signOut);
+  $('gateOut').addEventListener('click', signOut);
+  $('refreshBtn').addEventListener('click', function () { loadAll().then(renderHome); });
+  $('printBtn').addEventListener('click', function () { window.print(); });
+  $('searchBox').addEventListener('click', openPal);
+  $('palInput').addEventListener('input', function () { buildPal(this.value); });
+  $('palInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && palList.length) jumpTo(palList[0].target); });
+  $('palView').addEventListener('click', function (e) { if (e.target === this) closePal(); });
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); if (!$('appView').classList.contains('hidden')) openPal(); }
+    if (e.key === 'Escape') closePal();
+  });
+  if (DEMO) {
+    loadDemo();
+    me = { id: 'u-jeremy', email: 'jeremyashley1990@gmail.com' }; isAdmin = true;
+    $('meAvatar').textContent = initialsOf('u-jeremy');
+    showView('appView'); renderHome();
+    return;
+  }
+  if (window.supabase && window.supabase.createClient) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!sb) { showView('authView'); $('loginErr').textContent = 'Could not load the sign-in library — check your connection and reload.'; return; }
+  sb.auth.getSession().then(function (r) { var s = r && r.data && r.data.session; if (s) onSignedIn(s.user); else showView('authView'); });
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
