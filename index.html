@@ -403,6 +403,7 @@
   .jf-crewrow input { width:18px; height:18px; margin:0; accent-color:#6366f1; flex:none; }
   .jb-crewrow { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #1b1f33; }
   .jb-crewrow.last { border-bottom:none; }
+  .jb-binbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
   .phead-actions { margin-left:auto; flex:none; display:flex; align-items:flex-start; gap:8px; }
   .phead-actions .chip { margin-left:0; }
   .jb-gearwrap { position:relative; flex:none; }
@@ -562,7 +563,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.8 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.9 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -583,6 +584,10 @@
 
 <div id="jbDelWrap" class="palwrap hidden">
   <div class="pal jobform jbwin" id="jbDelCard"></div>
+</div>
+
+<div id="jbPurgeWrap" class="palwrap hidden">
+  <div class="pal jobform jbwin" id="jbPurgeCard"></div>
 </div>
 
 <div id="muFormWrap" class="palwrap hidden">
@@ -1472,7 +1477,7 @@ function renderProjects() {
   var counts = { active: 0, scheduled: 0, open: 0, overdue: 0, closed: 0, all: PM.rows.length, deleted: 0 };
   PM.rows.forEach(function (r) { counts[r.bucket]++; if (r.bucket !== 'closed') counts.active++; });
   D.projects.forEach(function (p) { if (p.deleted_at) counts.deleted++; });
-  var chips = [['active', 'Active'], ['scheduled', 'Scheduled'], ['open', 'Open'], ['overdue', 'Overdue'], ['closed', 'Closed'], ['all', 'All'], ['deleted', 'Deleted']];
+  var chips = [['active', 'Active'], ['scheduled', 'Scheduled'], ['open', 'Open'], ['overdue', 'Overdue'], ['closed', 'Closed'], ['all', 'All'], ['deleted', 'Recycle bin']];
   var h = '<div class="pj-chips">';
   chips.forEach(function (c) { h += '<button class="pj-chip' + (PJ.filter === c[0] ? ' on' : '') + '" data-filter="' + c[0] + '">' + c[1] + ' <span class="n">' + counts[c[0]] + '</span></button>'; });
   h += '<input class="pj-search" id="pjSearch" type="text" placeholder="Search jobs, customers, tickets…" value="' + esc(PJ.q) + '">';
@@ -1495,9 +1500,13 @@ function renderProjects() {
    Rows are created in Field Kit's exact shape (see jbCreateJob): the
    creator is the owner, picked crew become project_members rows with
    role 'member', and the owner is never a member row. Deleting a job
-   is always a soft delete; there is no permanent delete here. */
-var JB = { mode: null, pid: null, msg: '', err: false, confirmDel: null, listMsg: '', listErr: false, winPid: null };
+   is a soft delete into the Recycle bin (v1.9): restorable for 30
+   days, then purgeable for good through the manage-users function —
+   the browser itself never hard-deletes a job. */
+var JB = { mode: null, pid: null, msg: '', err: false, confirmDel: null, listMsg: '', listErr: false, winPid: null, purgeIds: [], purgeSingle: false };
 var JB_SETUP_HINT = 'Job changes need the one-time setup SQL (supabase-jobs-write.sql) — once an admin has run it, this works.';
+var JB_BIN_DAYS = 30;
+var JB_PURGE_HINT = 'Purging needs the one-time manage-users function update — re-deploy the function file (see the setup notes in the README), then purging works. Restoring jobs from the bin works either way.';
 var JB_MODULES = ['time', 'cable', 'materials'];
 function jbGenId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 function jbErrText(e) {
@@ -1735,7 +1744,7 @@ function jbSyncCrewWin() {
 function jbOpenDelete(row) {
   var p = row.p;
   var h = '<h2>Delete job</h2>';
-  h += '<p class="caption" style="margin-top:6px">Delete \u201C' + esc(p.name) + '\u201D? This is a soft delete \u2014 the job leaves every view and can be restored from Projects \u2192 Deleted. Its time history is kept.</p>';
+  h += '<p class="caption" style="margin-top:6px">Delete \u201C' + esc(p.name) + '\u201D? This is a soft delete \u2014 the job leaves every view and can be restored from Projects \u2192 Recycle bin. Its time history is kept.</p>';
   h += '<div class="cardfoot"><button class="btn ghost" id="jbDelCancel">Cancel</button><button class="btn ghost btndanger" id="jbDelConfirm">Delete job</button></div>';
   $('jbDelCard').innerHTML = h;
   $('jbDelWrap').classList.remove('hidden');
@@ -1745,19 +1754,79 @@ function jbOpenDelete(row) {
 function jbCloseDelete() { var w = $('jbDelWrap'); if (w) w.classList.add('hidden'); }
 
 /* ---------- projects list: deleted filter + body wiring ---------- */
+/* ---------- recycle bin (v1.9): 30-day retention, then purge ----------
+   A soft-deleted job rests here, restorable, for JB_BIN_DAYS days.
+   Inside the window there is deliberately NO purge control anywhere —
+   the retention is a guarantee, not a suggestion. Once a job is
+   expired it can be erased for good, but only through the manage-users
+   function, which re-checks the deletion date against its own clock. */
+function jbBinState(p) {
+  var left = Math.ceil((new Date(p.deleted_at).getTime() + JB_BIN_DAYS * 86400000 - now().getTime()) / 86400000);
+  return { left: left, expired: left <= 0 };
+}
+function jbExpiredJobs() {
+  return D.projects.filter(function (p) { return !!p.deleted_at && jbBinState(p).expired; })
+    .sort(function (a, b) { return String(a.deleted_at).localeCompare(String(b.deleted_at)); });
+}
 function jbDeletedHTML() {
   var q = PJ.q.trim().toLowerCase();
   var rows = D.projects.filter(function (p) { return !!p.deleted_at; });
   if (q) rows = rows.filter(function (p) { return ((p.name || '') + ' ' + (p.customer || '') + ' ' + (p.ticket || '')).toLowerCase().indexOf(q) >= 0; });
-  rows.sort(function (a, b) { return String(b.deleted_at).localeCompare(String(a.deleted_at)); });
+  rows.sort(function (a, b) {
+    var ea = jbBinState(a).expired ? 0 : 1, eb = jbBinState(b).expired ? 0 : 1;
+    if (ea !== eb) return ea - eb;
+    return String(b.deleted_at).localeCompare(String(a.deleted_at));
+  });
   var h = '';
   if (JB.listMsg) h += '<p class="co-msg ' + (JB.listErr ? 'err' : 'ok') + '" style="margin-bottom:10px">' + esc(JB.listMsg) + '</p>';
-  if (!rows.length) return h + '<p class="empty">No deleted jobs. Jobs deleted in Manage land here and can be restored; their time history is kept.</p>';
-  h += '<div class="ts-scroll"><table><tr><th>Job</th><th class="col-cw">Ticket</th><th>Deleted</th><th></th></tr>';
+  var expired = jbExpiredJobs();
+  if (!rows.length && !expired.length) return h + '<p class="empty">The recycle bin is empty. Deleted jobs land here and stay restorable for ' + JB_BIN_DAYS + ' days; after that they can be purged for good.</p>';
+  if (expired.length) h += '<div class="jb-binbar"><span>' + expired.length + ' job' + (expired.length === 1 ? ' is' : 's are') + ' past the ' + JB_BIN_DAYS + '-day window and can be purged for good.</span><button class="btn ghost btndanger" id="jbPurgeAll">Purge expired (' + expired.length + ')</button></div>';
+  if (!rows.length) return h + '<p class="empty">No deleted jobs match the search.</p>';
+  h += '<div class="ts-scroll"><table><tr><th>Job</th><th class="col-cw">Ticket</th><th>Deleted</th><th>Recycle bin</th><th></th></tr>';
   rows.forEach(function (p) {
-    h += '<tr><td><span class="jobname">' + esc(p.name) + '</span>' + (p.customer ? '<br><span class="cust">' + esc(p.customer) + '</span>' : '') + '</td><td class="col-cw">' + esc(p.ticket || '—') + '</td><td>' + esc(fmtDateShort(String(p.deleted_at).slice(0, 10))) + '</td><td style="text-align:right"><button class="btn ghost small" data-jbrestore="' + p.id + '">Restore</button></td></tr>';
+    var st = jbBinState(p);
+    h += '<tr><td><span class="jobname">' + esc(p.name) + '</span>' + (p.customer ? '<br><span class="cust">' + esc(p.customer) + '</span>' : '') + '</td><td class="col-cw">' + esc(p.ticket || '—') + '</td><td>' + esc(fmtDateShort(String(p.deleted_at).slice(0, 10))) + '</td>';
+    if (st.expired) h += '<td><span class="chip red">Expired — ready to purge</span></td><td style="text-align:right;white-space:nowrap"><button class="btn ghost small" data-jbrestore="' + p.id + '">Restore</button> <button class="btn ghost small btndanger" data-jbpurge="' + p.id + '">Purge</button></td></tr>';
+    else h += '<td>Restorable for ' + st.left + ' more day' + (st.left === 1 ? '' : 's') + '</td><td style="text-align:right"><button class="btn ghost small" data-jbrestore="' + p.id + '">Restore</button></td></tr>';
   });
   return h + '</table></div>';
+}
+
+/* ---------- purge (floating confirm window; function-backed) ---------- */
+function jbOpenPurge(ids, single) {
+  JB.purgeIds = ids.slice(); JB.purgeSingle = !!single;
+  var names = JB.purgeIds.map(function (id) { var p = projById(id); return p ? p.name : id; });
+  var h = '<h2>Purge ' + (JB.purgeSingle ? 'this job' : 'expired jobs') + ' permanently?</h2>';
+  h += '<p class="caption" style="margin-top:6px">' + (JB.purgeSingle ? 'This job is past its ' + JB_BIN_DAYS + ' days in the recycle bin:' : 'These jobs are past their ' + JB_BIN_DAYS + ' days in the recycle bin:') + '</p>';
+  h += '<p style="margin-top:8px">' + names.map(function (n) { return '<b>' + esc(n) + '</b>'; }).join('<br>') + '</p>';
+  h += '<p class="caption" style="margin-top:8px">Purging erases ' + (JB.purgeSingle ? 'it' : 'them') + ' for good — all of ' + (JB.purgeSingle ? 'its' : 'their') + ' logged hours, materials, and cable records go too, and past timesheets will change. This cannot be undone.</p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="jbPurgeCancel">Cancel</button><button class="btn ghost btndanger" id="jbPurgeGo">Purge permanently</button></div>';
+  $('jbPurgeCard').innerHTML = h;
+  $('jbPurgeWrap').classList.remove('hidden');
+  $('jbPurgeCancel').addEventListener('click', jbClosePurge);
+  $('jbPurgeGo').addEventListener('click', jbDoPurge);
+}
+function jbClosePurge() { var w = $('jbPurgeWrap'); if (w) w.classList.add('hidden'); }
+function jbPurgeFail(r) {
+  var msg = r && r.error ? r.error : 'The purge failed — try again.';
+  if ((r && r.code === 'unavailable') || /unknown action/i.test(msg)) msg = JB_PURGE_HINT;
+  JB.listMsg = msg; JB.listErr = true;
+  renderProjects();
+}
+function jbDoPurge() {
+  var single = JB.purgeSingle, ids = JB.purgeIds.slice();
+  jbClosePurge();
+  if (!ids.length) return;
+  var call = single ? muCall('purge_project', { projectId: ids[0] }) : muCall('purge_expired', {});
+  call.then(function (r) {
+    if (!r || !r.ok) { jbPurgeFail(r); return; }
+    var names = r.names || [];
+    var n = (r.purged != null ? r.purged : names.length);
+    JB.listMsg = 'Purged ' + n + ' job' + (n === 1 ? '' : 's') + ' permanently' + (names.length ? ': ' + names.join(', ') : '') + '.';
+    JB.listErr = false;
+    jbAfterWrite();
+  });
 }
 function pjBodyHTML(PM) { return PJ.filter === 'deleted' ? jbDeletedHTML() : pjTableHTML(PM); }
 function wirePJBody() {
@@ -1765,6 +1834,11 @@ function wirePJBody() {
   Array.prototype.forEach.call($('pjView').querySelectorAll('[data-jbrestore]'), function (b) {
     b.addEventListener('click', function () { jbRestoreJob(b.getAttribute('data-jbrestore')); });
   });
+  Array.prototype.forEach.call($('pjView').querySelectorAll('[data-jbpurge]'), function (b) {
+    b.addEventListener('click', function () { jbOpenPurge([b.getAttribute('data-jbpurge')], true); });
+  });
+  var pa = $('jbPurgeAll');
+  if (pa) pa.addEventListener('click', function () { jbOpenPurge(jbExpiredJobs().map(function (p) { return p.id; }), false); });
 }
 
 function showMain(view) {
@@ -1793,8 +1867,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.8 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.8 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · Cable lists and the materials catalog, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.9 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.9 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · Cable lists and the materials catalog, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') renderCustomers(); } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -2429,6 +2503,34 @@ function muDemo(action, pl) {
       delete MU.demoOff[uid];
     }
     return done({ ok: true });
+  }
+  if (action === 'purge_expired' || action === 'purge_project') {
+    var cutoff = now().getTime() - JB_BIN_DAYS * 86400000;
+    var targets;
+    if (action === 'purge_project') {
+      var tpid = pl.project_id || pl.projectId || '';
+      var tp = projById(tpid);
+      if (!tp) return done({ ok: false, code: 'not_found', error: 'That job was not found.' });
+      if (!tp.deleted_at) return done({ ok: false, code: 'not_deleted', error: 'That job is not in the recycle bin — only deleted jobs can be purged.' });
+      if (new Date(tp.deleted_at).getTime() > cutoff) {
+        var when = new Date(new Date(tp.deleted_at).getTime() + JB_BIN_DAYS * 86400000).toISOString().slice(0, 10);
+        return done({ ok: false, code: 'not_expired', error: 'That job is still inside its 30 days in the recycle bin — it can be purged from ' + when + '.' });
+      }
+      targets = [tp];
+    } else {
+      targets = D.projects.filter(function (p) { return !!p.deleted_at && new Date(p.deleted_at).getTime() <= cutoff; });
+      targets.sort(function (a, b) { return String(a.deleted_at).localeCompare(String(b.deleted_at)); });
+    }
+    var pnames = targets.map(function (p) { return p.name; });
+    var pids = {};
+    targets.forEach(function (p) { pids[p.id] = 1; });
+    D.projects = D.projects.filter(function (p) { return !pids[p.id]; });
+    D.entries = D.entries.filter(function (e) { return !pids[e.project_id]; });
+    D.pulls = D.pulls.filter(function (x) { return !pids[x.project_id]; });
+    D.matLog = D.matLog.filter(function (x) { return !pids[x.project_id]; });
+    D.members = D.members.filter(function (m) { return !pids[m.project_id]; });
+    D.timers = D.timers.filter(function (t) { return !pids[t.project_id]; });
+    return done({ ok: true, purged: pnames.length, names: pnames });
   }
   return done({ ok: false, code: 'bad_request', error: 'Unknown action' });
 }
@@ -3563,6 +3665,20 @@ function loadDemo() {
     MLog('ml9', 'p-printer', 'u-jordan', 'Velcro ties', 2, 'roll', L(2026, 10, 2, 16, 0)),
     MLog('ml10', 'p-chaffee', 'u-sam', 'Cable labels', 1, 'pack', L(2026, 10, 2, 12, 10))
   ];
+  /* Recycle bin (v1.9): one fresh delete (Nov 1 — restorable, with
+     days left) and one long-expired delete (Oct 2 — past its 30 days
+     by the demo scene). The expired job carries September time and a
+     cable pull so a purge has something real to erase; everything sits
+     outside the current views' windows, so no other demo number moves. */
+  var oldPbx = P('p-oldpbx', 'Legacy PBX removal', 'City Mart', 'CW #998', 'done', 'u-sam', L(2026, 8, 14, 9, 0), L(2026, 9, 2, 10, 0));
+  oldPbx.deleted_at = L(2026, 9, 2, 10, 0);
+  var loaner = P('p-loaner', 'Loaner camera kit', 'Public Library', 'CW #1031', 'active', 'u-casey', L(2026, 9, 24, 9, 0), L(2026, 10, 1, 14, 0));
+  loaner.deleted_at = L(2026, 10, 1, 14, 0);
+  D.projects.push(oldPbx, loaner);
+  D.members.push({ project_id: 'p-oldpbx', user_id: 'u-sam', role: 'member' }, { project_id: 'p-loaner', user_id: 'u-casey', role: 'member' });
+  D.entries.push(E('x1', 'p-oldpbx', 'u-sam', 'Drive', '2026-09-28T07:00', '2026-09-28T07:30', '', L(2026, 8, 28, 7, 30)));
+  D.entries.push(E('x2', 'p-oldpbx', 'u-sam', 'On site', '2026-09-28T07:30', '2026-09-28T11:30', 'PBX head-end removal', L(2026, 8, 28, 11, 30)));
+  D.pulls.push({ id: 'cp5', project_id: 'p-oldpbx', user_id: 'u-sam', used: 120, pull_date: '2026-09-28', created_at: L(2026, 8, 28, 10, 0), deleted_at: null });
   lastVisit = new Date(2026, 10, 2, 15, 40);
 }
 
@@ -3599,6 +3715,7 @@ function init() {
   $('jobFormWrap').addEventListener('click', function (e) { if (e.target === this) jbCloseForm(); });
   $('jbCrewWrap').addEventListener('click', function (e) { if (e.target === this) jbCloseCrew(); });
   $('jbDelWrap').addEventListener('click', function (e) { if (e.target === this) jbCloseDelete(); });
+  $('jbPurgeWrap').addEventListener('click', function (e) { if (e.target === this) jbClosePurge(); });
   $('muFormWrap').addEventListener('click', function (e) { if (e.target === this) muCloseForm(); });
   $('muTempWrap').addEventListener('click', function (e) { if (e.target === this) muCloseTemp(); });
   $('muConfirmWrap').addEventListener('click', function (e) { if (e.target === this) muCloseConfirm(); });
