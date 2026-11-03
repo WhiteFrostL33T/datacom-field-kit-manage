@@ -620,7 +620,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.11.1 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.11.2 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -1693,16 +1693,47 @@ function jbDeleteJob(pid) {
   }
   jbRunUpdate(pid, sb.from('projects').update({ deleted_at: new Date().toISOString(), updated_by: me ? me.id : null }).eq('id', pid).select('id'), { after: function () { PJ.pid = null; JB.msg = ''; window.scrollTo(0, 0); } });
 }
+/* Restore parity with Field Kit's own recycle-bin restore (v1.11.2):
+   restoring a job revives the project row plus every child row deleted
+   at-or-after the project's own deletion — a Field Kit delete stamps
+   the children together with the job, so a project-only restore would
+   bring the job back empty. A child deleted individually, before the
+   job was deleted, stays deleted. Switch children (PoE devices, port
+   entries) hang off their switch rather than the project, so they are
+   reached through the project's switches with the same cutoff — the
+   same shape as Field Kit's restore. */
+var JB_RESTORE_CHILDREN = ['time_entries', 'cable_pulls', 'materials', 'poe_switches', 'port_switches', 'ip_assignments', 'technicians'];
+function jbRestoreSwitchKids(swTable, kidTable, pid, ts) {
+  return sb.from(swTable).select('id,deleted_at').eq('project_id', pid).then(function (r) {
+    var ids = (r.data || []).filter(function (s) { return !s.deleted_at || s.deleted_at >= ts; }).map(function (s) { return s.id; });
+    if (!ids.length) return null;
+    return sb.from(kidTable).update({ deleted_at: null }).in('switch_id', ids).gte('deleted_at', ts);
+  });
+}
 function jbRestoreJob(pid) {
   JB.listMsg = ''; JB.listErr = false;
+  var p = projById(pid);
+  var ts = p && p.deleted_at;
   if (DEMO) {
-    var p = projById(pid);
-    if (p) { p.deleted_at = null; p.updated_at = now().toISOString(); }
+    if (p && ts) {
+      p.deleted_at = null; p.updated_at = now().toISOString();
+      [D.entries, D.pulls, D.matLog].forEach(function (rows) {
+        rows.forEach(function (x) { if (x.project_id === pid && x.deleted_at && x.deleted_at >= ts) x.deleted_at = null; });
+      });
+    }
     renderProjects(); return;
   }
   sb.from('projects').update({ deleted_at: null, updated_by: me ? me.id : null }).eq('id', pid).select('id').then(function (r) {
     if (r.error || !r.data || !r.data.length) { JB.listMsg = r.error ? jbErrText(r.error) : JB_SETUP_HINT; JB.listErr = true; renderProjects(); return; }
-    loadAll().then(function () { renderProjects(); });
+    var jobs = [];
+    if (ts) {
+      JB_RESTORE_CHILDREN.forEach(function (tb) {
+        jobs.push(sb.from(tb).update({ deleted_at: null }).eq('project_id', pid).gte('deleted_at', ts));
+      });
+      jobs.push(jbRestoreSwitchKids('poe_switches', 'poe_devices', pid, ts));
+      jobs.push(jbRestoreSwitchKids('port_switches', 'port_entries', pid, ts));
+    }
+    Promise.all(jobs).then(function () { loadAll().then(function () { renderProjects(); }); }, function () { loadAll().then(function () { renderProjects(); }); });
   });
 }
 function jbAddMember(pid, uid) {
@@ -1936,8 +1967,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.11.1 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.11.1 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · Cable lists and the materials catalog, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.11.2 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.11.2 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · Cable lists and the materials catalog, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') renderCustomers(); } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
