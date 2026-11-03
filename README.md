@@ -8,6 +8,7 @@ Back-office companion to **Datacom Field Kit** — an admins-only, **read-only**
 - **Live.** Realtime subscriptions plus a 5-minute refresh keep timers and flags current.
 - **Print.** The Print brief button renders a one-page morning brief (at-a-glance, yesterday, week ahead, today's jobs, needs attention).
 - **Timesheets.** A second view (Oversight | Timesheets in the header): everyone's hours for a week or a pay period, click a person for their full day-by-day sheet, with print and CSV export.
+- **Projects.** A third view: every job in one filterable, searchable list, and a per-project page with all-time totals, hours by person, and the full entry history.
 - **Jump.** Ctrl/Cmd+K jumps to any job or tech on the page.
 - **Demo.** Add `?demo` to the URL to preview with sample data, no sign-in needed — the demo includes a full previous week so Timesheets has something to show.
 
@@ -17,7 +18,7 @@ Run `supabase-manage-readonly.sql` (kept with the project plan) once in the Supa
 
 ## Version
 
-v1.1.1 — Oversight home + Timesheets. (v1.1.1: navigation is now a top bar under the header.). (Schedule board and job costing are later phases, each approved separately.)
+v1.2 — Oversight home + Timesheets + Projects. (Schedule board and job costing are later phases, each approved separately.)
 
 ## Timesheets
 
@@ -27,3 +28,11 @@ v1.1.1 — Oversight home + Timesheets. (v1.1.1: navigation is now a top bar und
 - **Detail.** Click a person: totals split by kind (Drive / On site / Remote / Shop), a day-total strip, then every entry day by day with job, ticket, times, hours, lunch, and notes.
 - **Print & CSV.** Print gives the crew summary plus one page per person with hours. CSV downloads one row per entry (tech, date, job, customer, ticket, kind, start, end, hours, lunch, notes) for the period on screen — completed entries only, running timers are not included.
 - Still read-only: timesheets never writes to Field Kit data. Older weeks load on demand when you page back beyond the most recent entries.
+
+## Projects
+
+- **List.** Every project (except deleted ones) with filter chips and counts — Active is the default; also Scheduled, Open, Overdue, Closed, All — plus a text search over job name, customer, and ticket number. Columns: job + customer, ticket, status chip, schedule ("Today", "Day X of Y", a date or range, "Ended <date>" for overdue, "—" when unscheduled), crew avatars, all-time total hours (live dot when a timer is running on the job), and last activity. Sorted by last activity, newest first. Click a row to open the project.
+- **Status.** Derived, never stored: Closed › Overdue › In progress (a timer is running) › Worked today › Unstaffed (due today, nobody assigned) › Not started (due today, crew assigned, no time yet) › Scheduled › Open.
+- **Detail.** The full story of one job: header with customer · site · ticket, status, schedule, start date (earliest entry, or the project creation date), and the assigned crew; a totals strip (total hours + entry count, Drive / On site / Remote / Shop, cable pulled in feet + last pull date); **Hours by person** — each person's total with a kind-split stacked bar whose length is scaled to the top person's total; **History** — every entry grouped by day with day totals, kind pill, start–end times, lunch deductions, and notes, plus today's running timer as a live row; and the project's notes when set.
+- **History depth.** Entries load up front capped at the newest 3,000. Opening a project page fetches that project's entries once (per project per session), merges them in, and re-renders, so long jobs show their complete history. No fetch happens in demo mode.
+- **Printing.** The morning brief prints from Oversight and timesheets from the Timesheets tab; the Projects tab has no print output this round. With the Projects tab active, Ctrl+K picks a project to open its page.

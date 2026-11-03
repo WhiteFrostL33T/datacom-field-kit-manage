@@ -163,6 +163,56 @@
   .ts-ent:last-child { border-bottom:none; }
   .ts-ent .meta { color:#8b93b0; font-size:12.5px; margin-top:2px; }
   .ts-ent .notes { color:#c3c9de; font-size:13px; margin-top:2px; }
+  /* projects */
+  .pj-chips { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:14px 2px 12px; }
+  .pj-chip { background:transparent; border:1px solid #232842; color:#aab1c8; border-radius:999px; padding:6px 13px; font-size:12.5px; font-weight:650; cursor:pointer; font-family:inherit; }
+  .pj-chip:hover { background:#171a2b; }
+  .pj-chip.on { background:#6366f1; border-color:#6366f1; color:#fff; }
+  .pj-chip .n { opacity:.75; font-weight:600; }
+  .pj-search { margin-left:auto; background:#0b0e1a; border:1px solid #232842; border-radius:10px; color:#e6e9f5; padding:8px 12px; font-family:inherit; font-size:13px; min-width:210px; }
+  .pj-search:focus { outline:2px solid #6366f1; border-color:transparent; }
+  tr.pj-row { cursor:pointer; }
+  tr.pj-row:hover td { background:#171a2b; }
+  .avstack { display:inline-flex; align-items:center; }
+  .avstack .tavatar { width:26px; height:26px; font-size:10.5px; margin-left:-6px; border:2px solid #11141f; }
+  .avstack .tavatar:first-child { margin-left:0; }
+  .avstack .more { color:#8b93b0; font-size:12px; margin-left:6px; }
+  .stats.six { grid-template-columns:repeat(6,1fr); }
+  .projhead .prow { display:flex; align-items:flex-start; gap:12px; }
+  .pname { font-size:21px; font-weight:780; color:#e6e9f5; letter-spacing:-.2px; }
+  .pcust { color:#8b93b0; font-size:13.5px; margin-top:2px; }
+  .projhead .chip { margin-left:auto; flex:none; }
+  .pmeta { color:#aab1c8; font-size:13px; margin-top:12px; }
+  .pmeta b { color:#e6e9f5; }
+  .pcrew { display:flex; align-items:center; gap:8px; margin-top:10px; color:#aab1c8; font-size:13px; flex-wrap:wrap; }
+  .pcrew .tavatar { width:28px; height:28px; font-size:11px; }
+  .stack { display:flex; flex-direction:column; gap:14px; margin-top:14px; }
+  .prow2 { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid #1b1f33; }
+  .prow2:last-child { border-bottom:none; }
+  .prow2 .who { font-weight:680; color:#e6e9f5; }
+  .prow2 .split { color:#8b93b0; font-size:12.5px; margin-top:1px; }
+  .prow2 .tot { margin-left:auto; font-weight:750; font-size:15px; color:#e6e9f5; white-space:nowrap; }
+  .splitbar { display:flex; height:6px; border-radius:3px; overflow:hidden; margin-top:7px; background:#1b1f33; }
+  .splitbar .seg-drive { background:#f59e0b; }
+  .splitbar .seg-on { background:#10b981; }
+  .splitbar .seg-remote { background:#3b82f6; }
+  .splitbar .seg-shop { background:#a78bfa; }
+  .splitbar .seg-other { background:#64748b; }
+  .pj-dayh { display:flex; align-items:baseline; gap:10px; margin:14px 0 4px; }
+  .pj-dayh .d { font-weight:720; color:#e6e9f5; font-size:13.5px; }
+  .pj-dayh .dt { margin-left:auto; color:#8b93b0; font-size:12.5px; font-weight:650; }
+  .ent { display:flex; gap:11px; padding:8px 0; border-bottom:1px solid #1b1f33; }
+  .ent:last-child { border-bottom:none; }
+  .ent .tavatar { width:30px; height:30px; font-size:11px; }
+  .entmain { flex:1; min-width:0; }
+  .enttop { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+  .enttop .who { font-weight:680; color:#e6e9f5; }
+  .ent .pill { margin-left:0; padding:2.5px 9px; font-size:11.5px; }
+  .enttop .etime { color:#8b93b0; font-size:12.5px; }
+  .enttop .ehours { margin-left:auto; font-weight:720; color:#e6e9f5; white-space:nowrap; }
+  .enote { color:#8b93b0; font-size:12.5px; margin-top:2px; }
+  .rundot { width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block; flex:none; }
+  .notetext { color:#c6cbdf; font-size:13.5px; line-height:1.5; }
   /* auth */
   .authwrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
   .authcard { background:#11141f; border:1px solid #232842; border-radius:18px; padding:30px 30px 24px; width:100%; max-width:380px; box-shadow:0 10px 40px rgba(0,0,0,.45); }
@@ -191,7 +241,7 @@
   @media print {
     body { background:#fff; }
     .wrap, .authwrap, .palwrap { display:none !important; }
-    body:not(.view-ts) #brief { display:block; color:#111; font-size:13.5px; padding:10px 6px; }
+    body:not(.view-ts):not(.view-proj) #brief { display:block; color:#111; font-size:13.5px; padding:10px 6px; }
     #brief .head { border-bottom:3px solid #6366f1; padding-bottom:12px; display:flex; align-items:baseline; gap:12px; }
     #brief h1 { font-size:23px; font-weight:800; }
     #brief .sub { color:#555; font-size:13px; }
@@ -242,6 +292,8 @@
     .chip { font-size:11px; padding:3px 7px; }
     .jobname { font-size:12.5px; }
     .brand h1 { font-size:16.5px; }
+    .stats.six { grid-template-columns:repeat(2,1fr); }
+    .navtab { padding:10px 13px; font-size:13px; }
   }
 </style>
 </head>
@@ -289,6 +341,7 @@
     <div class="mainnav">
       <button class="navtab on" id="navHome">Oversight</button>
       <button class="navtab" id="navTs">Timesheets</button>
+      <button class="navtab" id="navProj">Projects</button>
     </div>
     <div class="dateline">
       <span class="date" id="dateLine">—</span>
@@ -299,7 +352,8 @@
     <div class="warnbar hidden" id="dataWarn"></div>
     <div id="home"></div>
     <div id="tsView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.1.1 · Oversight · Read-only — nothing here changes Field Kit data</div>
+    <div id="pjView" class="hidden"></div>
+    <div class="foot" id="footLine">Field Kit Manage v1.2 · Oversight · Read-only — nothing here changes Field Kit data</div>
   </div>
 </div>
 
@@ -862,18 +916,244 @@ function tsSetMode(m) {
   TS.mode = m; TS.offset = tsOffsetFor(start); TS.uid = null;
   renderTimesheets();
 }
+/* ================= projects ================= */
+var PJ = { filter: 'active', q: '', pid: null };
+var pjFetched = {};
+var PJM = null;
+var KIND_ORDER = ['drive', 'onsite', 'remote', 'shop', 'other'];
+var KIND_LABEL = { drive: 'Drive', onsite: 'On site', remote: 'Remote', shop: 'Shop', other: 'Other' };
+var SEG_CLASS = { drive: 'seg-drive', onsite: 'seg-on', remote: 'seg-remote', shop: 'seg-shop', other: 'seg-other' };
+function pjDayX(p, todayK) {
+  if (p.sched_start && p.sched_end && p.sched_start !== p.sched_end) {
+    var tot = Math.round((parseLocal(p.sched_end + 'T00:00') - parseLocal(p.sched_start + 'T00:00')) / 86400000) + 1;
+    var x = Math.round((parseLocal(todayK + 'T00:00') - parseLocal(p.sched_start + 'T00:00')) / 86400000) + 1;
+    if (x >= 1 && x <= tot) return 'Day ' + x + ' of ' + tot;
+  }
+  return null;
+}
+function pjModel() {
+  var todayK = dayKey(now());
+  var entries = D.entries.filter(function (e) { return !e.deleted_at; });
+  var pulls = D.pulls.filter(function (p) { return !p.deleted_at; });
+  var membersByProj = {}; D.members.forEach(function (m) { (membersByProj[m.project_id] = membersByProj[m.project_id] || []).push(m.user_id); });
+  var timersByProj = {}; D.timers.forEach(function (t) { (timersByProj[t.project_id] = timersByProj[t.project_id] || []).push(t); });
+  function scheduledOn(p, k) { return !!(p.sched_start && p.sched_start <= k && (!p.sched_end || p.sched_end >= k)); }
+  function isOverdue(p) { return p.status !== 'done' && !!p.sched_end && p.sched_end < todayK; }
+  var rows = D.projects.filter(function (p) { return !p.deleted_at; }).map(function (p) {
+    var ents = entries.filter(function (e) { return e.project_id === p.id; });
+    var timers = timersByProj[p.id] || [];
+    var byKind = { drive: 0, onsite: 0, remote: 0, shop: 0, other: 0 }, kindCount = { drive: 0, onsite: 0, remote: 0, shop: 0, other: 0 };
+    var total = 0, byPerson = {}, lastAct = null, firstK = null, todayMin = 0;
+    function bump(uid, kind, mins) {
+      var kc = kindClass(kind);
+      byKind[kc] += mins; total += mins;
+      if (!byPerson[uid]) byPerson[uid] = { uid: uid, total: 0, byKind: { drive: 0, onsite: 0, remote: 0, shop: 0, other: 0 }, live: false };
+      byPerson[uid].total += mins; byPerson[uid].byKind[kc] += mins;
+    }
+    ents.forEach(function (e) {
+      var m = entryMinutes(e); bump(e.user_id, e.kind, m); kindCount[kindClass(e.kind)]++;
+      var u = new Date(e.updated_at || e.created_at); if (!lastAct || u > lastAct) lastAct = u;
+      var ek = e.start_iso ? e.start_iso.slice(0, 10) : null;
+      if (ek) { if (!firstK || ek < firstK) firstK = ek; if (ek === todayK) todayMin += m; }
+    });
+    timers.forEach(function (t) {
+      var m = timerElapsedMin(t); bump(t.user_id, t.kind, m);
+      if (byPerson[t.user_id]) byPerson[t.user_id].live = true;
+      var s = new Date(t.started_at); if (!lastAct || s > lastAct) lastAct = s;
+    });
+    var pu = new Date(p.updated_at); if (!lastAct || pu > lastAct) lastAct = pu;
+    var pPulls = pulls.filter(function (x) { return x.project_id === p.id; });
+    var cableFt = pPulls.reduce(function (s, x) { return s + (x.used || 0); }, 0);
+    var lastPull = null; pPulls.forEach(function (x) { if (!lastPull || x.pull_date > lastPull) lastPull = x.pull_date; });
+    var members = membersByProj[p.id] || [];
+    var live = timers.length > 0, schedToday = scheduledOn(p, todayK), over = isOverdue(p);
+    var status, cls;
+    if (p.status === 'done') { status = 'Closed'; cls = 'gray'; }
+    else if (over) { status = 'Overdue'; cls = 'red'; }
+    else if (live) { status = 'In progress'; cls = 'green'; }
+    else if (todayMin > 0) { status = 'Worked today'; cls = 'green'; }
+    else if (schedToday && !members.length) { status = 'Unstaffed'; cls = 'red'; }
+    else if (schedToday) { status = 'Not started'; cls = 'gray'; }
+    else if (p.sched_start) { status = 'Scheduled'; cls = 'blue'; }
+    else { status = 'Open'; cls = 'gray'; }
+    var bucket = p.status === 'done' ? 'closed' : over ? 'overdue' : p.sched_start ? 'scheduled' : 'open';
+    return { p: p, ents: ents, timers: timers, total: total, byKind: byKind, kindCount: kindCount, byPerson: byPerson, members: members, live: live, status: status, cls: cls, bucket: bucket, lastAct: lastAct, startedK: firstK || dayKey(new Date(p.created_at)), cableFt: cableFt, lastPull: lastPull, schedToday: schedToday };
+  });
+  rows.sort(function (a, b) { var d = (b.lastAct ? b.lastAct.getTime() : 0) - (a.lastAct ? a.lastAct.getTime() : 0); if (d) return d; return jobLabel(a.p).localeCompare(jobLabel(b.p)); });
+  return { rows: rows, todayK: todayK };
+}
+function pjSchedCell(row) {
+  var p = row.p;
+  if (!p.sched_start) return '—';
+  if (row.bucket === 'overdue') return 'Ended ' + fmtDateShort(p.sched_end);
+  if (row.schedToday) { var dx = pjDayX(p, dayKey(now())); return dx || 'Today'; }
+  if (p.sched_end && p.sched_end !== p.sched_start) return fmtDateShort(p.sched_start) + ' – ' + fmtDateShort(p.sched_end);
+  return fmtDateShort(p.sched_start);
+}
+function pjSchedLong(row) {
+  var p = row.p;
+  if (!p.sched_start) return '';
+  if (row.bucket === 'overdue') return 'Ended ' + fmtDateShort(p.sched_end);
+  if (row.schedToday) { var dx = pjDayX(p, dayKey(now())); return dx ? 'Today · ' + dx : 'Today'; }
+  if (p.sched_end && p.sched_end !== p.sched_start) return fmtDateShort(p.sched_start) + ' – ' + fmtDateShort(p.sched_end);
+  return fmtDateShort(p.sched_start);
+}
+function pjStatusChip(row) { return '<span class="chip ' + row.cls + '">' + (row.cls === 'red' ? '⚠ ' : row.cls === 'green' ? '● ' : '') + row.status + '</span>'; }
+function pjCrewCell(r) {
+  if (!r.members.length) return '<span class="cust">—</span>';
+  var h = '<span class="avstack">';
+  r.members.slice(0, 4).forEach(function (u) { h += '<span class="tavatar" style="background:' + colorOf(u) + '" title="' + esc(nameOf(u)) + '">' + initialsOf(u) + '</span>'; });
+  h += '</span>';
+  if (r.members.length > 4) h += '<span class="more">+' + (r.members.length - 4) + '</span>';
+  return h;
+}
+function pjTableHTML(PM) {
+  var q = PJ.q.trim().toLowerCase();
+  var rows = PM.rows.filter(function (r) {
+    if (PJ.filter === 'active' && r.bucket === 'closed') return false;
+    if (PJ.filter !== 'active' && PJ.filter !== 'all' && r.bucket !== PJ.filter) return false;
+    if (q) { var hay = (r.p.name + ' ' + (r.p.customer || '') + ' ' + (r.p.ticket || '')).toLowerCase(); if (hay.indexOf(q) < 0) return false; }
+    return true;
+  });
+  if (!rows.length) return '<p class="empty">No jobs match.</p>';
+  var h = '<div class="ts-scroll"><table><tr><th>Job</th><th class="col-cw">Ticket</th><th>Status</th><th>Schedule</th><th>Crew</th><th>Total hours</th><th>Last activity</th></tr>';
+  rows.forEach(function (r) {
+    h += '<tr class="pj-row" data-pid="' + r.p.id + '"><td><span class="jobname">' + esc(r.p.name) + '</span>' + (r.p.customer ? '<br><span class="cust">' + esc(r.p.customer) + '</span>' : '') + '</td>';
+    h += '<td class="col-cw">' + esc(r.p.ticket || '—') + '</td>';
+    h += '<td>' + pjStatusChip(r) + '</td>';
+    h += '<td>' + esc(pjSchedCell(r)) + '</td>';
+    h += '<td>' + pjCrewCell(r) + '</td>';
+    h += '<td>' + (r.live ? '<span class="livedot"></span> ' : '') + fmtH(r.total) + '</td>';
+    h += '<td>' + (r.ents.length || r.live ? agoLabel(r.lastAct) : 'No activity yet') + '</td></tr>';
+  });
+  return h + '</table></div>';
+}
+function pjHistoryHTML(row) {
+  var byDay = {};
+  function dayItems(k) { return byDay[k] || (byDay[k] = []); }
+  row.ents.forEach(function (e) { if (e.start_iso) dayItems(e.start_iso.slice(0, 10)).push({ e: e, t: e.start_iso }); });
+  row.timers.forEach(function (t) { var sd = new Date(t.started_at); dayItems(dayKey(sd)).push({ timer: t, t: dayKey(sd) + 'T' + pad2(sd.getHours()) + ':' + pad2(sd.getMinutes()) }); });
+  var days = Object.keys(byDay).sort().reverse();
+  if (!days.length) return '<p class="empty">No entries yet.</p>';
+  var h = '';
+  days.forEach(function (k) {
+    var d = parseLocal(k + 'T00:00');
+    var items = byDay[k].slice().sort(function (a, b) { return a.t < b.t ? -1 : 1; });
+    var dayMin = 0, hasTimer = false;
+    items.forEach(function (it) { if (it.e) dayMin += entryMinutes(it.e); else { dayMin += timerElapsedMin(it.timer); hasTimer = true; } });
+    h += '<div class="pj-dayh"><span class="d">' + weekdayName(d) + ', ' + monthName(d) + ' ' + d.getDate() + '</span><span class="dt">' + fmtH(dayMin) + (hasTimer ? ' so far' : '') + '</span></div>';
+    items.forEach(function (it) {
+      if (it.timer) {
+        var t = it.timer;
+        h += '<div class="ent"><span class="tavatar" style="background:' + colorOf(t.user_id) + '">' + initialsOf(t.user_id) + '</span><div class="entmain"><div class="enttop"><span class="rundot"></span><span class="who">' + esc(nameOf(t.user_id)) + '</span><span class="pill ' + kindPillClass(t.kind) + '">' + esc(t.kind || 'Time') + '</span><span class="etime">' + fmtClock(new Date(t.started_at)) + ' – now · ' + fmtHM(timerElapsedMin(t)) + ' elapsed</span><span class="ehours">' + fmtH(timerElapsedMin(t)) + ' so far</span></div></div></div>';
+        return;
+      }
+      var e = it.e;
+      h += '<div class="ent"><span class="tavatar" style="background:' + colorOf(e.user_id) + '">' + initialsOf(e.user_id) + '</span><div class="entmain"><div class="enttop"><span class="who">' + esc(nameOf(e.user_id)) + '</span><span class="pill ' + kindPillClass(e.kind) + '">' + esc(e.kind || 'Time') + '</span><span class="etime">' + fmtClock(parseLocal(e.start_iso)) + ' – ' + fmtClock(parseLocal(e.end_iso)) + (e.lunch_min ? ' · −' + e.lunch_min + 'm lunch' : '') + '</span><span class="ehours">' + fmtH(entryMinutes(e)) + '</span></div>' + (e.notes && String(e.notes).trim() ? '<div class="enote">' + esc(e.notes) + '</div>' : '') + '</div></div>';
+    });
+  });
+  return h;
+}
+function renderPJDetail(row) {
+  var p = row.p;
+  var h = '<span class="ts-back" id="pjBack">‹ All projects</span>';
+  h += '<div class="card projhead"><div class="prow"><div><div class="pname">' + esc(p.name) + '</div><div class="pcust">' + esc([p.customer, p.site, p.ticket].filter(Boolean).join(' · ') || '—') + '</div></div>' + pjStatusChip(row) + '</div>';
+  var sl = pjSchedLong(row);
+  h += '<div class="pmeta">' + (sl ? 'Scheduled: <b>' + esc(sl) + '</b> · ' : '') + 'Started ' + fmtDateShort(row.startedK) + '</div>';
+  h += '<div class="pcrew">';
+  if (row.members.length) {
+    row.members.forEach(function (u) { h += '<span class="tavatar" style="background:' + colorOf(u) + '">' + initialsOf(u) + '</span>'; });
+    h += '<span>' + esc(row.members.map(function (u) { return nameOf(u); }).join(' · ')) + '</span>';
+  } else h += '<span>No crew assigned</span>';
+  h += '</div></div>';
+  function kindSub(kc) { if (row.kindCount[kc]) return row.kindCount[kc] + (row.kindCount[kc] === 1 ? ' entry' : ' entries'); return row.timers.some(function (t) { return kindClass(t.kind) === kc; }) ? 'Timer running' : 'No entries'; }
+  function hv(mins) { return fmtH(mins).replace(' h', ' <small>h</small>'); }
+  h += '<div class="stats six" style="margin-top:14px">';
+  h += statCard('Total hours', hv(row.total), row.ents.length ? 'Across ' + row.ents.length + ' entr' + (row.ents.length === 1 ? 'y' : 'ies') : 'No entries yet');
+  h += statCard('Drive', hv(row.byKind.drive), kindSub('drive'));
+  h += statCard('On site', hv(row.byKind.onsite), kindSub('onsite'));
+  h += statCard('Remote', hv(row.byKind.remote), kindSub('remote'));
+  h += statCard('Shop', hv(row.byKind.shop), kindSub('shop'));
+  h += statCard('Cable pulled', fmtInt(row.cableFt) + ' <small>ft</small>', row.lastPull ? 'Pulled ' + fmtDateShort(row.lastPull) : 'Nothing pulled yet');
+  h += '</div>';
+  h += '<div class="stack">';
+  h += '<div class="card"><h2>Hours by person</h2>';
+  var people = Object.keys(row.byPerson).map(function (k) { return row.byPerson[k]; }).sort(function (a, b) { return b.total - a.total; });
+  if (!people.length) h += '<p class="empty">No time logged on this job yet.</p>';
+  var top = people.length ? people[0].total : 0;
+  people.forEach(function (pp) {
+    var split = KIND_ORDER.filter(function (k) { return pp.byKind[k] > 0; }).map(function (k) { return KIND_LABEL[k] + ' ' + fmtH(pp.byKind[k]); }).join(' · ');
+    var wPct = top > 0 ? Math.max(2, Math.round(pp.total / top * 100)) : 0;
+    var segs = KIND_ORDER.filter(function (k) { return pp.byKind[k] > 0; }).map(function (k) { return '<div class="' + SEG_CLASS[k] + '" style="width:' + (pp.total > 0 ? pp.byKind[k] / pp.total * 100 : 0) + '%"></div>'; }).join('');
+    h += '<div class="prow2"><span class="tavatar" style="background:' + colorOf(pp.uid) + '">' + initialsOf(pp.uid) + '</span><div style="flex:1;min-width:0"><span class="who">' + esc(nameOf(pp.uid)) + '</span>' + (pp.live ? ' <span class="livedot" title="On the clock now"></span>' : '') + '<div class="split">' + esc(split) + '</div><div class="splitbar" style="width:' + wPct + '%">' + segs + '</div></div><div class="tot">' + fmtH(pp.total) + '</div></div>';
+  });
+  h += '</div>';
+  h += '<div class="card"><h2>History</h2>' + pjHistoryHTML(row) + '</div>';
+  if (p.notes && String(p.notes).trim()) h += '<div class="card"><h2>Project notes</h2><p class="notetext" style="margin-top:8px">' + esc(p.notes).replace(/\n/g, '<br>') + '</p></div>';
+  h += '</div>';
+  return h;
+}
+function pjMaybeFetch(pid) {
+  if (DEMO || !sb || D.entriesError || pjFetched[pid]) return;
+  pjFetched[pid] = 1;
+  sb.from('time_entries').select('*').eq('project_id', pid).then(function (r) {
+    if (!r || r.error || !r.data) return;
+    var seen = {}; D.entries.forEach(function (e) { seen[e.id] = 1; });
+    var added = false;
+    r.data.forEach(function (e) { if (!seen[e.id]) { D.entries.push(e); added = true; } });
+    if (added && VIEW === 'proj' && PJ.pid === pid) renderProjects();
+  });
+}
+function wirePJRows() {
+  Array.prototype.forEach.call($('pjView').querySelectorAll('tr.pj-row'), function (tr) {
+    tr.addEventListener('click', function () { PJ.pid = tr.getAttribute('data-pid'); renderProjects(); window.scrollTo(0, 0); });
+  });
+}
+function renderProjects() {
+  var PM = pjModel(); PJM = PM;
+  var el = $('pjView');
+  if (PJ.pid) {
+    var row = null;
+    PM.rows.forEach(function (r) { if (r.p.id === PJ.pid) row = r; });
+    if (row) {
+      el.innerHTML = renderPJDetail(row);
+      $('pjBack').addEventListener('click', function () { PJ.pid = null; renderProjects(); });
+      pjMaybeFetch(PJ.pid);
+      return;
+    }
+    PJ.pid = null;
+  }
+  var counts = { active: 0, scheduled: 0, open: 0, overdue: 0, closed: 0, all: PM.rows.length };
+  PM.rows.forEach(function (r) { counts[r.bucket]++; if (r.bucket !== 'closed') counts.active++; });
+  var chips = [['active', 'Active'], ['scheduled', 'Scheduled'], ['open', 'Open'], ['overdue', 'Overdue'], ['closed', 'Closed'], ['all', 'All']];
+  var h = '<div class="pj-chips">';
+  chips.forEach(function (c) { h += '<button class="pj-chip' + (PJ.filter === c[0] ? ' on' : '') + '" data-filter="' + c[0] + '">' + c[1] + ' <span class="n">' + counts[c[0]] + '</span></button>'; });
+  h += '<input class="pj-search" id="pjSearch" type="text" placeholder="Search jobs, customers, tickets…" value="' + esc(PJ.q) + '">';
+  h += '</div><div class="card"><h2>Projects <span class="hint">Every job · click one for its full story</span></h2><div id="pjTableWrap">' + pjTableHTML(PM) + '</div></div>';
+  el.innerHTML = h;
+  Array.prototype.forEach.call(el.querySelectorAll('.pj-chip'), function (btn) {
+    btn.addEventListener('click', function () { PJ.filter = btn.getAttribute('data-filter'); renderProjects(); });
+  });
+  var si = $('pjSearch');
+  si.addEventListener('input', function () { PJ.q = si.value; $('pjTableWrap').innerHTML = pjTableHTML(PJM); wirePJRows(); });
+  wirePJRows();
+}
+
 function showMain(view) {
   VIEW = view;
   document.body.classList.toggle('view-ts', view === 'ts');
+  document.body.classList.toggle('view-proj', view === 'proj');
   $('home').classList.toggle('hidden', view !== 'home');
   $('tsView').classList.toggle('hidden', view !== 'ts');
+  $('pjView').classList.toggle('hidden', view !== 'proj');
   $('navHome').classList.toggle('on', view === 'home');
   $('navTs').classList.toggle('on', view === 'ts');
-  $('printBtn').classList.toggle('hidden', view === 'ts');
-  $('footLine').textContent = 'Field Kit Manage v1.1.1 · ' + (view === 'ts' ? 'Timesheets' : 'Oversight') + ' · Read-only — nothing here changes Field Kit data';
-  if (view === 'ts') renderTimesheets(); else renderHome();
+  $('navProj').classList.toggle('on', view === 'proj');
+  $('printBtn').classList.toggle('hidden', view !== 'home');
+  $('footLine').textContent = 'Field Kit Manage v1.2 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : 'Oversight') + ' · Read-only — nothing here changes Field Kit data';
+  if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else renderHome();
 }
-function renderCurrent() { if (VIEW === 'ts') renderTimesheets(); else renderHome(); }
+function renderCurrent() { if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else renderHome(); }
 
 /* ================= palette ================= */
 var palList = [];
@@ -889,6 +1169,7 @@ function buildPal(q) {
 }
 function jumpTo(id) {
   closePal();
+  if (VIEW === 'proj' && id.indexOf('job-') === 0) { PJ.pid = id.slice(4); renderProjects(); window.scrollTo(0, 0); return; }
   if (VIEW === 'ts') {
     if (id.indexOf('crew-') === 0) { TS.uid = id.slice(5); renderTimesheets(); window.scrollTo(0, 0); return; }
     showMain('home');
@@ -922,6 +1203,7 @@ function startTicks() {
   setInterval(function () {
     document.querySelectorAll('[data-elapsed]').forEach(function (el) { el.textContent = fmtHM(timerElapsedMin({ started_at: el.getAttribute('data-elapsed') })); });
     if (VIEW === 'ts') { var w = tsWindow(), tk = dayKey(now()); if (dayKey(w.start) <= tk && tk <= dayKey(w.end)) renderTimesheets(); }
+    else if (VIEW === 'proj') { var ae = document.activeElement; if (PJ.pid || !ae || ae.id !== 'pjSearch') renderProjects(); }
   }, 30000);
   setInterval(function () { if ($('palView').classList.contains('hidden') && !$('appView').classList.contains('hidden')) loadAll().then(renderCurrent); }, 300000);
 }
@@ -968,6 +1250,7 @@ function loadDemo() {
     P('p-harbor', 'Intercom repair', 'Harbor Point', 'CW #1019', 'active', 'u-sam', L(2026, 9, 20, 9, 0), L(2026, 9, 25, 9, 0), null, null),
     P('p-northplant', 'Fiber backbone', 'North Plant', 'CW #1004', 'active', 'u-casey', L(2026, 8, 30, 8, 0), L(2026, 10, 1, 11, 0), null, null)
   ];
+  D.projects[0].notes = 'PO received; lift rental confirmed for Tuesday.';
   var fillers = [
     ['2026-11-04', ['Lobby cameras|Riverview Clinic', 'POS drops|City Mart', 'Intercom add|Chaffee School', 'Fiber test|North Plant']],
     ['2026-11-05', ['Camera refresh|Southgate Plaza', 'Door adds|Main Office', 'AP install|Public Library', 'Switch swap|Warehouse B', 'Cable cert|Harbor Point', 'NVR upgrade|Riverview Clinic']],
@@ -1044,7 +1327,9 @@ function loadDemo() {
   ]);
   D.pulls = [
     { id: 'cp1', project_id: 'p-warehouse', user_id: 'u-casey', used: 560, pull_date: '2026-11-02', created_at: L(2026, 10, 2, 10, 0), deleted_at: null },
-    { id: 'cp2', project_id: 'p-warehouse', user_id: 'u-sam', used: 300, pull_date: '2026-11-02', created_at: L(2026, 10, 2, 15, 15), deleted_at: null }
+    { id: 'cp2', project_id: 'p-warehouse', user_id: 'u-sam', used: 300, pull_date: '2026-11-02', created_at: L(2026, 10, 2, 15, 15), deleted_at: null },
+    { id: 'cp3', project_id: 'p-riverview', user_id: 'u-jordan', used: 240, pull_date: '2026-11-02', created_at: L(2026, 10, 2, 10, 30), deleted_at: null },
+    { id: 'cp4', project_id: 'p-northplant', user_id: 'u-casey', used: 180, pull_date: '2026-10-29', created_at: L(2026, 9, 29, 13, 0), deleted_at: null }
   ];
   lastVisit = new Date(2026, 10, 2, 15, 40);
 }
@@ -1062,6 +1347,7 @@ function init() {
   $('signOutBtn').addEventListener('click', signOut);
   $('navHome').addEventListener('click', function () { showMain('home'); });
   $('navTs').addEventListener('click', function () { showMain('ts'); });
+  $('navProj').addEventListener('click', function () { showMain('proj'); });
   $('gateOut').addEventListener('click', signOut);
   $('refreshBtn').addEventListener('click', function () { loadAll().then(renderCurrent); });
   $('printBtn').addEventListener('click', function () { window.print(); });
