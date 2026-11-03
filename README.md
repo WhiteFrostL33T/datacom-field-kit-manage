@@ -1,13 +1,13 @@
 # Field Kit Manage
 
-Back-office companion to **Datacom Field Kit** — an admins-only, **read-only** Oversight home for the office: live crew, today's jobs, yesterday's recap, the week ahead, and a needs-attention list, all computed live from the same Supabase data Field Kit already collects.
+Back-office companion to **Datacom Field Kit** — an admins-only, **read-only** Dashboard home for the office: live crew, today's jobs, yesterday's recap, the week ahead, and a needs-attention list, all computed live from the same Supabase data Field Kit already collects.
 
 - **Separate app.** Field Kit is not modified in any way; Manage only reads.
 - **Admins only.** Sign in with your Field Kit account; non-admin accounts get a closed door.
 - **Zero writes.** There is no code path in this app that creates, edits, or deletes Field Kit data.
 - **Live.** Realtime subscriptions plus a 5-minute refresh keep timers and flags current.
 - **Print.** The Print brief button renders a one-page morning brief (at-a-glance, yesterday, week ahead, today's jobs, needs attention).
-- **Timesheets.** A second view (Oversight | Timesheets in the header): everyone's hours for a week or a pay period, click a person for their full day-by-day sheet, with print and CSV export.
+- **Timesheets.** A second view (Dashboard | Timesheets in the header): everyone's hours for a week or a pay period, click a person for their full day-by-day sheet, with print and CSV export.
 - **Projects.** A third view: every job in one filterable, searchable list, and a per-project page with all-time totals, hours by person, and the full entry history.
 - **Schedule.** A fourth view: the week as a board — every scheduled job on its days, multi-day jobs spanning, unstaffed jobs flagged, and an unscheduled tray for open jobs with no dates.
 - **Jump.** Ctrl/Cmd+K jumps to any job or tech on the page.
@@ -19,7 +19,7 @@ Run `supabase-manage-readonly.sql` (kept with the project plan) once in the Supa
 
 ## Version
 
-v1.3.1 — Oversight home + Timesheets + Projects + Schedule board. New in 1.3.1: hovering a block on a crew member's day timeline (Oversight, Live crew) shows which job it was for, with the kind, times, and duration — a running block shows its elapsed time so far. (Job costing is a later phase, approved separately.)
+v1.3.2 — Dashboard home + Timesheets + Projects + Schedule board. New in 1.3.2: the Print brief action moved out of the header into the view tabs bar as an icon-only printer button (still Dashboard only), and the home section was renamed from Oversight to Dashboard; the timesheet Print and CSV actions joined it in the tabs bar as matching icon buttons (Timesheets only). New in 1.3.1: hovering a block on a crew member's day timeline (Dashboard, Live crew) shows which job it was for, with the kind, times, and duration — a running block shows its elapsed time so far. (Job costing is a later phase, approved separately.)
 
 ## Timesheets
 
@@ -36,7 +36,7 @@ v1.3.1 — Oversight home + Timesheets + Projects + Schedule board. New in 1.3.1
 - **Status.** Derived, never stored: Closed › Overdue › In progress (a timer is running) › Worked today › Unstaffed (due today, nobody assigned) › Not started (due today, crew assigned, no time yet) › Scheduled › Open.
 - **Detail.** The full story of one job: header with customer · site · ticket, status, schedule, start date (earliest entry, or the project creation date), and the assigned crew; a totals strip (total hours + entry count, Drive / On site / Remote / Shop, cable pulled in feet + last pull date); **Hours by person** — each person's total with a kind-split stacked bar whose length is scaled to the top person's total; **History** — every entry grouped by day with day totals, kind pill, start–end times, lunch deductions, and notes, plus today's running timer as a live row; and the project's notes when set.
 - **History depth.** Entries load up front capped at the newest 3,000. Opening a project page fetches that project's entries once (per project per session), merges them in, and re-renders, so long jobs show their complete history. No fetch happens in demo mode.
-- **Printing.** The morning brief prints from Oversight and timesheets from the Timesheets tab; the Projects tab has no print output this round. With the Projects tab active, Ctrl+K picks a project to open its page.
+- **Printing.** The morning brief prints from the Dashboard and timesheets from the Timesheets tab; the Projects tab has no print output this round. With the Projects tab active, Ctrl+K picks a project to open its page.
 
 ## Schedule
 

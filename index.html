@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#090d16">
-<title>Field Kit Manage — Oversight</title>
+<title>Field Kit Manage — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;550;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -136,6 +136,10 @@
   .navtab { background:transparent; border:1px solid transparent; color:#aab1c8; border-radius:10px; padding:10px 24px; font-size:14px; font-weight:650; cursor:pointer; font-family:inherit; }
   .navtab:hover { background:#1c2036; color:#e6e9f5; }
   .navtab.on { background:#6366f1; border-color:#6366f1; color:#fff; box-shadow:0 2px 10px rgba(99,102,241,.45); }
+  .navprint { align-self:center; width:36px; height:36px; flex:none; display:flex; align-items:center; justify-content:center; background:transparent; border:1px solid transparent; border-radius:10px; color:#aab1c8; cursor:pointer; padding:0; font-family:inherit; }
+  .navprint:hover { background:#1c2036; color:#6366f1; box-shadow:0 2px 10px rgba(99,102,241,.35); }
+  .navprint svg { display:block; }
+  .navactions { margin-left:auto; display:flex; gap:8px; align-items:center; }
   .ts-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:14px 2px 12px; }
   .segctl { display:flex; border:1px solid #232842; border-radius:10px; overflow:hidden; flex:none; }
   .segctl button { background:#0b0e1a; color:#aab1c8; border:none; padding:8px 14px; font-size:13px; font-weight:650; cursor:pointer; font-family:inherit; }
@@ -395,15 +399,19 @@
       <div class="spacer"></div>
       <div class="search" id="searchBox">🔍 Jump to a job or tech… <kbd>Ctrl K</kbd></div>
       <button class="btn ghost" id="refreshBtn" title="Refresh now">↻</button>
-      <button class="btn" id="printBtn">🖨 Print brief</button>
       <div class="avatar" id="meAvatar">–</div>
       <button class="btn ghost" id="signOutBtn">Sign out</button>
     </div>
     <div class="mainnav">
-      <button class="navtab on" id="navHome">Oversight</button>
+      <button class="navtab on" id="navHome">Dashboard</button>
       <button class="navtab" id="navTs">Timesheets</button>
       <button class="navtab" id="navProj">Projects</button>
       <button class="navtab" id="navSched">Schedule</button>
+      <div class="navactions">
+        <button class="navprint" id="printNav" title="Print brief" aria-label="Print brief"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
+        <button class="navprint hidden" id="tsPrintNav" title="Print timesheets" aria-label="Print timesheets"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
+        <button class="navprint hidden" id="tsCsvNav" title="Export CSV" aria-label="Export CSV"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
+      </div>
     </div>
     <div class="dateline">
       <span class="date" id="dateLine">—</span>
@@ -416,7 +424,7 @@
     <div id="tsView" class="hidden"></div>
     <div id="pjView" class="hidden"></div>
     <div id="schedView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.3.1 · Oversight · Read-only — nothing here changes Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.3.2 · Dashboard · Read-only — nothing here changes Field Kit data</div>
   </div>
 </div>
 
@@ -846,8 +854,6 @@ function renderTSBar(w) {
   if (TS.offset !== 0) h += '<button class="btn ghost" id="tsCurrent">Current</button>';
   h += '<span style="flex:1"></span>';
   if (TS.mode === 'period') h += '<label class="ts-anchor">Pay period starts <input type="date" id="tsAnchor" value="' + tsAnchorKey() + '"></label>';
-  h += '<button class="btn ghost" id="tsCsv">⬇ CSV</button>';
-  h += '<button class="btn" id="tsPrint">🖨 Print</button>';
   return h + '</div>';
 }
 function tsPersonCell(row) {
@@ -986,8 +992,6 @@ function renderTimesheets() {
   $('tsPrev').addEventListener('click', function () { TS.offset--; renderTimesheets(); });
   $('tsNext').addEventListener('click', function () { TS.offset++; renderTimesheets(); });
   var cur = $('tsCurrent'); if (cur) cur.addEventListener('click', function () { TS.offset = 0; renderTimesheets(); });
-  $('tsPrint').addEventListener('click', function () { window.print(); });
-  $('tsCsv').addEventListener('click', function () { tsDownloadCSV(w); });
   var anch = $('tsAnchor');
   if (anch) anch.addEventListener('change', function () {
     var oldStart = tsWindow().start;
@@ -1241,8 +1245,10 @@ function showMain(view) {
   $('navTs').classList.toggle('on', view === 'ts');
   $('navProj').classList.toggle('on', view === 'proj');
   $('navSched').classList.toggle('on', view === 'sched');
-  $('printBtn').classList.toggle('hidden', view !== 'home');
-  $('footLine').textContent = 'Field Kit Manage v1.3.1 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Oversight') + ' · Read-only — nothing here changes Field Kit data';
+  $('printNav').classList.toggle('hidden', view !== 'home');
+  $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
+  $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
+  $('footLine').textContent = 'Field Kit Manage v1.3.2 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + ' · Read-only — nothing here changes Field Kit data';
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else renderHome(); }
@@ -1598,7 +1604,9 @@ function init() {
   document.addEventListener('mouseover', function (e) { var s = segOf(e.target); if (s === tipSeg) return; if (s) showSegTip(s, e.clientX, e.clientY, false); else if (!tipPinned) hideSegTip(); });
   document.addEventListener('mousemove', function (e) { if (tipSeg && !tipPinned) placeSegTip(e.clientX, e.clientY); });
   document.addEventListener('click', function (e) { var s = segOf(e.target); if (s) { if (tipSeg === s && tipPinned) hideSegTip(); else showSegTip(s, e.clientX, e.clientY, true); } else if (tipPinned) hideSegTip(); });
-  $('printBtn').addEventListener('click', function () { window.print(); });
+  $('printNav').addEventListener('click', function () { window.print(); });
+  $('tsPrintNav').addEventListener('click', function () { window.print(); });
+  $('tsCsvNav').addEventListener('click', function () { tsDownloadCSV(tsWindow()); });
   $('searchBox').addEventListener('click', openPal);
   $('palInput').addEventListener('input', function () { buildPal(this.value); });
   $('palInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && palList.length) jumpTo(palList[0].target); });
