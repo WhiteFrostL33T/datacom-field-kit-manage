@@ -19,7 +19,7 @@ Run `supabase-manage-readonly.sql` (kept with the project plan) once in the Supa
 
 ## Version
 
-v1.3 — Oversight home + Timesheets + Projects + Schedule board. (Job costing is a later phase, approved separately.)
+v1.3.1 — Oversight home + Timesheets + Projects + Schedule board. New in 1.3.1: hovering a block on a crew member's day timeline (Oversight, Live crew) shows which job it was for, with the kind, times, and duration — a running block shows its elapsed time so far. (Job costing is a later phase, approved separately.)
 
 ## Timesheets
 

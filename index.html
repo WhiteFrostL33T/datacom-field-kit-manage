@@ -71,6 +71,11 @@
   .seg.other { background:#64748b; }
   .nowmark { position:absolute; top:-2px; bottom:-2px; width:2px; background:#818cf8; }
   .tl-scale { display:flex; justify-content:space-between; color:#8b93b0; font-size:10.5px; margin-top:3px; }
+  .timeline .seg { cursor:pointer; }
+  .segtip { position:fixed; z-index:80; display:none; max-width:300px; background:#171a2c; border:1px solid #2e3355; border-radius:12px; padding:8px 11px; box-shadow:0 8px 24px rgba(0,0,0,.45); pointer-events:none; }
+  .segtip.on { display:block; }
+  .segtip .tj { font-weight:700; font-size:13px; color:#e6e9f5; }
+  .segtip .tm { color:#aab1c8; font-size:12px; margin-top:1px; white-space:nowrap; }
   .week { display:flex; align-items:flex-end; gap:14px; margin-top:9px; }
   .days { display:flex; gap:5px; align-items:flex-end; }
   .day { text-align:center; }
@@ -411,7 +416,7 @@
     <div id="tsView" class="hidden"></div>
     <div id="pjView" class="hidden"></div>
     <div id="schedView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.3 · Oversight · Read-only — nothing here changes Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.3.1 · Oversight · Read-only — nothing here changes Field Kit data</div>
   </div>
 </div>
 
@@ -424,6 +429,7 @@
 
 <div id="brief"></div>
 <div id="tsprint"></div>
+<div id="segtip" class="segtip"><div class="tj" id="segtipJob"></div><div class="tm" id="segtipMeta"></div></div>
 
 <script>
 'use strict';
@@ -558,12 +564,13 @@ function renderStats(M) {
 function weekdayName(d) { return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()]; }
 function monthName(d) { return ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][d.getMonth()]; }
 
+function segTipJob(pid) { var p = projById(pid); if (!p) return '(job unavailable)'; return p.customer ? p.name + ' — ' + p.customer : p.name; }
 function timelineHTML(c, M) {
   var DAY_START = 6 * 60, DAY_SPAN = 12 * 60;
   function pos(d) { var mins = d.getHours() * 60 + d.getMinutes() - DAY_START; return Math.max(0, Math.min(100, mins / DAY_SPAN * 100)); }
   var h = '<div class="timeline">';
-  c.entriesToday.forEach(function (e) { var s = parseLocal(e.start_iso), en = parseLocal(e.end_iso); if (!s || !en) return; h += '<div class="seg ' + kindClass(e.kind) + '" style="left:' + pos(s) + '%;width:' + Math.max(0.8, pos(en) - pos(s)) + '%"></div>'; });
-  if (c.timer) { var st = new Date(c.timer.started_at); h += '<div class="seg ' + kindClass(c.timer.kind) + '" style="left:' + pos(st) + '%;width:' + Math.max(0.8, pos(M.n) - pos(st)) + '%"></div>'; }
+  c.entriesToday.forEach(function (e) { var s = parseLocal(e.start_iso), en = parseLocal(e.end_iso); if (!s || !en) return; h += '<div class="seg ' + kindClass(e.kind) + '" data-tjob="' + esc(segTipJob(e.project_id)) + '" data-tsub="' + esc((e.kind || '') + ' · ' + fmtClock(s) + ' – ' + fmtClock(en) + ' · ' + fmtH(entryMinutes(e))) + '" style="left:' + pos(s) + '%;width:' + Math.max(0.8, pos(en) - pos(s)) + '%"></div>'; });
+  if (c.timer) { var st = new Date(c.timer.started_at); h += '<div class="seg ' + kindClass(c.timer.kind) + '" data-tjob="' + esc(segTipJob(c.timer.project_id)) + '" data-tsub="' + esc((c.timer.kind || '') + ' · started ' + fmtClock(st) + ' · ' + fmtH(timerElapsedMin(c.timer)) + ' so far') + '" style="left:' + pos(st) + '%;width:' + Math.max(0.8, pos(M.n) - pos(st)) + '%"></div>'; }
   h += '<div class="nowmark" style="left:' + pos(M.n) + '%"></div></div>';
   h += '<div class="tl-scale"><span>6 AM</span><span>9 AM</span><span>12 PM</span><span>3 PM</span><span>6 PM</span></div>';
   return h;
@@ -575,6 +582,29 @@ function weekHTML(c) {
   h += '</div><div class="weektotal"><span class="n">' + fmtH(c.weekMin) + '</span> this week<div class="ot' + (c.weekMin > 40 * 60 ? ' over' : '') + '"><i style="width:' + Math.min(100, c.weekMin / (40 * 60) * 100) + '%"></i></div><div class="otlbl">of 40 h overtime line</div></div></div>';
   return h;
 }
+/* ================= crew timeline tooltip ================= */
+var tipSeg = null, tipPinned = false;
+function segOf(el) { while (el && el !== document) { if (el.classList && el.classList.contains('seg') && el.getAttribute('data-tjob') !== null) return el; el = el.parentNode; } return null; }
+function placeSegTip(x, y) {
+  var tip = $('segtip'); if (!tip) return;
+  var tw = tip.offsetWidth, th = tip.offsetHeight;
+  var left = x + 14, top = y - th - 12;
+  if (left + tw > window.innerWidth - 8) left = x - tw - 10;
+  if (top < 8) top = y + 16;
+  if (left < 8) left = 8;
+  if (top + th > window.innerHeight - 8) top = Math.max(8, window.innerHeight - th - 8);
+  tip.style.left = left + 'px'; tip.style.top = top + 'px';
+}
+function showSegTip(seg, x, y, pinned) {
+  var tip = $('segtip'); if (!tip) return;
+  tipSeg = seg; tipPinned = !!pinned;
+  $('segtipJob').textContent = seg.getAttribute('data-tjob') || '';
+  $('segtipMeta').textContent = seg.getAttribute('data-tsub') || '';
+  tip.classList.add('on');
+  if (!x && !y) { var r = seg.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top; }
+  placeSegTip(x, y);
+}
+function hideSegTip() { var tip = $('segtip'); if (tip) tip.classList.remove('on'); tipSeg = null; tipPinned = false; }
 function renderCrew(M) {
   var h = '<div class="card"><h2>Live crew <span class="hint">Updates as the crew works</span></h2>';
   if (!M.crew.length) h += '<p class="empty">No crew found yet — techs appear here once they are on a project, have a timer, or log time.</p>';
@@ -1198,6 +1228,7 @@ function renderProjects() {
 }
 
 function showMain(view) {
+  hideSegTip();
   VIEW = view;
   document.body.classList.toggle('view-ts', view === 'ts');
   document.body.classList.toggle('view-proj', view === 'proj');
@@ -1211,10 +1242,10 @@ function showMain(view) {
   $('navProj').classList.toggle('on', view === 'proj');
   $('navSched').classList.toggle('on', view === 'sched');
   $('printBtn').classList.toggle('hidden', view !== 'home');
-  $('footLine').textContent = 'Field Kit Manage v1.3 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Oversight') + ' · Read-only — nothing here changes Field Kit data';
+  $('footLine').textContent = 'Field Kit Manage v1.3.1 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Oversight') + ' · Read-only — nothing here changes Field Kit data';
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else renderHome();
 }
-function renderCurrent() { if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else renderHome(); }
+function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else renderHome(); }
 
 /* ================= schedule ================= */
 var SCHED = { offset: 0 };
@@ -1564,6 +1595,9 @@ function init() {
   $('navSched').addEventListener('click', function () { showMain('sched'); });
   $('gateOut').addEventListener('click', signOut);
   $('refreshBtn').addEventListener('click', function () { loadAll().then(renderCurrent); });
+  document.addEventListener('mouseover', function (e) { var s = segOf(e.target); if (s === tipSeg) return; if (s) showSegTip(s, e.clientX, e.clientY, false); else if (!tipPinned) hideSegTip(); });
+  document.addEventListener('mousemove', function (e) { if (tipSeg && !tipPinned) placeSegTip(e.clientX, e.clientY); });
+  document.addEventListener('click', function (e) { var s = segOf(e.target); if (s) { if (tipSeg === s && tipPinned) hideSegTip(); else showSegTip(s, e.clientX, e.clientY, true); } else if (tipPinned) hideSegTip(); });
   $('printBtn').addEventListener('click', function () { window.print(); });
   $('searchBox').addEventListener('click', openPal);
   $('palInput').addEventListener('input', function () { buildPal(this.value); });
