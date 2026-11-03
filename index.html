@@ -26,7 +26,7 @@
   .btn.ghost { background:transparent; border:1px solid #232842; color:#aab1c8; }
   .btn.ghost:hover { background:#171a2b; }
   .avatar { width:36px; height:36px; border-radius:50%; background:#1e2040; color:#a5b4fc; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex:none; }
-  .dateline { display:flex; align-items:center; gap:12px; margin:16px 2px 12px; flex-wrap:wrap; }
+  .dateline { display:flex; align-items:center; gap:12px; margin:13px 2px 12px; flex-wrap:wrap; }
   .dateline .date { font-size:16px; font-weight:700; }
   .live { display:inline-flex; align-items:center; gap:6px; color:#34d399; font-weight:600; font-size:12.5px; }
   .live i { width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block; }
@@ -127,10 +127,10 @@
   .flag .fd b { font-weight:700; color:#e6e9f5; }
   .foot { color:#8b93b0; font-size:12px; text-align:center; margin-top:18px; }
   /* nav + timesheets */
-  .mainnav { display:flex; gap:6px; margin-top:12px; }
-  .navtab { background:transparent; border:1px solid #232842; color:#aab1c8; border-radius:10px; padding:8px 18px; font-size:13.5px; font-weight:650; cursor:pointer; font-family:inherit; }
-  .navtab:hover { background:#171a2b; }
-  .navtab.on { background:#6366f1; border-color:#6366f1; color:#fff; }
+  .mainnav { display:flex; gap:8px; margin-top:12px; background:#11141f; border:1px solid #232842; border-radius:16px; padding:8px; box-shadow:0 1px 2px rgba(0,0,0,.35); }
+  .navtab { background:transparent; border:1px solid transparent; color:#aab1c8; border-radius:10px; padding:10px 24px; font-size:14px; font-weight:650; cursor:pointer; font-family:inherit; }
+  .navtab:hover { background:#1c2036; color:#e6e9f5; }
+  .navtab.on { background:#6366f1; border-color:#6366f1; color:#fff; box-shadow:0 2px 10px rgba(99,102,241,.45); }
   .ts-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:14px 2px 12px; }
   .segctl { display:flex; border:1px solid #232842; border-radius:10px; overflow:hidden; flex:none; }
   .segctl button { background:#0b0e1a; color:#aab1c8; border:none; padding:8px 14px; font-size:13px; font-weight:650; cursor:pointer; font-family:inherit; }
@@ -299,7 +299,7 @@
     <div class="warnbar hidden" id="dataWarn"></div>
     <div id="home"></div>
     <div id="tsView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.1 · Oversight · Read-only — nothing here changes Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.1.1 · Oversight · Read-only — nothing here changes Field Kit data</div>
   </div>
 </div>
 
@@ -870,7 +870,7 @@ function showMain(view) {
   $('navHome').classList.toggle('on', view === 'home');
   $('navTs').classList.toggle('on', view === 'ts');
   $('printBtn').classList.toggle('hidden', view === 'ts');
-  $('footLine').textContent = 'Field Kit Manage v1.1 · ' + (view === 'ts' ? 'Timesheets' : 'Oversight') + ' · Read-only — nothing here changes Field Kit data';
+  $('footLine').textContent = 'Field Kit Manage v1.1.1 · ' + (view === 'ts' ? 'Timesheets' : 'Oversight') + ' · Read-only — nothing here changes Field Kit data';
   if (view === 'ts') renderTimesheets(); else renderHome();
 }
 function renderCurrent() { if (VIEW === 'ts') renderTimesheets(); else renderHome(); }
