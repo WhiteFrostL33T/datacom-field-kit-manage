@@ -213,6 +213,62 @@
   .enote { color:#8b93b0; font-size:12.5px; margin-top:2px; }
   .rundot { width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block; flex:none; }
   .notetext { color:#c6cbdf; font-size:13.5px; line-height:1.5; }
+  /* schedule */
+  .wkbar { display:flex; align-items:center; gap:10px; margin:16px 2px 2px; }
+  .wkbar .wk { font-size:17px; font-weight:750; color:#e6e9f5; letter-spacing:-.2px; }
+  .btn.small { padding:7px 13px; font-size:12.5px; border-radius:9px; }
+  .wksum { color:#8b93b0; font-size:13px; margin:2px 2px 12px; }
+  .wksum b { color:#e6e9f5; font-weight:700; }
+  .wksum .bad { color:#f87171; font-weight:700; }
+  .boardcard { background:#11141f; border:1px solid #232842; border-radius:16px; padding:10px; box-shadow:0 1px 2px rgba(0,0,0,.3); }
+  .board { display:grid; grid-template-columns:repeat(7,1fr); gap:6px 0; }
+  .colshade { grid-row:1 / -1; background:#0c0f1a; border:1px solid #1b1f33; border-radius:12px; margin:0 3px; z-index:0; }
+  .colshade.today { background:rgba(99,102,241,.09); border-color:rgba(99,102,241,.55); box-shadow:0 0 0 1px rgba(99,102,241,.25), 0 6px 18px rgba(79,70,229,.12); }
+  .dayhead { z-index:1; padding:9px 12px 4px; }
+  .dayhead .dw { font-size:12px; font-weight:750; text-transform:uppercase; letter-spacing:.6px; color:#aab1c8; display:flex; align-items:center; gap:7px; }
+  .dayhead .dn { font-size:19px; font-weight:780; color:#e6e9f5; margin-top:1px; }
+  .dayhead .dc { color:#8b93b0; font-size:11.5px; margin-top:1px; }
+  .dayhead.today .dw, .dayhead.today .dn { color:#c7d2fe; }
+  .todaytag { background:#6366f1; color:#fff; border-radius:999px; padding:1.5px 8px; font-size:10px; font-weight:750; letter-spacing:.4px; }
+  .jcard { background:#171a2b; border:1px solid #262b47; border-radius:11px; padding:10px 12px; margin:2px 9px 4px; z-index:1; box-shadow:0 1px 2px rgba(0,0,0,.3); cursor:pointer; }
+  .jcard:hover { border-color:#3a4066; }
+  .jcard .jtop { display:flex; align-items:flex-start; gap:8px; }
+  .jcard .jname { font-weight:700; font-size:13.5px; color:#e6e9f5; line-height:1.25; }
+  .jcard .chip { margin-left:auto; padding:2.5px 8px; font-size:11px; flex:none; }
+  .jcard .jcust { color:#8b93b0; font-size:11.5px; margin-top:2px; }
+  .jcard .jcust .tk { white-space:nowrap; }
+  .jcard .jcrew { display:flex; align-items:center; gap:6px; margin-top:8px; color:#aab1c8; font-size:12px; flex-wrap:wrap; }
+  .jcard .jcrew .tavatar { width:22px; height:22px; font-size:9.5px; }
+  .jcard .jspan { color:#8b93b0; font-size:11.5px; margin-top:7px; }
+  .jcard.alert { background:rgba(239,68,68,.07); border-color:rgba(239,68,68,.55); }
+  .jcard.alert .jname { color:#fecaca; }
+  .jcard.closed { opacity:.68; }
+  .nojobs { z-index:1; color:#5b6280; font-size:12px; text-align:center; padding:14px 0 10px; }
+  .tray { margin-top:14px; }
+  .traygrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .traychip { display:flex; align-items:center; gap:11px; background:#0b0e1a; border:1px solid #232842; border-radius:11px; padding:12px 14px; cursor:pointer; }
+  .traychip:hover { border-color:#3a4066; }
+  .traychip .tavatar { width:32px; height:32px; font-size:12px; }
+  .traychip .tn { font-weight:700; color:#e6e9f5; font-size:13.5px; }
+  .traychip .tc { color:#8b93b0; font-size:12px; margin-top:1px; }
+  .traychip .tc .tk { white-space:nowrap; }
+  .traychip .tright { margin-left:auto; text-align:right; flex:none; }
+  .traychip .th { font-weight:750; color:#e6e9f5; font-size:14px; }
+  .traychip .ts2 { color:#8b93b0; font-size:11.5px; margin-top:1px; }
+  .traychip .ts2.stale { color:#fbbf24; font-weight:650; }
+  .sched-days { display:none; }
+  .sday { background:#11141f; border:1px solid #232842; border-radius:14px; padding:13px 14px; margin-top:10px; }
+  .sday.today { border-color:rgba(99,102,241,.55); }
+  .sday h3 { font-size:14px; font-weight:720; color:#e6e9f5; display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+  .sday .jcard { margin:0 0 8px; }
+  .sday .jcard:last-child { margin-bottom:0; }
+  @media (max-width:760px) {
+    .boardcard { display:none; }
+    .sched-days { display:block; }
+    .traygrid { grid-template-columns:1fr; }
+    .mainnav { flex-wrap:wrap; }
+    .wkbar .wk { font-size:15px; }
+  }
   /* auth */
   .authwrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
   .authcard { background:#11141f; border:1px solid #232842; border-radius:18px; padding:30px 30px 24px; width:100%; max-width:380px; box-shadow:0 10px 40px rgba(0,0,0,.45); }
@@ -241,7 +297,7 @@
   @media print {
     body { background:#fff; }
     .wrap, .authwrap, .palwrap { display:none !important; }
-    body:not(.view-ts):not(.view-proj) #brief { display:block; color:#111; font-size:13.5px; padding:10px 6px; }
+    body:not(.view-ts):not(.view-proj):not(.view-sched) #brief { display:block; color:#111; font-size:13.5px; padding:10px 6px; }
     #brief .head { border-bottom:3px solid #6366f1; padding-bottom:12px; display:flex; align-items:baseline; gap:12px; }
     #brief h1 { font-size:23px; font-weight:800; }
     #brief .sub { color:#555; font-size:13px; }
@@ -342,6 +398,7 @@
       <button class="navtab on" id="navHome">Oversight</button>
       <button class="navtab" id="navTs">Timesheets</button>
       <button class="navtab" id="navProj">Projects</button>
+      <button class="navtab" id="navSched">Schedule</button>
     </div>
     <div class="dateline">
       <span class="date" id="dateLine">—</span>
@@ -353,7 +410,8 @@
     <div id="home"></div>
     <div id="tsView" class="hidden"></div>
     <div id="pjView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.2 · Oversight · Read-only — nothing here changes Field Kit data</div>
+    <div id="schedView" class="hidden"></div>
+    <div class="foot" id="footLine">Field Kit Manage v1.3 · Oversight · Read-only — nothing here changes Field Kit data</div>
   </div>
 </div>
 
@@ -1143,17 +1201,160 @@ function showMain(view) {
   VIEW = view;
   document.body.classList.toggle('view-ts', view === 'ts');
   document.body.classList.toggle('view-proj', view === 'proj');
+  document.body.classList.toggle('view-sched', view === 'sched');
   $('home').classList.toggle('hidden', view !== 'home');
   $('tsView').classList.toggle('hidden', view !== 'ts');
   $('pjView').classList.toggle('hidden', view !== 'proj');
+  $('schedView').classList.toggle('hidden', view !== 'sched');
   $('navHome').classList.toggle('on', view === 'home');
   $('navTs').classList.toggle('on', view === 'ts');
   $('navProj').classList.toggle('on', view === 'proj');
+  $('navSched').classList.toggle('on', view === 'sched');
   $('printBtn').classList.toggle('hidden', view !== 'home');
-  $('footLine').textContent = 'Field Kit Manage v1.2 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : 'Oversight') + ' · Read-only — nothing here changes Field Kit data';
-  if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else renderHome();
+  $('footLine').textContent = 'Field Kit Manage v1.3 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Oversight') + ' · Read-only — nothing here changes Field Kit data';
+  if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else renderHome();
 }
-function renderCurrent() { if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else renderHome(); }
+function renderCurrent() { if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else renderHome(); }
+
+/* ================= schedule ================= */
+var SCHED = { offset: 0 };
+function schedRange(p) {
+  /* normalize a project's schedule to [startK, endK]; null when it has no dates at all */
+  var s = p.sched_start || p.sched_end, e = p.sched_end || p.sched_start;
+  if (!s || !e) return null;
+  if (e < s) { var t = s; s = e; e = t; }
+  return [s, e];
+}
+function schedModel() {
+  var n = now(), todayK = dayKey(n);
+  var wkMon = addDays(mondayOf(n), SCHED.offset * 7);
+  var wkKeys = [], i;
+  for (i = 0; i < 7; i++) wkKeys.push(dayKey(addDays(wkMon, i)));
+  var wkStart = wkKeys[0], wkEnd = wkKeys[6];
+  var membersByProj = {}; D.members.forEach(function (m) { (membersByProj[m.project_id] = membersByProj[m.project_id] || []).push(m.user_id); });
+  var pmById = {};
+  pjModel().rows.forEach(function (r) { pmById[r.p.id] = r; });
+  var jobs = [];
+  D.projects.filter(function (p) { return !p.deleted_at; }).forEach(function (p) {
+    var r = schedRange(p); if (!r) return;
+    if (r[1] < wkStart || r[0] > wkEnd) return;
+    var cs = r[0] < wkStart ? wkStart : r[0], ce = r[1] > wkEnd ? wkEnd : r[1];
+    jobs.push({ p: p, sK: r[0], eK: r[1], sc: wkKeys.indexOf(cs), ec: wkKeys.indexOf(ce), span: wkKeys.indexOf(ce) - wkKeys.indexOf(cs) + 1, members: membersByProj[p.id] || [], prow: pmById[p.id] || null, lane: -1 });
+  });
+  jobs.sort(function (a, b) { if (a.sc !== b.sc) return a.sc - b.sc; if (b.span !== a.span) return b.span - a.span; return jobLabel(a.p).localeCompare(jobLabel(b.p)); });
+  var lanes = [];
+  jobs.forEach(function (j) {
+    for (var li = 0; li < lanes.length; li++) {
+      var ok = true;
+      for (var k = 0; k < lanes[li].length; k++) { var o = lanes[li][k]; if (j.sc <= o.ec && o.sc <= j.ec) { ok = false; break; } }
+      if (ok) { j.lane = li; lanes[li].push(j); break; }
+    }
+    if (j.lane < 0) { j.lane = lanes.length; lanes.push([j]); }
+  });
+  var counts = [0, 0, 0, 0, 0, 0, 0];
+  jobs.forEach(function (j) { for (var c = j.sc; c <= j.ec; c++) counts[c]++; });
+  var unstaffed = jobs.filter(function (j) { return !j.members.length; }).length;
+  var tray = D.projects.filter(function (p) { return !p.deleted_at && p.status !== 'done' && !schedRange(p); }).map(function (p) {
+    var prow = pmById[p.id] || null;
+    return { p: p, members: membersByProj[p.id] || [], total: prow ? prow.total : 0, lastAct: prow ? prow.lastAct : new Date(p.updated_at) };
+  });
+  tray.sort(function (a, b) { return (a.lastAct ? a.lastAct.getTime() : 0) - (b.lastAct ? b.lastAct.getTime() : 0); });
+  return { n: n, todayK: todayK, wkMon: wkMon, wkKeys: wkKeys, jobs: jobs, counts: counts, unstaffed: unstaffed, tray: tray };
+}
+function schedChip(j, SM) {
+  /* chip only once the job touches today or a past day of the week on screen */
+  var touches = false, c;
+  for (c = j.sc; c <= j.ec; c++) if (SM.wkKeys[c] <= SM.todayK) { touches = true; break; }
+  if (!touches || !j.prow) return '';
+  var st = j.prow.status;
+  if (st !== 'Closed' && st !== 'Overdue' && st !== 'In progress' && st !== 'Worked today') return '';
+  return '<span class="chip ' + j.prow.cls + '">' + (j.prow.cls === 'red' ? '⚠ ' : j.prow.cls === 'green' ? '● ' : '') + st + '</span>';
+}
+function schedCardHTML(j, SM, styleAttr) {
+  var p = j.p, un = !j.members.length;
+  var h = '<div class="jcard' + (un ? ' alert' : '') + (p.status === 'done' ? ' closed' : '') + '" data-pid="' + p.id + '"' + (styleAttr ? ' style="' + styleAttr + '"' : '') + '>';
+  h += '<div class="jtop"><span class="jname">' + esc(p.name) + '</span>' + schedChip(j, SM) + '</div>';
+  var meta = [];
+  if (p.customer) meta.push(esc(p.customer));
+  if (p.ticket) meta.push('<span class="tk">' + esc(p.ticket) + '</span>');
+  if (meta.length) h += '<div class="jcust">' + meta.join(' · ') + '</div>';
+  if (un) h += '<div class="jcrew"><span class="unstaffed">— nobody assigned —</span></div>';
+  else {
+    h += '<div class="jcrew">';
+    j.members.slice(0, 3).forEach(function (u) { h += '<span class="tavatar" style="background:' + colorOf(u) + '">' + initialsOf(u) + '</span>'; });
+    h += '<span>' + esc(j.members.slice(0, 3).map(function (u) { return firstNameOf(u); }).join(' · ')) + (j.members.length > 3 ? ' +' + (j.members.length - 3) : '') + '</span></div>';
+  }
+  if (j.sK !== j.eK) {
+    var inWeek = j.sK >= SM.wkKeys[0] && j.eK <= SM.wkKeys[6];
+    var cap = inWeek
+      ? weekdayName(parseLocal(j.sK + 'T00:00')).slice(0, 3) + ' – ' + weekdayName(parseLocal(j.eK + 'T00:00')).slice(0, 3)
+      : fmtDateShort(j.sK) + ' – ' + fmtDateShort(j.eK);
+    var dx = pjDayX(p, SM.todayK);
+    if (dx) cap += ' · ' + dx;
+    h += '<div class="jspan">' + cap + '</div>';
+  }
+  return h + '</div>';
+}
+function schedTrayHTML(SM) {
+  var h = '<div class="card tray"><h2>Unscheduled — open, no dates <span class="hint">No dates set · not on the board</span></h2>';
+  if (!SM.tray.length) return h + '<p class="empty">Every open job has dates.</p></div>';
+  h += '<div class="traygrid">';
+  SM.tray.forEach(function (t) {
+    var p = t.p;
+    var idleDays = t.lastAct ? Math.floor((SM.n - t.lastAct) / 86400000) : 0;
+    var stale = idleDays >= 7;
+    h += '<div class="traychip" data-pid="' + p.id + '">';
+    if (t.members.length) h += '<span class="tavatar" style="background:' + colorOf(t.members[0]) + '">' + initialsOf(t.members[0]) + '</span>';
+    var tcParts = [];
+    if (p.customer) tcParts.push(esc(p.customer));
+    if (p.ticket) tcParts.push('<span class="tk">' + esc(p.ticket) + '</span>');
+    if (t.members.length) tcParts.push(esc(firstNameOf(t.members[0])));
+    h += '<div><div class="tn">' + esc(p.name) + '</div><div class="tc">' + tcParts.join(' · ') + '</div></div>';
+    h += '<div class="tright"><div class="th">' + fmtH(t.total) + ' logged</div><div class="ts2' + (stale ? ' stale' : '') + '">' + (stale ? 'No activity in ' + idleDays + ' days' : 'Last activity ' + (t.lastAct ? agoLabel(t.lastAct) : '—')) + '</div></div></div>';
+  });
+  return h + '</div></div>';
+}
+function renderSchedule() {
+  var SM = schedModel();
+  var el = $('schedView'), ci, d;
+  var h = '<div class="wkbar"><span class="wk">Week of ' + fmtDateShort(SM.wkKeys[0]) + ' – ' + fmtDateShort(SM.wkKeys[6]) + '</span><span class="spacer"></span>'
+    + '<button class="btn ghost small" id="schedPrev" title="Previous week">‹</button>'
+    + '<button class="btn ghost small" id="schedNext" title="Next week">›</button>'
+    + (SCHED.offset !== 0 ? '<button class="btn ghost small" id="schedThis">This week</button>' : '')
+    + '</div>';
+  h += '<div class="wksum"><b>' + SM.jobs.length + ' job' + (SM.jobs.length === 1 ? '' : 's') + '</b> scheduled · '
+    + (SM.unstaffed ? '<span class="bad">' + SM.unstaffed + ' unstaffed</span>' : 'no unstaffed jobs')
+    + ' · <b>' + SM.tray.length + ' job' + (SM.tray.length === 1 ? '' : 's') + '</b> unscheduled — in the tray below</div>';
+  h += '<div class="boardcard"><div class="board">';
+  for (ci = 0; ci < 7; ci++) h += '<div class="colshade' + (SM.wkKeys[ci] === SM.todayK ? ' today' : '') + '" style="grid-column:' + (ci + 1) + '"></div>';
+  for (ci = 0; ci < 7; ci++) {
+    d = addDays(SM.wkMon, ci);
+    var isT = SM.wkKeys[ci] === SM.todayK;
+    h += '<div class="dayhead' + (isT ? ' today' : '') + '" style="grid-column:' + (ci + 1) + ';grid-row:1"><div class="dw">' + weekdayName(d).slice(0, 3) + (isT ? ' <span class="todaytag">Today</span>' : '') + '</div><div class="dn">' + monthName(d).slice(0, 3) + ' ' + d.getDate() + '</div><div class="dc">' + SM.counts[ci] + ' job' + (SM.counts[ci] === 1 ? '' : 's') + '</div></div>';
+  }
+  SM.jobs.forEach(function (j) { h += schedCardHTML(j, SM, 'grid-column:' + (j.sc + 1) + ' / span ' + j.span + ';grid-row:' + (j.lane + 2)); });
+  for (ci = 0; ci < 7; ci++) if (!SM.counts[ci]) h += '<div class="nojobs" style="grid-column:' + (ci + 1) + ';grid-row:2">No jobs</div>';
+  h += '</div></div>';
+  h += '<div class="sched-days">';
+  for (ci = 0; ci < 7; ci++) {
+    d = addDays(SM.wkMon, ci);
+    var isT2 = SM.wkKeys[ci] === SM.todayK;
+    var starts = SM.jobs.filter(function (j) { return j.sc === ci; });
+    h += '<div class="sday' + (isT2 ? ' today' : '') + '"><h3>' + weekdayName(d) + ', ' + monthName(d).slice(0, 3) + ' ' + d.getDate() + (isT2 ? ' <span class="todaytag">Today</span>' : '') + '</h3>';
+    if (!starts.length) h += '<p class="empty">No jobs start this day.</p>';
+    starts.forEach(function (j) { h += schedCardHTML(j, SM, null); });
+    h += '</div>';
+  }
+  h += '</div>';
+  h += schedTrayHTML(SM);
+  el.innerHTML = h;
+  $('schedPrev').addEventListener('click', function () { SCHED.offset--; renderSchedule(); });
+  $('schedNext').addEventListener('click', function () { SCHED.offset++; renderSchedule(); });
+  var tw = $('schedThis'); if (tw) tw.addEventListener('click', function () { SCHED.offset = 0; renderSchedule(); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-pid]'), function (node) {
+    node.addEventListener('click', function () { PJ.pid = node.getAttribute('data-pid'); showMain('proj'); window.scrollTo(0, 0); });
+  });
+}
 
 /* ================= palette ================= */
 var palList = [];
@@ -1204,6 +1405,7 @@ function startTicks() {
     document.querySelectorAll('[data-elapsed]').forEach(function (el) { el.textContent = fmtHM(timerElapsedMin({ started_at: el.getAttribute('data-elapsed') })); });
     if (VIEW === 'ts') { var w = tsWindow(), tk = dayKey(now()); if (dayKey(w.start) <= tk && tk <= dayKey(w.end)) renderTimesheets(); }
     else if (VIEW === 'proj') { var ae = document.activeElement; if (PJ.pid || !ae || ae.id !== 'pjSearch') renderProjects(); }
+    else if (VIEW === 'sched') renderSchedule();
   }, 30000);
   setInterval(function () { if ($('palView').classList.contains('hidden') && !$('appView').classList.contains('hidden')) loadAll().then(renderCurrent); }, 300000);
 }
@@ -1241,7 +1443,7 @@ function loadDemo() {
     { id: 'u-casey', email: 'tech2@example.com', display_name: 'Casey Brooks' }
   ];
   D.projects = [
-    P('p-riverview', 'Camera adds', 'Riverview Clinic', 'CW #1042', 'active', 'u-jordan', L(2026, 9, 28, 9, 0), L(2026, 10, 2, 15, 0), '2026-11-03', '2026-11-03'),
+    P('p-riverview', 'Camera adds', 'Riverview Clinic', 'CW #1042', 'active', 'u-jordan', L(2026, 9, 28, 9, 0), L(2026, 10, 2, 15, 0), '2026-11-02', '2026-11-03'),
     P('p-chaffee', 'AP swap', 'Chaffee School', 'CW #1043', 'active', 'u-sam', L(2026, 9, 29, 9, 0), L(2026, 10, 2, 15, 30), '2026-11-03', '2026-11-03'),
     P('p-warehouse', 'Cable run', 'Warehouse B', 'CW #1039', 'active', 'u-casey', L(2026, 9, 27, 8, 0), L(2026, 10, 2, 16, 5), '2026-11-02', '2026-11-04'),
     P('p-door', 'Door controller', 'Main Office', 'CW #1044', 'active', 'u-jordan', L(2026, 10, 1, 10, 0), L(2026, 10, 2, 17, 2), '2026-11-03', '2026-11-03'),
@@ -1255,7 +1457,9 @@ function loadDemo() {
     ['2026-11-04', ['Lobby cameras|Riverview Clinic', 'POS drops|City Mart', 'Intercom add|Chaffee School', 'Fiber test|North Plant']],
     ['2026-11-05', ['Camera refresh|Southgate Plaza', 'Door adds|Main Office', 'AP install|Public Library', 'Switch swap|Warehouse B', 'Cable cert|Harbor Point', 'NVR upgrade|Riverview Clinic']],
     ['2026-11-06', ['Punch list|Warehouse B', 'Camera aiming|City Mart']],
-    ['2026-11-09', ['Walkthrough|Elm Street Offices', 'Rack build|Main Office', 'Camera install|Public Library']],
+    ['2026-11-04', ['Walkthrough|Elm Street Offices']],
+    ['2026-11-09', ['Rack build|Main Office']],
+    ['2026-11-04', ['Camera install|Public Library']],
     ['2026-11-10', ['Access control|Elm Street Offices', 'Fiber run|North Plant', 'Final testing|Warehouse B']]
   ];
   var fi = 0;
@@ -1264,7 +1468,16 @@ function loadDemo() {
     { project_id: 'p-riverview', user_id: 'u-jordan', role: 'member' }, { project_id: 'p-chaffee', user_id: 'u-sam', role: 'member' },
     { project_id: 'p-warehouse', user_id: 'u-casey', role: 'member' }, { project_id: 'p-southgate', user_id: 'u-sam', role: 'member' },
     { project_id: 'p-southgate', user_id: 'u-casey', role: 'member' }, { project_id: 'p-printer', user_id: 'u-jordan', role: 'member' },
-    { project_id: 'p-harbor', user_id: 'u-sam', role: 'member' }, { project_id: 'p-northplant', user_id: 'u-casey', role: 'member' }
+    { project_id: 'p-harbor', user_id: 'u-sam', role: 'member' }, { project_id: 'p-northplant', user_id: 'u-casey', role: 'member' },
+    { project_id: 'p-f1', user_id: 'u-jordan', role: 'member' }, { project_id: 'p-f2', user_id: 'u-casey', role: 'member' },
+    { project_id: 'p-f3', user_id: 'u-sam', role: 'member' }, { project_id: 'p-f4', user_id: 'u-casey', role: 'member' },
+    { project_id: 'p-f5', user_id: 'u-sam', role: 'member' }, { project_id: 'p-f6', user_id: 'u-casey', role: 'member' },
+    { project_id: 'p-f7', user_id: 'u-jordan', role: 'member' }, { project_id: 'p-f8', user_id: 'u-sam', role: 'member' },
+    { project_id: 'p-f9', user_id: 'u-casey', role: 'member' }, { project_id: 'p-f10', user_id: 'u-jordan', role: 'member' },
+    { project_id: 'p-f11', user_id: 'u-casey', role: 'member' }, { project_id: 'p-f12', user_id: 'u-sam', role: 'member' },
+    { project_id: 'p-f14', user_id: 'u-casey', role: 'member' }, { project_id: 'p-f15', user_id: 'u-jordan', role: 'member' },
+    { project_id: 'p-f16', user_id: 'u-jordan', role: 'member' }, { project_id: 'p-f17', user_id: 'u-casey', role: 'member' },
+    { project_id: 'p-f18', user_id: 'u-sam', role: 'member' }
   ];
   D.timers = [
     { user_id: 'u-jordan', project_id: 'p-riverview', kind: 'On site', started_at: L(2026, 10, 3, 7, 5) },
@@ -1348,6 +1561,7 @@ function init() {
   $('navHome').addEventListener('click', function () { showMain('home'); });
   $('navTs').addEventListener('click', function () { showMain('ts'); });
   $('navProj').addEventListener('click', function () { showMain('proj'); });
+  $('navSched').addEventListener('click', function () { showMain('sched'); });
   $('gateOut').addEventListener('click', signOut);
   $('refreshBtn').addEventListener('click', function () { loadAll().then(renderCurrent); });
   $('printBtn').addEventListener('click', function () { window.print(); });
