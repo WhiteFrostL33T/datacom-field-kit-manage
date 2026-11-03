@@ -953,10 +953,10 @@ function loadDemo() {
   function EL(id, proj, user, kind, s, e, notes, created, lunch) { var x = E(id, proj, user, kind, s, e, notes, created, created); x.lunch_min = lunch || 0; return x; }
   function P(id, name, customer, ticket, status, owner, created, updated, ss, se) { return { id: id, name: name, customer: customer, site: '', ticket: ticket, notes: '', status: status, owner_id: owner, created_at: created, updated_at: updated, deleted_at: null, sched_start: ss || null, sched_end: se || null }; }
   D.profiles = [
-    { id: 'u-jamie', email: 'tech3@mhs-ent.com', display_name: 'Jamie Carter' },
-    { id: 'u-jordan', email: 'lead@mhs-ent.com', display_name: 'Jordan Ellis' },
-    { id: 'u-sam', email: 'tech1@mhs-ent.com', display_name: 'Sam Rivera' },
-    { id: 'u-casey', email: 'tech2@mhs-ent.com', display_name: 'Casey Brooks' }
+    { id: 'u-jamie', email: 'tech3@example.com', display_name: 'Jamie Carter' },
+    { id: 'u-jordan', email: 'lead@example.com', display_name: 'Jordan Ellis' },
+    { id: 'u-sam', email: 'tech1@example.com', display_name: 'Sam Rivera' },
+    { id: 'u-casey', email: 'tech2@example.com', display_name: 'Casey Brooks' }
   ];
   D.projects = [
     P('p-riverview', 'Camera adds', 'Riverview Clinic', 'CW #1042', 'active', 'u-jordan', L(2026, 9, 28, 9, 0), L(2026, 10, 2, 15, 0), '2026-11-03', '2026-11-03'),
@@ -1075,7 +1075,7 @@ function init() {
   });
   if (DEMO) {
     loadDemo();
-    me = { id: 'u-jamie', email: 'tech3@mhs-ent.com' }; isAdmin = true;
+    me = { id: 'u-jamie', email: 'tech3@example.com' }; isAdmin = true;
     $('meAvatar').textContent = initialsOf('u-jamie');
     showView('appView'); renderHome();
     return;
