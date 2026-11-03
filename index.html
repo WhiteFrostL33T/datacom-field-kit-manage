@@ -411,6 +411,12 @@
   .jb-menu button:hover { background:#1d2140; }
   .jb-menu button.danger { color:#f87171; }
   .jb-menu .jb-mdiv { display:block; height:1px; background:#232842; margin:5px 4px; }
+  .ppl-wrap { margin-left:auto; }
+  .ppl-dots { width:40px; height:40px; }
+  .jb-menu.up { top:auto; bottom:calc(100% + 8px); }
+  .jb-menu button:disabled { color:#5d6480; cursor:default; }
+  .jb-menu button:disabled:hover { background:transparent; }
+  .jb-menu .jb-why { display:block; font-size:11px; font-weight:500; color:#8b93b0; margin-top:1px; }
   .jbwin { max-width:520px; }
   .timerbadge { background:rgba(52,211,153,.13); color:#34d399; border:1px solid rgba(52,211,153,.35); font-size:11px; font-weight:700; border-radius:999px; padding:2px 8px; white-space:nowrap; }
   .ownerbadge { background:rgba(99,102,241,.16); color:#a5b4fc; border:1px solid rgba(99,102,241,.4); font-size:11px; font-weight:700; border-radius:999px; padding:2px 8px; white-space:nowrap; }
@@ -520,7 +526,7 @@
     <div id="pjView" class="hidden"></div>
     <div id="schedView" class="hidden"></div>
     <div id="coView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.6.1 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.6.2 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -1726,8 +1732,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.6.1 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.6.1 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.6.2 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.6.2 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -1962,20 +1968,40 @@ function coPaintPreview() {
   var lt = $('coLogoTile'); if (lt) lt.innerHTML = coLogoTag(CO.logo, 96);
   var rm = $('coRemove'); if (rm) rm.disabled = !CO.logo;
 }
+/* ---------- people row menu (v1.6.2) ----------
+   Every action for a person lives in one menu on the right of their row,
+   built on the job gear-menu idiom (.jb-gearwrap / .jb-menu). Items keep
+   the data-coact / data-muact attributes, so the existing action wiring
+   and windows fire exactly as they did from the old row buttons. */
+var pplMenuUid = null;
+var PPL_DOTS_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2.1"></circle><circle cx="12" cy="12" r="2.1"></circle><circle cx="12" cy="19" r="2.1"></circle></svg>';
+function pplCloseMenus() {
+  pplMenuUid = null;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-pmenu]'), function (m) { m.classList.add('hidden'); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-pmenu-btn]'), function (b) { b.classList.remove('on'); });
+}
+function pplAdminItem(uid, adm) {
+  if (adm) {
+    if (coAdmins().length <= 1) return '<button type="button" disabled>Remove admin<span class="jb-why">Last admin</span></button>';
+    if (me && uid === me.id && CO.confirmSelf === uid) return '<button type="button" data-coact="rm" data-uid="' + uid + '">Remove your admin? Tap again to confirm</button>';
+    return '<button type="button" data-coact="rm" data-uid="' + uid + '">Remove admin</button>';
+  }
+  return '<button type="button" data-coact="mk" data-uid="' + uid + '">Make admin</button>';
+}
+function pplMenuHTML(uid, items) {
+  var open = pplMenuUid === uid;
+  return '<span class="jb-gearwrap ppl-wrap" data-pwrap><button type="button" class="gearbtn ppl-dots' + (open ? ' on' : '') + '" data-pmenu-btn="' + uid + '" title="Person options" aria-label="Person options" aria-haspopup="true">' + PPL_DOTS_SVG + '</button>'
+    + '<span class="jb-menu' + (open ? '' : ' hidden') + '" data-pmenu="' + uid + '" role="menu">' + items + '</span></span>';
+}
 function coPersonRow(p) {
   var uid = p.id, adm = coIsAdmin(uid), isMe = !!(me && uid === me.id);
   var act = coLastAct(uid);
   var actHtml = act.now ? '<span class="actdot"></span>Active now' : (act.d ? 'Last activity ' + agoLabel(act.d) : 'No activity yet');
-  var h = '<div class="tech"><div class="tech-head"><div class="tavatar" style="background:' + colorOf(uid) + '">' + initialsOf(uid) + '</div><div><div class="tname">' + esc(nameOf(uid)) + (adm ? '<span class="adminbadge">Admin' + (isMe ? ' · You' : '') + '</span>' : '') + '</div><div class="tmeta">' + esc(p.email || '') + ' · ' + actHtml + '</div></div><div class="rowact">';
-  if (adm) {
-    if (coAdmins().length <= 1) h += '<button class="btn ghost btndanger" disabled>Remove admin</button><div class="guardnote">Last admin can’t be removed</div>';
-    else if (isMe && CO.confirmSelf === uid) h += '<button class="btn ghost btndanger" data-coact="rm" data-uid="' + uid + '">Remove your admin? Tap again to confirm</button>';
-    else h += '<button class="btn ghost btndanger" data-coact="rm" data-uid="' + uid + '">Remove admin</button>';
-  } else {
-    h += '<button class="btn ghost" data-coact="mk" data-uid="' + uid + '">Make admin</button>';
-  }
-  return h + '</div></div></div>';
+  var h = '<div class="tech"><div class="tech-head"><div class="tavatar" style="background:' + colorOf(uid) + '">' + initialsOf(uid) + '</div><div><div class="tname">' + esc(nameOf(uid)) + (adm ? '<span class="adminbadge">Admin' + (isMe ? ' \u00b7 You' : '') + '</span>' : '') + '</div><div class="tmeta">' + esc(p.email || '') + ' \u00b7 ' + actHtml + '</div></div>';
+  h += pplMenuHTML(uid, pplAdminItem(uid, adm));
+  return h + '</div></div>';
 }
+
 function renderCompany() {
   var el = $('coView');
   if (DEMO) { MU.available = true; MU.roster = muDemoRoster(); MU.off = MU.demoOff; }
@@ -2038,15 +2064,35 @@ function coWireCompany() {
   var ni = $('coNameIn'); if (ni) ni.addEventListener('input', function () { CO.name = ni.value; coPaintPreview(); });
   var sp = $('coSaveProfile'); if (sp) sp.addEventListener('click', coSaveProfile);
   var ss = $('coSaveSettings'); if (ss) ss.addEventListener('click', coSaveSettings);
+  Array.prototype.forEach.call(el.querySelectorAll('[data-pmenu-btn]'), function (b) {
+    b.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var uid = b.getAttribute('data-pmenu-btn');
+      var wrap = b.parentNode;
+      var m = wrap ? wrap.querySelector('[data-pmenu]') : null;
+      if (!m) return;
+      var willOpen = m.classList.contains('hidden');
+      pplCloseMenus();
+      if (willOpen) {
+        pplMenuUid = uid;
+        var r = b.getBoundingClientRect();
+        if (r.bottom + 260 > window.innerHeight) m.classList.add('up'); else m.classList.remove('up');
+        m.classList.remove('hidden');
+        b.classList.add('on');
+      }
+    });
+  });
   Array.prototype.forEach.call(el.querySelectorAll('[data-coact]'), function (b) {
     b.addEventListener('click', function () {
       var uid = b.getAttribute('data-uid');
+      var keepOpen = b.getAttribute('data-coact') === 'rm' && me && uid === me.id && CO.confirmSelf !== uid && coAdmins().length > 1;
+      if (keepOpen) pplMenuUid = uid; else pplCloseMenus();
       if (b.getAttribute('data-coact') === 'mk') coMakeAdmin(uid); else coRemoveAdmin(uid);
     });
   });
   var ap = $('coAddPerson'); if (ap) ap.addEventListener('click', function () { muOpenForm('add', null); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-muact]'), function (b) {
-    b.addEventListener('click', function () { muAct(b.getAttribute('data-muact'), b.getAttribute('data-uid')); });
+    b.addEventListener('click', function () { pplCloseMenus(); muAct(b.getAttribute('data-muact'), b.getAttribute('data-uid')); });
   });
 }
 function coHandleFile(file) {
@@ -2180,27 +2226,20 @@ function muPersonRow(r) {
   var uid = r.id, adm = !!r.is_admin, isMe = !!(me && uid === me.id), deact = !!r.deactivated;
   var lastAdmin = adm && coAdmins().length <= 1;
   var h = '<div class="tech"><div class="tech-head"><div class="tavatar" style="background:' + colorOf(uid) + '">' + initialsOf(uid) + '</div><div><div class="tname">' + esc(muNameOf(uid))
-    + (adm ? '<span class="adminbadge">Admin' + (isMe ? ' · You' : '') + '</span>' : '')
+    + (adm ? '<span class="adminbadge">Admin' + (isMe ? ' \u00b7 You' : '') + '</span>' : '')
     + (deact ? '<span class="deactbadge">Deactivated</span>' : '')
-    + '</div><div class="tmeta">' + esc(r.email || '') + ' · ' + muSigninLine(r) + '</div></div><div class="rowact">';
-  if (adm) {
-    if (coAdmins().length <= 1) h += '<button class="btn ghost btndanger" disabled>Remove admin</button><div class="guardnote">Last admin can’t be removed</div>';
-    else if (isMe && CO.confirmSelf === uid) h += '<button class="btn ghost btndanger" data-coact="rm" data-uid="' + uid + '">Remove your admin? Tap again to confirm</button>';
-    else h += '<button class="btn ghost btndanger" data-coact="rm" data-uid="' + uid + '">Remove admin</button>';
-  } else {
-    h += '<button class="btn ghost" data-coact="mk" data-uid="' + uid + '">Make admin</button>';
-  }
-  h += '</div></div>';
-  h += '<div class="mu-actions">'
-    + '<button class="btn ghost" data-muact="rename" data-uid="' + uid + '">Edit name</button>'
-    + '<button class="btn ghost" data-muact="reset" data-uid="' + uid + '">Reset password</button>';
-  if (deact) h += '<button class="btn ghost" data-muact="react" data-uid="' + uid + '">Reactivate</button>';
-  else if (!isMe && !lastAdmin) h += '<button class="btn ghost" data-muact="deact" data-uid="' + uid + '">Deactivate</button>';
-  if (!isMe && !lastAdmin) h += '<button class="btn ghost btndanger" data-muact="del" data-uid="' + uid + '">Delete</button>';
-  h += '</div>';
-  if (isMe) h += '<div class="guardnote" style="margin-top:6px">This is your account — you can’t deactivate or delete it.</div>';
-  else if (lastAdmin) h += '<div class="guardnote" style="margin-top:6px">Last admin — make someone else an admin before deactivating or deleting this account.</div>';
-  return h + '</div>';
+    + '</div><div class="tmeta">' + esc(r.email || '') + ' \u00b7 ' + muSigninLine(r) + '</div></div>';
+  var items = '<button type="button" data-muact="rename" data-uid="' + uid + '">Edit name</button>'
+    + '<button type="button" data-muact="reset" data-uid="' + uid + '">Reset password</button>'
+    + pplAdminItem(uid, adm);
+  if (deact) items += '<button type="button" data-muact="react" data-uid="' + uid + '">Reactivate</button>';
+  else if (isMe || lastAdmin) items += '<button type="button" disabled>Deactivate<span class="jb-why">' + (isMe ? 'Your account' : 'Last admin') + '</span></button>';
+  else items += '<button type="button" data-muact="deact" data-uid="' + uid + '">Deactivate</button>';
+  items += '<span class="jb-mdiv"></span>';
+  if (isMe || lastAdmin) items += '<button type="button" class="danger" disabled>Delete<span class="jb-why">' + (isMe ? 'Your account' : 'Last admin') + '</span></button>';
+  else items += '<button type="button" class="danger" data-muact="del" data-uid="' + uid + '">Delete</button>';
+  h += pplMenuHTML(uid, items);
+  return h + '</div></div>';
 }
 
 /* ---------- the function bridge ---------- */
@@ -2652,9 +2691,14 @@ function init() {
     if (m.contains(e.target)) return;
     jbCloseMenu();
   });
+  document.addEventListener('click', function (e) {
+    if (!pplMenuUid) return;
+    if (e.target && e.target.closest && e.target.closest('[data-pwrap]')) return;
+    pplCloseMenus();
+  });
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); if (!$('appView').classList.contains('hidden')) openPal(); }
-    if (e.key === 'Escape') { closePal(); jbCloseForm(); jbCloseMenu(); jbCloseCrew(); jbCloseDelete(); muCloseForm(); muCloseTemp(); muCloseConfirm(); }
+    if (e.key === 'Escape') { closePal(); jbCloseForm(); jbCloseMenu(); pplCloseMenus(); jbCloseCrew(); jbCloseDelete(); muCloseForm(); muCloseTemp(); muCloseConfirm(); }
   });
   if (DEMO) {
     loadDemo();
