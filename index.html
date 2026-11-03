@@ -491,6 +491,43 @@
     .setrow { flex-direction:column; }
     .setrow .datein { width:100%; }
   }
+  /* mobile layout (v1.10) — the new chrome is display:none outside the
+     phone breakpoint; everything else here lives in the 700px query */
+  .menubtn { display:none; width:38px; height:38px; flex:none; align-items:center; justify-content:center; background:transparent; border:1px solid #232842; border-radius:10px; color:#e6e9f5; cursor:pointer; padding:0; font-family:inherit; font-size:19px; line-height:1; }
+  .menubtn:hover { background:#171a2b; }
+  .menubtn.on { color:#818cf8; border-color:#3730a3; background:rgba(99,102,241,.15); box-shadow:0 2px 10px rgba(99,102,241,.4); }
+  .searchbtn { display:none; }
+  .mmenu { display:none; }
+  .mm-row { display:block; width:100%; background:transparent; border:1px solid transparent; color:#aab1c8; border-radius:10px; padding:13px 14px; font-size:15px; font-weight:650; cursor:pointer; font-family:inherit; text-align:left; }
+  .mm-row:hover { background:#1c2036; color:#e6e9f5; }
+  .mm-row.on { background:#6366f1; border-color:#6366f1; color:#fff; box-shadow:0 2px 10px rgba(99,102,241,.45); }
+  .mm-div { height:1px; background:#232842; margin:6px 4px; }
+  @media (max-width:700px) {
+    .menubtn { display:flex; }
+    .searchbtn { display:flex; }
+    #gearBtn, #signOutBtn { display:none; }
+    .mainnav { display:none; }
+    .mmenu.open { display:block; margin-top:12px; background:#11141f; border:1px solid #232842; border-radius:16px; padding:8px; box-shadow:0 1px 2px rgba(0,0,0,.35); }
+    .topbar { gap:10px; padding:12px 14px; }
+    .brand { min-width:0; }
+    .brand h1, .brand p { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .card { padding:18px 15px; }
+    .stack { gap:16px; }
+    .costack { gap:14px; }
+    .pj-chips { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+    .pj-chips::-webkit-scrollbar { display:none; }
+    .pj-chips > * { flex:none; }
+    .ts-bar { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+    .ts-bar::-webkit-scrollbar { display:none; }
+    .ts-bar .ts-label { white-space:nowrap; }
+    .wkbar { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
+    .wkbar::-webkit-scrollbar { display:none; }
+    .wkbar .wk { white-space:nowrap; }
+    .palwrap { padding:28px 8px 12px; }
+    .jobform { max-height:calc(100vh - 60px); }
+    .card > table { display:block; overflow-x:auto; scrollbar-width:none; }
+    .card > table::-webkit-scrollbar { display:none; }
+  }
 </style>
 </head>
 <body>
@@ -524,6 +561,7 @@
 <div id="appView" class="hidden">
   <div class="wrap">
     <div class="topbar">
+      <button class="menubtn" id="menuBtn" title="Sections" aria-label="Sections menu" aria-expanded="false" aria-haspopup="true">&#9776;</button>
       <div class="logo" id="brandLogo">FK</div>
       <div class="brand">
         <h1 id="brandTitle">Field Kit Manage</h1>
@@ -531,6 +569,7 @@
       </div>
       <div class="spacer"></div>
       <div class="search" id="searchBox">🔍 Jump to a job or tech… <kbd>Ctrl K</kbd></div>
+      <button class="gearbtn searchbtn" id="searchBtn" title="Jump to a job or tech" aria-label="Jump to a job or tech"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg></button>
       <button class="btn ghost" id="refreshBtn" title="Refresh now">↻</button>
       <button class="gearbtn" id="gearBtn" title="Company Management" aria-label="Company Management"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
       <div class="avatar" id="meAvatar">–</div>
@@ -549,6 +588,17 @@
         <button class="navprint hidden" id="tsCsvNav" title="Export CSV" aria-label="Export CSV"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
       </div>
     </div>
+    <div class="mmenu" id="mobileMenu">
+      <button class="mm-row on" id="mmHome">Dashboard</button>
+      <button class="mm-row" id="mmTs">Timesheets</button>
+      <button class="mm-row" id="mmProj">Projects</button>
+      <button class="mm-row" id="mmSched">Schedule</button>
+      <button class="mm-row" id="mmCust">Customers</button>
+      <button class="mm-row" id="mmMat">Materials</button>
+      <div class="mm-div"></div>
+      <button class="mm-row" id="mmCompany">Company settings</button>
+      <button class="mm-row" id="mmOut">Sign out</button>
+    </div>
     <div class="dateline">
       <span class="date" id="dateLine">—</span>
       <span class="live" id="liveLine"><i></i> Live</span>
@@ -563,7 +613,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.9 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.10 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -1864,11 +1914,19 @@ function showMain(view) {
   $('navCust').classList.toggle('on', view === 'cust');
   $('navMat').classList.toggle('on', view === 'mat');
   $('gearBtn').classList.toggle('on', view === 'company');
+  $('mmHome').classList.toggle('on', view === 'home');
+  $('mmTs').classList.toggle('on', view === 'ts');
+  $('mmProj').classList.toggle('on', view === 'proj');
+  $('mmSched').classList.toggle('on', view === 'sched');
+  $('mmCust').classList.toggle('on', view === 'cust');
+  $('mmMat').classList.toggle('on', view === 'mat');
+  $('mmCompany').classList.toggle('on', view === 'company');
+  mmClose();
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.9 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.9 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · Cable lists and the materials catalog, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.10 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.10 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · Cable lists and the materials catalog, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') renderCustomers(); } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -2017,6 +2075,10 @@ function renderSchedule() {
 var palList = [];
 function openPal() { $('palView').classList.remove('hidden'); $('palInput').value = ''; buildPal(''); setTimeout(function () { $('palInput').focus(); }, 30); }
 function closePal() { $('palView').classList.add('hidden'); }
+/* mobile sections menu (v1.10): presentation only — rows call the same
+   showMain / signOut the desktop chrome calls */
+function mmClose() { var m = $('mobileMenu'); if (m) m.classList.remove('open'); var b = $('menuBtn'); if (b) { b.classList.remove('on'); b.setAttribute('aria-expanded', 'false'); } }
+function mmToggle() { var m = $('mobileMenu'); var open = m.classList.toggle('open'); var b = $('menuBtn'); b.classList.toggle('on', open); b.setAttribute('aria-expanded', open ? 'true' : 'false'); }
 function buildPal(q) {
   q = (q || '').toLowerCase(); palList = [];
   D.projects.filter(function (p) { return !p.deleted_at && p.status !== 'done'; }).forEach(function (p) { if (!q || jobLabel(p).toLowerCase().indexOf(q) >= 0 || (p.ticket || '').toLowerCase().indexOf(q) >= 0) palList.push({ tag: 'Job', label: jobLabel(p), sub: p.ticket || '', target: 'job-' + p.id }); });
@@ -3709,6 +3771,17 @@ function init() {
   $('tsPrintNav').addEventListener('click', function () { window.print(); });
   $('tsCsvNav').addEventListener('click', function () { tsDownloadCSV(tsWindow()); });
   $('searchBox').addEventListener('click', openPal);
+  $('searchBtn').addEventListener('click', openPal);
+  $('menuBtn').addEventListener('click', function (e) { e.stopPropagation(); mmToggle(); });
+  $('mmHome').addEventListener('click', function () { showMain('home'); });
+  $('mmTs').addEventListener('click', function () { showMain('ts'); });
+  $('mmProj').addEventListener('click', function () { showMain('proj'); });
+  $('mmSched').addEventListener('click', function () { showMain('sched'); });
+  $('mmCust').addEventListener('click', function () { showMain('cust'); });
+  $('mmMat').addEventListener('click', function () { showMain('mat'); });
+  $('mmCompany').addEventListener('click', function () { showMain('company'); });
+  $('mmOut').addEventListener('click', function () { mmClose(); signOut(); });
+  document.addEventListener('click', function (e) { var m = $('mobileMenu'); if (m && m.classList.contains('open') && !m.contains(e.target) && !$('menuBtn').contains(e.target)) mmClose(); });
   $('palInput').addEventListener('input', function () { buildPal(this.value); });
   $('palInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && palList.length) jumpTo(palList[0].target); });
   $('palView').addEventListener('click', function (e) { if (e.target === this) closePal(); });
@@ -3746,7 +3819,7 @@ function init() {
   });
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); if (!$('appView').classList.contains('hidden')) openPal(); }
-    if (e.key === 'Escape') { closePal(); jbCloseForm(); jbCloseMenu(); pplCloseMenus(); jbCloseCrew(); jbCloseDelete(); muCloseForm(); muCloseTemp(); muCloseConfirm(); cuCloseForm(); cuCloseMenus(); maCloseForm(); maCloseConfirm(); maCloseMenus(); }
+    if (e.key === 'Escape') { closePal(); mmClose(); jbCloseForm(); jbCloseMenu(); pplCloseMenus(); jbCloseCrew(); jbCloseDelete(); muCloseForm(); muCloseTemp(); muCloseConfirm(); cuCloseForm(); cuCloseMenus(); maCloseForm(); maCloseConfirm(); maCloseMenus(); }
   });
   if (DEMO) {
     loadDemo();
