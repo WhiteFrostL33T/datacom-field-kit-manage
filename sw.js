@@ -2,7 +2,7 @@
    so a new version is never trapped behind the cache; the cache is the
    offline fallback only. Cross-origin traffic is never intercepted.
    The cache name carries the app version — bump it with every release. */
-var CACHE = 'fkm-v1.13';
+var CACHE = 'fkm-v1.13.1';
 
 self.addEventListener('install', function () { self.skipWaiting(); });
 

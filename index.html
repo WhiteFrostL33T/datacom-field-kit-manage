@@ -502,6 +502,8 @@
   .ma-addrow .txtin { flex:1; min-width:0; }
   .ma-group { font-size:12.5px; font-weight:800; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); margin:16px 0 2px; }
   .ma-used { color:var(--muted); font-size:12.5px; flex:none; white-space:nowrap; }
+  .ma-cathead { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .ma-cattitle { flex:1; }
   /* materials tree (v1.13) */
   .mt-shell { display:grid; grid-template-columns:264px 1fr; border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-top:12px; }
   .mt-tree { background:var(--secbg); border-right:1px solid var(--line); padding:10px 8px; }
@@ -513,6 +515,9 @@
   .mt-node.sub { margin-left:22px; width:calc(100% - 22px); font-weight:600; }
   .mt-node.on { background:var(--tint); border-color:var(--line-focus); color:var(--text); }
   .mt-systag { flex:none; font-size:9.5px; font-weight:800; letter-spacing:.6px; color:var(--muted2); border:1px solid var(--line-hover); border-radius:5px; padding:1px 5px; }
+  .mt-catrow { display:flex; align-items:center; }
+  .mt-caretbtn { flex:none; width:40px; min-height:40px; margin-right:-20px; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; background:none; border:none; color:var(--muted); font-size:10px; cursor:pointer; font-family:inherit; padding:0; }
+  .mt-caretbtn:hover { color:var(--text); }
   .mt-uncat { margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
   .mt-badge { flex:none; background:rgba(245,158,11,.18); color:var(--amber-t); border-radius:999px; font-size:11.5px; font-weight:800; padding:1px 8px; }
   .mt-hint { color:var(--muted-dark); font-size:11.5px; line-height:1.45; padding:2px 9px 6px; }
@@ -538,7 +543,7 @@
   .mf-seg { display:inline-flex; background:var(--inset); border:1px solid var(--line); border-radius:11px; overflow:hidden; flex:none; }
   .mf-seg button { border:none; background:none; color:var(--muted); padding:8px 11px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
   .mf-seg button.on { background:var(--tint); color:var(--text); }
-  @media (max-width:700px) { .ma-cols { grid-template-columns:1fr; } .mt-shell { grid-template-columns:1fr; } .mt-tree { border-right:none; border-bottom:1px solid var(--line); } .mt-detail { padding:14px; } }
+  @media (max-width:700px) { .ma-cols { grid-template-columns:1fr; } .mt-shell { grid-template-columns:1fr; border:none; border-radius:0; margin-top:6px; } .mt-tree { border-right:none; border-bottom:1px solid var(--line); background:transparent; padding:6px 0 8px; } .mt-detail { padding:12px 0 2px; } .mt-node { padding:6px 8px; } .mt-uncat { margin-top:7px; padding-top:7px; } .mt-hint { padding:1px 8px 2px; } .mt-note { margin:10px 0 2px; } .ma-vrow { padding:4px 2px; min-height:40px; } .ma-x { width:26px; height:26px; } .ma-addrow { margin-top:10px; } .ma-cattitle { flex:1 1 100%; flex-wrap:wrap; row-gap:2px; } .card .ma-cattitle .hint { margin-left:0; flex:1 1 100%; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; } .ma-cathead .btn { min-height:40px; } }
   @media (max-width:700px) {
     .prof-flex { flex-direction:column; }
     .prof-left { flex:none; width:100%; }
@@ -683,7 +688,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.13 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.13.1 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -1666,6 +1671,7 @@ function jbRunUpdate(pid, promise, opts) {
 
 /* ---------- create / edit form (overlay, in the palette idiom) ---------- */
 function jbOpenForm(mode, pid) {
+  closeAllPopovers();
   JB.mode = mode; JB.pid = pid;
   var p = mode === 'edit' ? projById(pid) : null;
   var h = '<h2>' + (mode === 'edit' ? 'Edit job' : 'New job') + '</h2>';
@@ -1883,6 +1889,7 @@ function wireJbCrew(row) {
   var dn = $('jbCrewDone'); if (dn) dn.addEventListener('click', jbCloseCrew);
 }
 function jbOpenCrew(row) {
+  closeAllPopovers();
   JB.winPid = row.p.id;
   $('jbCrewCard').innerHTML = jbCrewHTML(row);
   dlgX('jbCrewCard', jbCloseCrew);
@@ -1904,6 +1911,7 @@ function jbSyncCrewWin() {
 
 /* ---------- delete job (floating confirm window) ---------- */
 function jbOpenDelete(row) {
+  closeAllPopovers();
   var p = row.p;
   var h = '<h2>Delete job</h2>';
   h += '<p class="caption" style="margin-top:6px">Delete \u201C' + esc(p.name) + '\u201D? This is a soft delete \u2014 the job leaves every view and can be restored from Projects \u2192 Recycle bin. Its time history is kept.</p>';
@@ -1958,6 +1966,7 @@ function jbDeletedHTML() {
 
 /* ---------- purge (floating confirm window; function-backed) ---------- */
 function jbOpenPurge(ids, single) {
+  closeAllPopovers();
   JB.purgeIds = ids.slice(); JB.purgeSingle = !!single;
   var names = JB.purgeIds.map(function (id) { var p = projById(id); return p ? p.name : id; });
   var h = '<h2>Purge ' + (JB.purgeSingle ? 'this job' : 'expired jobs') + ' permanently?</h2>';
@@ -2039,8 +2048,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.13 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.13 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · The materials tree — categories, per-type forms, and cable lists, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.13.1 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.13.1 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · The materials tree — categories, per-type forms, and cable lists, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') renderCustomers(); } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -2188,7 +2197,7 @@ function renderSchedule() {
 /* ================= palette ================= */
 var palList = [];
 function dlgX(cardId, closeFn) { var c = $(cardId); if (!c) return; var b = document.createElement('button'); b.type = 'button'; b.className = 'dlg-x'; b.setAttribute('aria-label', 'Close'); b.textContent = '\u00d7'; b.addEventListener('click', closeFn); c.insertBefore(b, c.firstChild); }
-function openPal() { $('palView').classList.remove('hidden'); $('palInput').value = ''; buildPal(''); setTimeout(function () { $('palInput').focus(); }, 30); }
+function openPal() { closeAllPopovers(); $('palView').classList.remove('hidden'); $('palInput').value = ''; buildPal(''); setTimeout(function () { $('palInput').focus(); }, 30); }
 function closePal() { $('palView').classList.add('hidden'); }
 /* mobile sections menu (v1.10): presentation only — rows call the same
    showMain / signOut the desktop chrome calls */
@@ -2204,6 +2213,7 @@ window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault()
 window.addEventListener('appinstalled', function () { appInstalled = true; deferredInstall = null; syncInstallRow(); });
 function installIsIOS() { var ua = window.navigator.userAgent || ''; return /iphone|ipad|ipod/i.test(ua) || (ua.indexOf('Macintosh') >= 0 && 'ontouchend' in document); }
 function openInstallHelp() {
+  closeAllPopovers();
   var h = '<h2>Install Field Kit Manage</h2>';
   if (installIsIOS()) {
     h += '<p class="caption" style="margin-top:6px">Add Manage to your home screen and it opens full-screen, from its own icon:</p>';
@@ -2763,6 +2773,7 @@ function muAct(kind, uid) {
   else if (kind === 'del') muOpenConfirm('del', uid);
 }
 function muOpenForm(mode, uid) {
+  closeAllPopovers();
   MU.mode = mode; MU.uid = uid;
   var isAdd = mode === 'add';
   var h = '<h2>' + (isAdd ? 'Add person' : 'Edit name') + '</h2>';
@@ -2810,6 +2821,7 @@ function muSubmitForm() {
   }
 }
 function muOpenTemp(name, temp, isNew) {
+  closeAllPopovers();
   MU.temp = temp || '';
   var h = '<h2>' + (isNew ? 'Account created' : 'Password reset') + '</h2>';
   h += '<p class="caption">Temporary password for <b>' + esc(name) + '</b> — they sign in with this, so hand it to them now.</p>';
@@ -2850,6 +2862,7 @@ function muOwnedActive(uid) {
   return D.projects.filter(function (p) { return p.owner_id === uid && p.status === 'active' && !p.deleted_at; }).length;
 }
 function muOpenConfirm(mode, uid) {
+  closeAllPopovers();
   MU.mode = mode; MU.uid = uid;
   var r = muRosterEntry(uid);
   var nm = muNameOf(uid);
@@ -3096,6 +3109,7 @@ function cuFormFail(msg) { var e = $('cuErr'); if (e) { e.textContent = msg; e.c
 function cuVal(id) { var el = $(id); return el ? el.value.trim() : ''; }
 function cuOpt(id) { var v = cuVal(id); return v || null; }
 function cuOpenCustForm(cid, opts) {
+  closeAllPopovers();
   CU.formKind = 'cust'; CU.formId = cid || null; CU.returnToJob = !!(opts && opts.fromJob);
   var c = cid ? custById(cid) : null;
   var o = c || {};
@@ -3116,6 +3130,7 @@ function cuOpenCustForm(cid, opts) {
   setTimeout(function () { var n = $('cfName'); if (n) n.focus(); }, 30);
 }
 function cuOpenSiteForm(cid, sid, opts) {
+  closeAllPopovers();
   CU.formKind = 'site'; CU.formId = sid || null; CU.formCid = cid; CU.returnToJob = !!(opts && opts.fromJob);
   var c = custById(cid);
   var s = sid ? siteById(sid) : null;
@@ -3443,10 +3458,9 @@ function maDupKind(kind, value) { var v = value.toLowerCase(); return maKindRows
 function maSetKindMsg(kind, msg, err) { if (kind === 'type') { MA.typeMsg = msg; MA.typeErr = err; } else { MA.colorMsg = msg; MA.colorErr = err; } }
 function maCableListHTML(kind) {
   var isType = kind === 'type';
-  var label = isType ? 'Types' : 'Colors';
   var rows = maKindRows(kind);
   var builtin = isType ? MA_TYPES_BUILTIN : MA_COLORS_BUILTIN;
-  var h = '<div><div class="set-label">' + label + '</div>';
+  var h = '<div>';
   if (D.cableError) {
     h += '<p class="empty" style="margin-top:8px">Couldn’t load the saved list — check your connection and refresh. Field Kit keeps using the last list it loaded.</p></div>';
     return h;
@@ -3524,6 +3538,7 @@ function maStartBuiltin(kind) {
 
 /* ---------- confirm window (mu/cu overlay idiom) ---------- */
 function maOpenConfirm(c) {
+  closeAllPopovers();
   MA.confirm = c;
   var kindWord = c.kind === 'type' ? 'type' : 'color';
   var h = '';
@@ -3634,6 +3649,18 @@ function maCloseMenus() {
   Array.prototype.forEach.call(document.querySelectorAll('[data-mamenu]'), function (m) { m.classList.add('hidden'); });
   Array.prototype.forEach.call(document.querySelectorAll('[data-mamenu-btn]'), function (b) { b.classList.remove('on'); });
 }
+
+/* ---------- shared popover hygiene ----------
+   Every .jb-menu popover in the app (job gear, people, customers,
+   materials) closes before any dialog opens. The menus ride at
+   z-index 60, above the dialog wraps (50), and they are shown from
+   view state — a state-only close left the DOM popover floating over
+   the freshly opened dialog (the v1.13 field screenshot). Each close
+   helper below nulls its state AND hides its DOM nodes, so calling
+   this from every dialog opener fixes the whole app at once. */
+function closeAllPopovers() {
+  jbCloseMenu(); pplCloseMenus(); cuCloseMenus(); maCloseMenus();
+}
 function wireMaMenus(el) {
   Array.prototype.forEach.call(el.querySelectorAll('[data-mamenu-btn]'), function (b) {
     b.addEventListener('click', function (e) { e.stopPropagation(); var k = b.getAttribute('data-mamenu-btn'); MA.menu = MA.menu === k ? null : k; renderMaterials(); });
@@ -3644,8 +3671,11 @@ function wireMaMenus(el) {
       if (act === 'archive') maSetArchived(id, true);
     });
   });
-  Array.prototype.forEach.call(el.querySelectorAll('[data-mafile]'), function (b) {
-    b.addEventListener('click', function () { var subId = b.getAttribute('data-mafile'), id = b.getAttribute('data-mid'); MA.menu = null; maOpenItemForm(subId, id); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-mafilemenu]'), function (b) {
+    b.addEventListener('click', function () { MA.menu = null; maOpenFilePicker(b.getAttribute('data-mafilemenu'), 'file'); });
+  });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-mamove]'), function (b) {
+    b.addEventListener('click', function () { MA.menu = null; maOpenFilePicker(b.getAttribute('data-mamove'), 'move'); });
   });
   Array.prototype.forEach.call(el.querySelectorAll('[data-maedit]'), function (b) {
     b.addEventListener('click', function () { var subId = b.getAttribute('data-maedit'), id = b.getAttribute('data-mid'); MA.menu = null; maOpenItemForm(subId, id); });
@@ -3668,6 +3698,7 @@ function wireMaMenus(el) {
 
 /* ---------- category create / rename ---------- */
 function maOpenCatForm(mode, topId, catId) {
+  closeAllPopovers();
   MA.catForm = { mode: mode, topId: topId || null, id: catId || null };
   var o = catId ? matCatById(catId) : null;
   var isSub = mode === 'sub';
@@ -3741,6 +3772,7 @@ function maArchiveCat(id) {
 
 /* ---------- the form-fields editor ---------- */
 function maOpenFields(subId) {
+  closeAllPopovers();
   var sub = matCatById(subId); if (!sub) return;
   MA.fieldState = { subId: subId, fields: maFieldsOf(sub).map(function (f) { return { label: f.label, type: f.type, choices: (f.choices || []).slice(), suffix: f.suffix || '' }; }), addType: 'text', editIdx: null, msg: '' };
   maRenderFields();
@@ -3840,6 +3872,7 @@ function maUnitSelectHTML(cur) {
   return '<select class="txtin" id="miUnit">' + opts.map(function (u) { return '<option value="' + esc(u) + '"' + (u === cur ? ' selected' : '') + '>' + esc(u) + '</option>'; }).join('') + '</select>';
 }
 function maOpenItemForm(subId, itemId) {
+  closeAllPopovers();
   var sub = matCatById(subId); if (!sub) return;
   var it = itemId ? matById(itemId) : null;
   MA.itemState = { subId: subId, itemId: itemId || null };
@@ -3909,7 +3942,55 @@ function maSaveItemForm() {
     maCloseForm(); MA.msg = 'Item saved.'; MA.err = false; loadAll().then(renderCurrent);
   });
 }
+/* ---------- file / move picker ----------
+   One entry point for both jobs. File into… on an Uncategorized item
+   and Move to… on a filed item open this chooser; picking a
+   subcategory hands off to the item form, whose save does the filing.
+   With nowhere to file into (no subcategories yet, or no OTHER
+   subcategory for a move), an explainer opens instead — the menu
+   entry itself is always present (v1.13 hid it entirely when the tree
+   was empty, which is exactly the first-run state this fixes). */
+function maActiveSubs() {
+  return D.matCats.filter(function (x) { return x.parent_id && !x.deleted_at; }).sort(maCatSort);
+}
+function maOpenFilePicker(itemId, mode) {
+  closeAllPopovers();
+  var it = matById(itemId); if (!it) return;
+  var subs = maActiveSubs();
+  if (mode === 'move') subs = subs.filter(function (s) { return s.id !== it.category_id; });
+  if (!subs.length) { maOpenFileEmpty(mode, it); return; }
+  var h = '<h2>' + (mode === 'move' ? 'Move item' : 'File item') + '</h2>';
+  h += '<p class="caption">' + esc(it.name) + ' — pick the subcategory. Its form opens next, and saving files the item there and rebuilds its catalog name.</p>';
+  subs.forEach(function (s) {
+    var tp = matCatById(s.parent_id);
+    var fs = maFieldsOf(s);
+    h += '<button type="button" class="btn ghost" style="width:100%;justify-content:flex-start;margin-top:8px" data-mafilepick="' + s.id + '">' + esc((tp ? tp.name + ' · ' : '') + s.name) + (fs.length ? '' : ' <span class="caption">(no form)</span>') + '</button>';
+  });
+  h += '<div class="cardfoot"><button class="btn ghost" id="maCancel">Cancel</button></div>';
+  $('maFormCard').innerHTML = h;
+  dlgX('maFormCard', maCloseForm);
+  $('maFormWrap').classList.remove('hidden');
+  $('maCancel').addEventListener('click', maCloseForm);
+  Array.prototype.forEach.call($('maFormCard').querySelectorAll('[data-mafilepick]'), function (b) {
+    b.addEventListener('click', function () { maOpenItemForm(b.getAttribute('data-mafilepick'), itemId); });
+  });
+}
+function maOpenFileEmpty(mode, it) {
+  closeAllPopovers();
+  var h = '<h2>' + (mode === 'move' ? 'Move item' : 'File item') + '</h2>';
+  h += '<p class="caption">' + (mode === 'move'
+    ? 'There is no other subcategory to move this item into yet. Create another category and subcategory first, then use Move to… from its ⋮ menu.'
+    : 'No subcategories yet — create a category and a subcategory first, then file this item into it from its ⋮ menu and fill in its form.') + '</p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="maCancel">Not now</button><button class="btn" id="maFileCreate">Create a category</button></div>';
+  $('maFormCard').innerHTML = h;
+  dlgX('maFormCard', maCloseForm);
+  $('maFormWrap').classList.remove('hidden');
+  $('maCancel').addEventListener('click', maCloseForm);
+  $('maFileCreate').addEventListener('click', function () { maOpenCatForm('top', null, null); });
+}
+
 function maOpenPlainForm(itemId) {
+  closeAllPopovers();
   var it = itemId ? matById(itemId) : null;
   MA.itemState = { subId: null, itemId: itemId || null };
   var h = '<h2>' + (it ? 'Edit item' : 'New item') + ' — Uncategorized</h2>';
@@ -4012,15 +4093,19 @@ function maNodeHTML(id, name, count, cls, systag) {
 function maTreeHTML() {
   var h = '<div class="mt-tree">';
   var cableN = maEffKindCount('type') + maEffKindCount('color');
-  h += '<button type="button" class="mt-node' + (MA.sel === MA_SYS_TYPE_ID || MA.sel === MA_SYS_COLOR_ID ? ' on' : '') + '" data-mtsel="' + MA_SYS_TYPE_ID + '"><span class="mt-caret">▾</span><span class="mt-nm">Cable</span><span class="mt-systag">SYSTEM</span><span class="mt-ct">' + cableN + '</span></button>';
-  h += maNodeHTML(MA_SYS_TYPE_ID, 'Types', maEffKindCount('type'), 'sub', false);
-  h += maNodeHTML(MA_SYS_COLOR_ID, 'Colors', maEffKindCount('color'), 'sub', false);
+  var sysOpen = !MA.collapsed['__sys'];
+  h += '<div class="mt-catrow"><button type="button" class="mt-caretbtn" data-mtsystoggle aria-expanded="' + (sysOpen ? 'true' : 'false') + '" aria-label="Collapse or expand Cable">' + (sysOpen ? '▾' : '▸') + '</button>'
+    + '<button type="button" class="mt-node' + (MA.sel === MA_SYS_TYPE_ID || MA.sel === MA_SYS_COLOR_ID ? ' on' : '') + '" style="flex:1" data-mtsel="' + MA_SYS_TYPE_ID + '"><span class="mt-nm">Cable</span><span class="mt-systag">SYSTEM</span><span class="mt-ct">' + cableN + '</span></button></div>';
+  if (sysOpen) {
+    h += maNodeHTML(MA_SYS_TYPE_ID, 'Types', maEffKindCount('type'), 'sub', false);
+    h += maNodeHTML(MA_SYS_COLOR_ID, 'Colors', maEffKindCount('color'), 'sub', false);
+  }
   maTopCats().forEach(function (top) {
     var subs = maSubsOf(top.id, true);
     var n = subs.reduce(function (s, x) { return s + maItemCount(x.id); }, 0);
     var open = !MA.collapsed[top.id];
     var catItems = '<button type="button" data-macat="rename-cat" data-mcid="' + top.id + '">Rename</button><span class="jb-mdiv"></span><button type="button" data-macat="add-sub" data-mcid="' + top.id + '">Add subcategory</button><span class="jb-mdiv"></span><button type="button" class="danger" data-macat="archive-cat" data-mcid="' + top.id + '">Archive category</button>';
-    h += '<div style="display:flex;align-items:center"><button type="button" class="mt-node" style="flex:1" data-mttoggle="' + top.id + '"><span class="mt-caret">' + (open ? '▾' : '▸') + '</span><span class="mt-nm">' + esc(top.name) + '</span><span class="mt-ct">' + n + '</span></button>' + maMenuHTML('cat-' + top.id, catItems) + '</div>';
+    h += '<div class="mt-catrow"><button type="button" class="mt-caretbtn" data-mttoggle="' + top.id + '" aria-expanded="' + (open ? 'true' : 'false') + '" aria-label="Collapse or expand ' + esc(top.name) + '">' + (open ? '▾' : '▸') + '</button><button type="button" class="mt-node" style="flex:1" data-mttoggle="' + top.id + '"><span class="mt-nm">' + esc(top.name) + '</span><span class="mt-ct">' + n + '</span></button>' + maMenuHTML('cat-' + top.id, catItems) + '</div>';
     if (open) subs.forEach(function (s) {
       var subItems = '<button type="button" data-macat="rename-sub" data-mcid="' + s.id + '">Rename</button><span class="jb-mdiv"></span><button type="button" data-macat="fields" data-mcid="' + s.id + '">Form fields</button><span class="jb-mdiv"></span><button type="button" class="danger" data-macat="archive-sub" data-mcid="' + s.id + '">Archive subcategory</button>';
       h += '<div style="display:flex;align-items:center">' + maNodeHTML(s.id, s.name, maItemCount(s.id), 'sub', false).replace('class="mt-node sub', 'class="mt-node sub" style="flex:1') + maMenuHTML('sub-' + s.id, subItems) + '</div>';
@@ -4046,13 +4131,11 @@ function maItemRowHTML(c, usage, arch, ctxSub) {
     var bits = fs.map(function (f) { var v = maFieldValue(f, (c.attrs || {})[f.label]); return v ? f.label + ': ' + v : ''; }).filter(Boolean);
     meta = bits.length ? bits.join(' · ') : (c.unit ? 'Default unit: ' + c.unit : 'No default unit');
     if (c.unit && bits.length) meta += ' · unit ' + c.unit;
-    items = '<button type="button" data-maedit="' + ctxSub.id + '" data-mid="' + c.id + '">Edit</button><span class="jb-mdiv"></span><button type="button" class="danger" data-maact="archive" data-mid="' + c.id + '">Archive</button>';
+    items = '<button type="button" data-maedit="' + ctxSub.id + '" data-mid="' + c.id + '">Edit</button><span class="jb-mdiv"></span><button type="button" data-mamove="' + c.id + '">Move to…</button><span class="jb-mdiv"></span><button type="button" class="danger" data-maact="archive" data-mid="' + c.id + '">Archive</button>';
   } else {
     meta = (c.unit ? 'Default unit: ' + c.unit : 'No default unit') + (c.category ? ' · logged as “' + c.category + '”' : '');
-    var subs = D.matCats.filter(function (x) { return x.parent_id && !x.deleted_at; }).sort(maCatSort);
-    items = subs.map(function (s) { var tp = matCatById(s.parent_id); return '<button type="button" data-mafile="' + s.id + '" data-mid="' + c.id + '">File into ' + esc((tp ? tp.name + ' · ' : '') + s.name) + '</button>'; }).join('<span class="jb-mdiv"></span>');
-    if (subs.length) items += '<span class="jb-mdiv"></span>';
-    items += '<button type="button" data-maeditplain="' + c.id + '">Edit</button><span class="jb-mdiv"></span><button type="button" class="danger" data-maact="archive" data-mid="' + c.id + '">Archive</button>';
+    items = '<button type="button" data-mafilemenu="' + c.id + '">File into…</button><span class="jb-mdiv"></span>'
+      + '<button type="button" data-maeditplain="' + c.id + '">Edit</button><span class="jb-mdiv"></span><button type="button" class="danger" data-maact="archive" data-mid="' + c.id + '">Archive</button>';
   }
   return '<div class="cu-row" style="cursor:default"><div style="min-width:0"><div class="cu-name">' + esc(c.name) + '</div><div class="cu-meta">' + esc(meta) + '</div></div>'
     + '<div class="cu-right" style="display:flex;align-items:center;gap:10px">' + (used !== null ? '<span class="ma-used">used ' + used + '×</span>' : '') + maMenuHTML(c.id, items) + '</div></div>';
@@ -4106,7 +4189,7 @@ function maCatalogCardHTML() {
     h += '<div class="card" style="margin-top:14px"><h2>Material categories — one-time setup needed</h2><p class="caption" style="margin-top:8px">The tree keeps its categories in one small table of its own. An admin runs the one-time setup file <b>supabase-material-categories.sql</b> in the Supabase Dashboard SQL Editor — it adds that table and two filing columns on the catalog; Field Kit is untouched, and the Cable branch below works either way. Run it, then reopen this screen.</p></div>';
   }
   var kind = maSelKind();
-  h += '<div class="card"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="flex:1">Materials catalog <span class="hint">Categories, per-type forms, and the cable lists — the quick-pick source a later Field Kit update will offer techs</span></h2>'
+  h += '<div class="card"><div class="ma-cathead"><h2 class="ma-cattitle">Materials catalog <span class="hint">Categories, per-type forms, and the cable lists — the quick-pick source a later Field Kit update will offer techs</span></h2>'
     + '<button class="btn ghost" id="maNewCat">+ Category</button>'
     + '<button class="btn ghost" id="maNewSub">+ Subcategory</button>'
     + (kind === 'sub' ? '<button class="btn" id="maNewItem">+ New item</button>' : kind === 'uncat' ? '<button class="btn" id="maNewItemPlain">+ New item</button>' : '')
@@ -4119,6 +4202,7 @@ function wireMaCatalog(el) {
   Array.prototype.forEach.call(el.querySelectorAll('[data-marestore]'), function (b) { b.addEventListener('click', function () { maSetArchived(b.getAttribute('data-marestore'), false); }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-mtsel]'), function (b) { b.addEventListener('click', function () { MA.sel = b.getAttribute('data-mtsel'); MA.msg = ''; MA.err = false; MA.menu = null; renderMaterials(); }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-mttoggle]'), function (b) { b.addEventListener('click', function () { var id = b.getAttribute('data-mttoggle'); MA.collapsed[id] = !MA.collapsed[id]; renderMaterials(); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-mtsystoggle]'), function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); MA.collapsed['__sys'] = !MA.collapsed['__sys']; renderMaterials(); }); });
   var nc = $('maNewCat'); if (nc) nc.addEventListener('click', function () { maOpenCatForm('top', null, null); });
   var ns = $('maNewSub'); if (ns) ns.addEventListener('click', function () { var tp = maContextTopId(); if (!tp) { MA.msg = 'Create a category first — subcategories live under one.'; MA.err = true; renderMaterials(); return; } maOpenCatForm('sub', tp, null); });
   var ni = $('maNewItem'); if (ni) ni.addEventListener('click', function () { maOpenItemForm(MA.sel, null); });
