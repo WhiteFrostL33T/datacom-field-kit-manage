@@ -495,14 +495,6 @@
   textarea.txtin { font-family:inherit; resize:vertical; }
   /* materials (v1.8) */
   .ma-cols { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:10px; }
-  .ma-vrow { display:flex; align-items:center; gap:8px; padding:7px 2px; border-bottom:1px solid var(--line); font-size:14px; min-height:43px; }
-  .ma-vrow:last-child { border-bottom:none; }
-  .ma-vrow .mv { flex:1; min-width:0; }
-  .ma-x { flex:none; width:28px; height:28px; border-radius:8px; border:1px solid var(--line-hover); background:transparent; color:var(--red-t); font-size:15px; line-height:1; cursor:pointer; font-family:inherit; }
-  .ma-x:hover { background:rgba(244,63,94,.1); }
-  .ma-bi { color:var(--muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; flex:none; }
-  .ma-addrow { display:flex; gap:8px; margin-top:12px; }
-  .ma-addrow .txtin { flex:1; min-width:0; }
   .ma-group { font-size:12.5px; font-weight:800; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); margin:16px 0 2px; }
   .ma-used { color:var(--muted); font-size:12.5px; flex:none; white-space:nowrap; }
   .ma-cathead { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -517,7 +509,6 @@
   .mt-node .mt-ct { flex:none; color:var(--muted); font-size:12px; font-weight:600; }
   .mt-node.sub { margin-left:22px; width:calc(100% - 22px); font-weight:600; }
   .mt-node.on { background:var(--tint); border-color:var(--line-focus); color:var(--text); }
-  .mt-systag { flex:none; font-size:9.5px; font-weight:800; letter-spacing:.6px; color:var(--muted2); border:1px solid var(--line-hover); border-radius:5px; padding:1px 5px; }
   .mt-catrow { display:flex; align-items:center; }
   .mt-caretbtn { flex:none; width:40px; min-height:40px; margin-right:-20px; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; background:none; border:none; color:var(--muted); font-size:10px; cursor:pointer; font-family:inherit; padding:0; }
   .mt-caretbtn:hover { color:var(--text); }
@@ -526,7 +517,6 @@
   .mt-hint { color:var(--muted-dark); font-size:11.5px; line-height:1.45; padding:2px 9px 6px; }
   .mt-detail { padding:16px 18px; min-width:0; }
   .mt-detail h2 { font-size:17px; }
-  .mt-note { background:var(--tint); border:1px solid var(--line-focus); border-radius:12px; padding:9px 12px; font-size:13px; font-weight:600; color:var(--accent-100); margin:12px 0 4px; }
   .mt-namestrip { background:var(--tint); border:1px solid var(--line-focus); border-radius:14px; padding:10px 14px; margin-top:6px; }
   .mt-namestrip .l { font-size:10.5px; font-weight:800; letter-spacing:.7px; color:var(--accent-200); text-transform:uppercase; }
   .mt-namestrip .v { font-size:15px; font-weight:700; margin-top:2px; word-break:break-word; }
@@ -546,7 +536,7 @@
   .mf-seg { display:inline-flex; background:var(--inset); border:1px solid var(--line); border-radius:11px; overflow:hidden; flex:none; }
   .mf-seg button { border:none; background:none; color:var(--muted); padding:8px 11px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
   .mf-seg button.on { background:var(--tint); color:var(--text); }
-  @media (max-width:700px) { .ma-cols { grid-template-columns:1fr; } .mt-shell { grid-template-columns:1fr; border:none; border-radius:0; margin-top:6px; } .mt-tree { border-right:none; border-bottom:1px solid var(--line); background:transparent; padding:6px 0 8px; } .mt-detail { padding:12px 0 2px; } .mt-node { padding:6px 8px; } .mt-uncat { margin-top:7px; padding-top:7px; } .mt-hint { padding:1px 8px 2px; } .mt-note { margin:10px 0 2px; } .ma-vrow { padding:4px 2px; min-height:40px; } .ma-x { width:26px; height:26px; } .ma-addrow { margin-top:10px; } .ma-cattitle { flex:1 1 100%; flex-wrap:wrap; row-gap:2px; } .card .ma-cattitle .hint { margin-left:0; flex:1 1 100%; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; } .ma-cathead .btn { min-height:40px; } }
+  @media (max-width:700px) { .ma-cols { grid-template-columns:1fr; } .mt-shell { grid-template-columns:1fr; border:none; border-radius:0; margin-top:6px; } .mt-tree { border-right:none; border-bottom:1px solid var(--line); background:transparent; padding:6px 0 8px; } .mt-detail { padding:12px 0 2px; } .mt-node { padding:6px 8px; } .mt-uncat { margin-top:7px; padding-top:7px; } .mt-hint { padding:1px 8px 2px; } .ma-cattitle { flex:1 1 100%; flex-wrap:wrap; row-gap:2px; } .card .ma-cattitle .hint { margin-left:0; flex:1 1 100%; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; } .ma-cathead .btn { min-height:40px; } }
   @media (max-width:700px) {
     .prof-flex { flex-direction:column; }
     .prof-left { flex:none; width:100%; }
@@ -691,7 +681,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.13.2 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.14 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -764,7 +754,7 @@ var DEMO_NOW = new Date(2026, 10, 3, 8, 12, 0); /* Tue Nov 3 2026, 8:12 AM — t
 
 /* ================= state ================= */
 var sb = null, me = null, isAdmin = false;
-var D = { profiles: [], projects: [], members: [], timers: [], entries: [], pulls: [], admins: [], entriesError: false, loadedAt: null, customers: [], sites: [], custError: false, cableOpts: [], matCatalog: [], matLog: [], matCats: [], cableError: false, matError: false, matLogError: false, catError: false };
+var D = { profiles: [], projects: [], members: [], timers: [], entries: [], pulls: [], admins: [], entriesError: false, loadedAt: null, customers: [], sites: [], custError: false, matCatalog: [], matLog: [], matCats: [], matError: false, matLogError: false, catError: false };
 var lastVisit = null;
 /* ================= company settings (v1.4) =================
    Manage's first write-capable area. COMPANY is the company_settings row
@@ -2051,8 +2041,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.13.2 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.13.2 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · The materials tree — categories, per-type forms, and cable lists, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.14 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.14 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · The materials tree — categories and per-type forms, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') renderCustomers(); } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -2280,7 +2270,6 @@ function loadAll() {
     sb.from('admins').select('user_id'),
     sb.from('customers').select('*'),
     sb.from('customer_sites').select('*'),
-    sb.from('cable_options').select('kind,value'),
     sb.from('materials_catalog').select('*'),
     sb.from('materials').select('name,unit,project_id,deleted_at').limit(2000),
     sb.from('material_categories').select('*')
@@ -2290,17 +2279,16 @@ function loadAll() {
     D.entriesError = !!rs[4].error; D.entries = rs[4].data || []; D.pulls = rs[5].data || []; D.loadedAt = new Date();
     D.admins = (rs[6].data || []).map(function (a) { return a.user_id; });
     D.custError = !!(rs[7].error || rs[8].error); D.customers = rs[7].data || []; D.sites = rs[8].data || [];
-    D.cableError = !!rs[9].error; D.cableOpts = rs[9].data || [];
-    D.matError = !!rs[10].error; D.matCatalog = rs[10].data || [];
-    D.matLogError = !!rs[11].error; D.matLog = rs[11].data || [];
-    D.catError = !!rs[12].error; D.matCats = rs[12].data || [];
+    D.matError = !!rs[9].error; D.matCatalog = rs[9].data || [];
+    D.matLogError = !!rs[10].error; D.matLog = rs[10].data || [];
+    D.catError = !!rs[11].error; D.matCats = rs[11].data || [];
   });
 }
 var reloadTimer = null;
 function scheduleReload() { if (reloadTimer) return; reloadTimer = setTimeout(function () { reloadTimer = null; loadAll().then(renderCurrent); }, 1200); }
 function subscribeRT() {
   if (!sb || DEMO) return;
-  try { var ch = sb.channel('fkm-live'); ['projects', 'time_entries', 'running_timers', 'project_members', 'cable_pulls', 'customers', 'customer_sites', 'cable_options', 'materials_catalog', 'materials', 'material_categories'].forEach(function (t) { ch.on('postgres_changes', { event: '*', schema: 'public', table: t }, scheduleReload); }); ch.subscribe(); } catch (e) {}
+  try { var ch = sb.channel('fkm-live'); ['projects', 'time_entries', 'running_timers', 'project_members', 'cable_pulls', 'customers', 'customer_sites', 'materials_catalog', 'materials', 'material_categories'].forEach(function (t) { ch.on('postgres_changes', { event: '*', schema: 'public', table: t }, scheduleReload); }); ch.subscribe(); } catch (e) {}
 }
 function startTicks() {
   setInterval(function () {
@@ -3494,20 +3482,16 @@ function jfQuickReturn(kind, row) {
 }
 
 /* ================= materials (v1.8) =================
-   Part A — cable: the back-office editor for Field Kit's existing
-   cable_options store (kinds 'type' / 'color'; values are add/remove
-   only — the store has no update). Field Kit reads that table for its
-   cable dropdowns and falls back to its built-in lists per kind when
-   a kind has no rows, so the empty-kind state below says that out
-   loud instead of letting the built-ins quietly come back.
-   Part B — the materials catalog (materials_catalog): standard items
-   with a default unit and a category, seedable from the crew's own
-   log history. The log stays free text forever; the catalog is a
+   The materials catalog (materials_catalog): standard items with a
+   default unit and a category, seedable from the crew's own log
+   history. The log stays free text forever; the catalog is a
    quick-pick source for a later Field Kit release, never a key.
-   Archiving is a soft delete, like customers and jobs. */
-var MA = { filter: 'active', msg: '', err: false, menu: null, typeMsg: '', typeErr: false, colorMsg: '', colorErr: false, confirm: null, sel: null, collapsed: {}, catForm: null, itemState: null, fieldState: null };
-var MA_TYPES_BUILTIN = ['CAT6 Riser', 'CAT6 Plenum', 'Controlled Access Cable', '2 Conductor Cable', '4 Conductor Cable', '6 Conductor Cable'];
-var MA_COLORS_BUILTIN = ['Blue', 'Black', 'White', 'Gray', 'Red', 'Green', 'Yellow', 'Orange', 'Purple', 'Brown'];
+   Archiving is a soft delete, like customers and jobs. (The v1.13
+   Cable system branch was removed in v1.14:
+   cable lists are no longer edited here — Field Kit keeps using the
+   cable_options values already saved, and cable gets filed under his
+   own categories like everything else.) */
+var MA = { filter: 'active', msg: '', err: false, menu: null, confirm: null, sel: null, collapsed: {}, catForm: null, itemState: null, fieldState: null };
 var MA_UNITS = ['each', 'box', 'ft', 'roll', 'pack'];
 var CAT_SETUP_HINT = 'The materials catalog needs the one-time setup SQL (supabase-materials-catalog.sql) — once an admin has run it, this works.';
 function maCatalogErrText(e) {
@@ -3518,122 +3502,19 @@ function maCatalogErrText(e) {
   if (e.code === '42501' || s.indexOf('row-level security') >= 0 || s.indexOf('permission denied') >= 0 || s.indexOf('policy') >= 0 || s.indexOf('does not exist') >= 0 || s.indexOf('schema cache') >= 0) return CAT_SETUP_HINT;
   return 'Could not save — ' + (e.message || 'check your connection and try again.');
 }
-function maCableErrText(e) {
-  if (!e) return 'check your connection and try again.';
-  if (e.code === '23505') return 'That entry is already in the list.';
-  var s = (String(e.code || '') + ' ' + String(e.message || '')).toLowerCase();
-  if (e.code === '42501' || s.indexOf('row-level security') >= 0 || s.indexOf('permission denied') >= 0) return 'Cable lists are admin-only — your account can read them but not change them.';
-  return 'Could not save — ' + (e.message || 'check your connection and try again.');
-}
 function matById(id) { if (!id) return null; for (var i = 0; i < D.matCatalog.length; i++) if (D.matCatalog[i].id === id) return D.matCatalog[i]; return null; }
 function maBestVal(map) { var best = null, n = -1; for (var k in map) if (map[k] > n) { n = map[k]; best = k; } return best; }
-
-/* ---------- cable lists ---------- */
-function maKindRows(kind) { return D.cableOpts.filter(function (r) { return r.kind === kind; }).map(function (r) { return r.value; }); }
-function maDupKind(kind, value) { var v = value.toLowerCase(); return maKindRows(kind).some(function (x) { return x.toLowerCase() === v; }); }
-function maSetKindMsg(kind, msg, err) { if (kind === 'type') { MA.typeMsg = msg; MA.typeErr = err; } else { MA.colorMsg = msg; MA.colorErr = err; } }
-function maCableListHTML(kind) {
-  var isType = kind === 'type';
-  var rows = maKindRows(kind);
-  var builtin = isType ? MA_TYPES_BUILTIN : MA_COLORS_BUILTIN;
-  var h = '<div>';
-  if (D.cableError) {
-    h += '<p class="empty" style="margin-top:8px">Couldn’t load the saved list — check your connection and refresh. Field Kit keeps using the last list it loaded.</p></div>';
-    return h;
-  }
-  if (!rows.length) {
-    h += '<p class="caption" style="margin-top:6px">Field Kit is showing its built-in list for ' + (isType ? 'types' : 'colors') + ' — nothing custom is saved yet.</p>';
-    builtin.forEach(function (v) { h += '<div class="ma-vrow"><span class="mv">' + esc(v) + '</span><span class="ma-bi">built-in</span></div>'; });
-    h += '<div class="btnrow"><button class="btn ghost small" data-mastart="' + kind + '">Start from the built-in list</button></div>';
-  } else {
-    rows.forEach(function (v, i) { h += '<div class="ma-vrow"><span class="mv">' + esc(v) + '</span><button class="ma-x" data-max="' + kind + '" data-mai="' + i + '" title="Remove ' + esc(v) + '" aria-label="Remove ' + esc(v) + '">×</button></div>'; });
-  }
-  var msg = isType ? MA.typeMsg : MA.colorMsg, err = isType ? MA.typeErr : MA.colorErr;
-  if (msg) h += '<p class="co-msg ' + (err ? 'err' : 'ok') + '" style="margin-top:10px">' + esc(msg) + '</p>';
-  h += '<div class="ma-addrow"><input class="txtin" id="maAdd-' + kind + '" placeholder="Add a ' + (isType ? 'cable type' : 'color') + '" autocomplete="off"><button class="btn" data-maadd="' + kind + '">Add</button></div>';
-  return h + '</div>';
-}
-function wireMaCable(el) {
-  Array.prototype.forEach.call(el.querySelectorAll('[data-mastart]'), function (b) { b.addEventListener('click', function () { maStartBuiltin(b.getAttribute('data-mastart')); }); });
-  Array.prototype.forEach.call(el.querySelectorAll('[data-maadd]'), function (b) { b.addEventListener('click', function () { maAddValue(b.getAttribute('data-maadd')); }); });
-  ['type', 'color'].forEach(function (kind) {
-    var inp = $('maAdd-' + kind);
-    if (inp) inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); maAddValue(kind); } });
-  });
-  Array.prototype.forEach.call(el.querySelectorAll('[data-max]'), function (b) { b.addEventListener('click', function () { var kind = b.getAttribute('data-max'); var rows = maKindRows(kind); var v = rows[parseInt(b.getAttribute('data-mai'), 10)]; if (v != null) maOpenConfirm({ mode: 'remove-opt', kind: kind, value: v }); }); });
-}
-function maAddValue(kind) {
-  var inp = $('maAdd-' + kind);
-  var v = inp ? inp.value.trim() : '';
-  if (!v) return;
-  if (D.cableError) { maSetKindMsg(kind, 'The saved list couldn’t be loaded — refresh before changing it.', true); renderMaterials(); return; }
-  if (maDupKind(kind, v)) { maSetKindMsg(kind, '“' + v + '” is already in the list.', true); renderMaterials(); return; }
-  if (!maKindRows(kind).length) { maOpenConfirm({ mode: 'first-add', kind: kind, value: v }); return; }
-  maDoAddValue(kind, v);
-}
-function maDoAddValue(kind, value) {
-  if (DEMO) {
-    D.cableOpts.push({ kind: kind, value: value });
-    maSetKindMsg(kind, 'Added “' + value + '” — Field Kit offers it at the next load.', false);
-    renderMaterials(); return;
-  }
-  sb.from('cable_options').insert({ kind: kind, value: value }).then(function (r) {
-    if (r.error) { maSetKindMsg(kind, maCableErrText(r.error), true); renderMaterials(); return; }
-    maSetKindMsg(kind, 'Added “' + value + '” — Field Kit offers it at the next load.', false);
-    loadAll().then(renderCurrent);
-  });
-}
-function maDoRemoveValue(kind, value) {
-  if (DEMO) {
-    D.cableOpts = D.cableOpts.filter(function (r) { return !(r.kind === kind && r.value === value); });
-    maSetKindMsg(kind, 'Removed “' + value + '”.', false);
-    renderMaterials(); return;
-  }
-  sb.from('cable_options').delete().eq('kind', kind).eq('value', value).then(function (r) {
-    if (r.error) { maSetKindMsg(kind, maCableErrText(r.error), true); renderMaterials(); return; }
-    maSetKindMsg(kind, 'Removed “' + value + '”.', false);
-    loadAll().then(renderCurrent);
-  });
-}
-function maStartBuiltin(kind) {
-  var builtin = kind === 'type' ? MA_TYPES_BUILTIN : MA_COLORS_BUILTIN;
-  var have = {}; maKindRows(kind).forEach(function (v) { have[v.toLowerCase()] = 1; });
-  var add = builtin.filter(function (v) { return !have[v.toLowerCase()]; });
-  if (!add.length) { maSetKindMsg(kind, 'The built-in list is already copied in.', false); renderMaterials(); return; }
-  if (DEMO) {
-    add.forEach(function (v) { D.cableOpts.push({ kind: kind, value: v }); });
-    maSetKindMsg(kind, 'Built-in list copied in — it’s yours to edit now.', false);
-    renderMaterials(); return;
-  }
-  sb.from('cable_options').insert(add.map(function (v) { return { kind: kind, value: v }; })).then(function (r) {
-    if (r.error) { maSetKindMsg(kind, maCableErrText(r.error), true); renderMaterials(); return; }
-    maSetKindMsg(kind, 'Built-in list copied in — it’s yours to edit now.', false);
-    loadAll().then(renderCurrent);
-  });
-}
 
 /* ---------- confirm window (mu/cu overlay idiom) ---------- */
 function maOpenConfirm(c) {
   closeAllPopovers();
   MA.confirm = c;
-  var kindWord = c.kind === 'type' ? 'type' : 'color';
   var h = '';
-  if (c.mode === 'first-add') {
-    h += '<h2>Add “' + esc(c.value) + '”?</h2>';
-    h += '<p class="caption" style="margin-top:6px">Adding the first custom ' + kindWord + ' replaces the built-in list on the field side — Field Kit will offer only what is in your list. To keep the familiar starting point instead, cancel and use “Start from the built-in list”, then edit from there.</p>';
-    h += '<div class="cardfoot"><button class="btn ghost" id="maCCancel">Cancel</button><button class="btn" id="maCGo">Add it</button></div>';
-  } else if (c.mode === 'archive-sub' || c.mode === 'archive-cat') {
-    h += '<h2>Archive “' + esc(c.name) + '”?</h2>';
-    h += '<p class="caption" style="margin-top:6px">' + (c.mode === 'archive-sub'
-      ? 'The subcategory leaves the tree. Its item' + (c.count === 1 ? '' : 's') + ' move' + (c.count === 1 ? 's' : '') + ' to Uncategorized — nothing is deleted, and the values filled in on them are kept for when they are filed again.'
-      : 'The category and its subcategories leave the tree. Items filed under them move to Uncategorized — nothing is deleted, and the values filled in on them are kept.') + '</p>';
-    h += '<div class="cardfoot"><button class="btn ghost" id="maCCancel">Keep it</button><button class="btn danger" id="maCGo">Archive</button></div>';
-  } else {
-    h += '<h2>Remove “' + esc(c.value) + '”?</h2>';
-    h += '<p class="caption" style="margin-top:6px">It leaves the ' + kindWord + ' choices in Field Kit right away. Past cable pulls keep the ' + kindWord + ' they were logged with — history doesn’t change.</p>';
-    if (maKindRows(c.kind).length === 1) h += '<p class="co-msg err" style="margin-top:10px">This is the last saved ' + kindWord + ' — removing it puts Field Kit back on its built-in list.</p>';
-    h += '<div class="cardfoot"><button class="btn ghost" id="maCCancel">Keep it</button><button class="btn danger" id="maCGo">Remove</button></div>';
-  }
+  h += '<h2>Archive “' + esc(c.name) + '”?</h2>';
+  h += '<p class="caption" style="margin-top:6px">' + (c.mode === 'archive-sub'
+    ? 'The subcategory leaves the tree. Its item' + (c.count === 1 ? '' : 's') + ' move' + (c.count === 1 ? 's' : '') + ' to Uncategorized — nothing is deleted, and the values filled in on them are kept for when they are filed again.'
+    : 'The category and its subcategories leave the tree. Items filed under them move to Uncategorized — nothing is deleted, and the values filled in on them are kept.') + '</p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="maCCancel">Keep it</button><button class="btn danger" id="maCGo">Archive</button></div>';
   $('maConfirmCard').innerHTML = h;
   dlgX('maConfirmCard', maCloseConfirm);
   $('maConfirmWrap').classList.remove('hidden');
@@ -3642,7 +3523,7 @@ function maOpenConfirm(c) {
 }
 function maCloseForm() { var w = $('maFormWrap'); if (w) w.classList.add('hidden'); MA.itemState = null; MA.catForm = null; }
 function maCloseConfirm() { var w = $('maConfirmWrap'); if (w) w.classList.add('hidden'); MA.confirm = null; }
-function maConfirmGo() { var c = MA.confirm; if (!c) return; maCloseConfirm(); if (c.mode === 'first-add') maDoAddValue(c.kind, c.value); else if (c.mode === 'archive-sub' || c.mode === 'archive-cat') maArchiveCat(c.id); else maDoRemoveValue(c.kind, c.value); }
+function maConfirmGo() { var c = MA.confirm; if (!c) return; maCloseConfirm(); if (c.mode === 'archive-sub' || c.mode === 'archive-cat') maArchiveCat(c.id); }
 
 /* ---------- usage (from the materials log) ---------- */
 function maUsageMap() {
@@ -3661,11 +3542,7 @@ function maUsageMap() {
    is BUILT from the subcategory + its filled values (attrs), so the
    catalog reads consistently and a later Field Kit quick-pick can
    reuse the same forms. Items with category_id null are
-   Uncategorized; their legacy free-text `category` shows as a hint.
-   The tree's Cable branch is NOT a row in that table: it is an
-   app-level system node whose Types/Colors edit the existing
-   cable_options store above, exactly as Field Kit expects. */
-var MA_SYSTEM_ID = 'sys-cable', MA_SYS_TYPE_ID = 'sys-cable-type', MA_SYS_COLOR_ID = 'sys-cable-color';
+   Uncategorized; their legacy free-text `category` shows as a hint. */
 var CATS_SETUP_HINT = 'The material categories need the one-time setup SQL (supabase-material-categories.sql) — once an admin has run it, this works.';
 function maCatErrText(e) {
   if (!e) return 'check your connection and try again.';
@@ -3694,8 +3571,6 @@ function maBuildName(sub, attrs) {
 function maItemCount(catId) { return D.matCatalog.filter(function (c) { return !c.deleted_at && c.category_id === catId; }).length; }
 function maSelKind() {
   if (MA.sel === 'uncat') return 'uncat';
-  if (MA.sel === MA_SYS_TYPE_ID) return 'cable-type';
-  if (MA.sel === MA_SYS_COLOR_ID) return 'cable-color';
   var c = matCatById(MA.sel);
   if (c && c.parent_id && !c.deleted_at) return 'sub';
   if (c && !c.parent_id && !c.deleted_at) return 'top';
@@ -3704,7 +3579,7 @@ function maSelKind() {
 function maEnsureSel() {
   if (maSelKind() !== 'none') return;
   var subs = D.matCats.filter(function (c) { return c.parent_id && !c.deleted_at; }).sort(maCatSort);
-  MA.sel = subs.length ? subs[0].id : MA_SYS_TYPE_ID;
+  MA.sel = subs.length ? subs[0].id : 'uncat';
 }
 function maContextTopId() {
   var k = maSelKind();
@@ -4162,20 +4037,11 @@ function maSeed() {
 }
 
 /* ---------- tree + detail render ---------- */
-function maEffKindCount(kind) { var n = maKindRows(kind).length; return n || (kind === 'type' ? MA_TYPES_BUILTIN.length : MA_COLORS_BUILTIN.length); }
-function maNodeHTML(id, name, count, cls, systag) {
-  return '<button type="button" class="mt-node ' + cls + (MA.sel === id ? ' on' : '') + '" data-mtsel="' + id + '"><span class="mt-nm">' + esc(name) + '</span>' + (systag ? '<span class="mt-systag">SYSTEM</span>' : '') + '<span class="mt-ct">' + count + '</span></button>';
+function maNodeHTML(id, name, count, cls) {
+  return '<button type="button" class="mt-node ' + cls + (MA.sel === id ? ' on' : '') + '" data-mtsel="' + id + '"><span class="mt-nm">' + esc(name) + '</span><span class="mt-ct">' + count + '</span></button>';
 }
 function maTreeHTML() {
   var h = '<div class="mt-tree">';
-  var cableN = maEffKindCount('type') + maEffKindCount('color');
-  var sysOpen = !MA.collapsed['__sys'];
-  h += '<div class="mt-catrow"><button type="button" class="mt-caretbtn" data-mtsystoggle aria-expanded="' + (sysOpen ? 'true' : 'false') + '" aria-label="Collapse or expand Cable">' + (sysOpen ? '▾' : '▸') + '</button>'
-    + '<button type="button" class="mt-node' + (MA.sel === MA_SYS_TYPE_ID || MA.sel === MA_SYS_COLOR_ID ? ' on' : '') + '" style="flex:1" data-mtsel="' + MA_SYS_TYPE_ID + '"><span class="mt-nm">Cable</span><span class="mt-systag">SYSTEM</span><span class="mt-ct">' + cableN + '</span></button></div>';
-  if (sysOpen) {
-    h += maNodeHTML(MA_SYS_TYPE_ID, 'Types', maEffKindCount('type'), 'sub', false);
-    h += maNodeHTML(MA_SYS_COLOR_ID, 'Colors', maEffKindCount('color'), 'sub', false);
-  }
   maTopCats().forEach(function (top) {
     var subs = maSubsOf(top.id, true);
     var n = subs.reduce(function (s, x) { return s + maItemCount(x.id); }, 0);
@@ -4184,7 +4050,7 @@ function maTreeHTML() {
     h += '<div class="mt-catrow"><button type="button" class="mt-caretbtn" data-mttoggle="' + top.id + '" aria-expanded="' + (open ? 'true' : 'false') + '" aria-label="Collapse or expand ' + esc(top.name) + '">' + (open ? '▾' : '▸') + '</button><button type="button" class="mt-node" style="flex:1" data-mttoggle="' + top.id + '"><span class="mt-nm">' + esc(top.name) + '</span><span class="mt-ct">' + n + '</span></button>' + maMenuHTML('cat-' + top.id, catItems) + '</div>';
     if (open) subs.forEach(function (s) {
       var subItems = '<button type="button" data-macat="rename-sub" data-mcid="' + s.id + '">Rename</button><span class="jb-mdiv"></span><button type="button" data-macat="fields" data-mcid="' + s.id + '">Form fields</button><span class="jb-mdiv"></span><button type="button" class="danger" data-macat="archive-sub" data-mcid="' + s.id + '">Archive subcategory</button>';
-      h += '<div style="display:flex;align-items:center">' + maNodeHTML(s.id, s.name, maItemCount(s.id), 'sub', false).replace('class="mt-node sub', 'class="mt-node sub" style="flex:1') + maMenuHTML('sub-' + s.id, subItems) + '</div>';
+      h += '<div style="display:flex;align-items:center">' + maNodeHTML(s.id, s.name, maItemCount(s.id), 'sub').replace('class="mt-node sub', 'class="mt-node sub" style="flex:1') + maMenuHTML('sub-' + s.id, subItems) + '</div>';
     });
   });
   var un = D.matCatalog.filter(function (c) { return !c.deleted_at && !c.category_id; }).length;
@@ -4221,13 +4087,6 @@ function maDetailHTML() {
   var arch = MA.filter === 'archived';
   var h = '<div class="mt-detail">';
   if (MA.msg) h += '<p class="co-msg ' + (MA.err ? 'err' : 'ok') + '" style="margin:0 2px 10px">' + esc(MA.msg) + '</p>';
-  if (kind === 'cable-type' || kind === 'cable-color') {
-    var ck = kind === 'cable-type' ? 'type' : 'color';
-    h += '<h2>' + (ck === 'type' ? 'Types' : 'Colors') + '</h2><div class="pagesub">Cable · System list · ' + maEffKindCount(ck) + ' values</div>';
-    h += '<div class="mt-note">ⓘ These values feed the Field Kit cable-pull dropdowns.</div>';
-    h += maCableListHTML(ck);
-    return h + '</div>';
-  }
   if (kind === 'sub') {
     var sub = matCatById(MA.sel), top = matCatById(sub.parent_id), fields = maFieldsOf(sub);
     var itemsAll = D.matCatalog.filter(function (c) { return c.category_id === sub.id && (arch ? !!c.deleted_at : !c.deleted_at); }).sort(function (a, b) { return a.name.localeCompare(b.name); });
@@ -4260,12 +4119,12 @@ function maDetailHTML() {
 function maCatalogCardHTML() {
   var h = '';
   if (!DEMO && D.matError) {
-    h += '<div class="card" style="margin-top:14px"><h2>Materials catalog — one-time setup needed</h2><p class="caption" style="margin-top:8px">The catalog keeps its standard items in one small table of its own. An admin runs the one-time setup file <b>supabase-materials-catalog.sql</b> in the Supabase Dashboard SQL Editor — it only adds that table and its rules, plus a read rule so this page can scan the materials log; Field Kit is untouched, and the Cable branch works either way. Run it, then reopen this screen.</p></div>';
+    h += '<div class="card" style="margin-top:14px"><h2>Materials catalog — one-time setup needed</h2><p class="caption" style="margin-top:8px">The catalog keeps its standard items in one small table of its own. An admin runs the one-time setup file <b>supabase-materials-catalog.sql</b> in the Supabase Dashboard SQL Editor — it only adds that table and its rules, plus a read rule so this page can scan the materials log; Field Kit is untouched. Run it, then reopen this screen.</p></div>';
   } else if (!DEMO && D.catError) {
-    h += '<div class="card" style="margin-top:14px"><h2>Material categories — one-time setup needed</h2><p class="caption" style="margin-top:8px">The tree keeps its categories in one small table of its own. An admin runs the one-time setup file <b>supabase-material-categories.sql</b> in the Supabase Dashboard SQL Editor — it adds that table and two filing columns on the catalog; Field Kit is untouched, and the Cable branch below works either way. Run it, then reopen this screen.</p></div>';
+    h += '<div class="card" style="margin-top:14px"><h2>Material categories — one-time setup needed</h2><p class="caption" style="margin-top:8px">The tree keeps its categories in one small table of its own. An admin runs the one-time setup file <b>supabase-material-categories.sql</b> in the Supabase Dashboard SQL Editor — it adds that table and two filing columns on the catalog; Field Kit is untouched. Run it, then reopen this screen.</p></div>';
   }
   var kind = maSelKind();
-  h += '<div class="card"><div class="ma-cathead"><h2 class="ma-cattitle">Materials catalog <span class="hint">Categories, per-type forms, and the cable lists — the quick-pick source a later Field Kit update will offer techs</span></h2>'
+  h += '<div class="card"><div class="ma-cathead"><h2 class="ma-cattitle">Materials catalog <span class="hint">Categories and per-type forms — the quick-pick source a later Field Kit update will offer techs</span></h2>'
     + '<button class="btn ghost" id="maNewCat">+ Category</button>'
     + '<button class="btn ghost" id="maNewSub">+ Subcategory</button>'
     + (kind === 'sub' ? '<button class="btn" id="maNewItem">+ New item</button>' : kind === 'uncat' ? '<button class="btn" id="maNewItemPlain">+ New item</button>' : '')
@@ -4278,7 +4137,6 @@ function wireMaCatalog(el) {
   Array.prototype.forEach.call(el.querySelectorAll('[data-marestore]'), function (b) { b.addEventListener('click', function () { maSetArchived(b.getAttribute('data-marestore'), false); }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-mtsel]'), function (b) { b.addEventListener('click', function () { MA.sel = b.getAttribute('data-mtsel'); MA.msg = ''; MA.err = false; MA.menu = null; renderMaterials(); }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-mttoggle]'), function (b) { b.addEventListener('click', function () { var id = b.getAttribute('data-mttoggle'); MA.collapsed[id] = !MA.collapsed[id]; renderMaterials(); }); });
-  Array.prototype.forEach.call(el.querySelectorAll('[data-mtsystoggle]'), function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); MA.collapsed['__sys'] = !MA.collapsed['__sys']; renderMaterials(); }); });
   var nc = $('maNewCat'); if (nc) nc.addEventListener('click', function () { maOpenCatForm('top', null, null); });
   var ns = $('maNewSub'); if (ns) ns.addEventListener('click', function () { var tp = maContextTopId(); if (!tp) { MA.msg = 'Create a category first — subcategories live under one.'; MA.err = true; renderMaterials(); return; } maOpenCatForm('sub', tp, null); });
   var ni = $('maNewItem'); if (ni) ni.addEventListener('click', function () { maOpenItemForm(MA.sel, null); });
@@ -4294,9 +4152,8 @@ function wireMaCatalog(el) {
 function renderMaterials() {
   maEnsureSel();
   var el = $('maView');
-  var head = '<div class="pagetitle-row"><div><div class="pagetitle">Materials</div><div class="pagesub">The materials tree and cable lists, set here for the field side.</div></div></div>';
+  var head = '<div class="pagetitle-row"><div><div class="pagetitle">Materials</div><div class="pagesub">The materials tree, set here for the field side.</div></div></div>';
   el.innerHTML = head + maCatalogCardHTML();
-  wireMaCable(el);
   wireMaCatalog(el);
   wireMaMenus(el);
 }
@@ -4440,7 +4297,6 @@ function loadDemo() {
   ];
   D.customers = [];
   D.sites = [];
-  D.cableOpts = [];
   D.matCats = [
     { id: 'dc-data', name: 'Data', parent_id: null, fields: [], sort: 1, deleted_at: null, created_at: L(2026, 9, 20, 9, 0), updated_at: L(2026, 9, 20, 9, 0) },
     { id: 'dc-power', name: 'Power', parent_id: null, fields: [], sort: 2, deleted_at: null, created_at: L(2026, 9, 20, 9, 0), updated_at: L(2026, 9, 20, 9, 0) },
