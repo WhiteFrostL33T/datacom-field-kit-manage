@@ -31,7 +31,7 @@
   body { font-family:'Plus Jakarta Sans',-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background-color:var(--bg); background-image:radial-gradient(circle at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(16,185,129,0.05) 0%, transparent 40%); background-attachment:fixed; color:var(--text); font-size:14px; }
   html, body { overscroll-behavior:none; }
   @keyframes ptrspin { to { transform:rotate(360deg); } }
-  @media print { #ptrInd { display:none !important; } }
+  @media print { #ptrInd, #nrToast { display:none !important; } }
   .wrap { max-width:1400px; margin:0 auto; padding:18px 22px 30px; }
   .hidden { display:none !important; }
   /* header */
@@ -543,6 +543,60 @@
     .setrow { flex-direction:column; }
     .setrow .datein { width:100%; }
   }
+  /* network rooms (v1.15) */
+  .nr-toast { position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:95; background:var(--panel2); border:1px solid var(--line-hover); color:var(--text); padding:10px 18px; border-radius:999px; font-size:13px; font-weight:700; box-shadow:0 12px 32px rgba(0,0,0,.5); max-width:92vw; text-align:center; }
+  .nr-tabs { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:2px 2px 12px; }
+  .nr-cols { display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:14px; align-items:start; }
+  .nr-mapdim { display:flex; justify-content:space-between; color:var(--muted-dark); font-size:11.5px; font-family:'JetBrains Mono',monospace; margin:0 2px 6px; }
+  .nr-map { position:relative; border:1.5px solid var(--line-hover); border-radius:14px; background-color:rgba(255,255,255,.012); background-image:linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); overflow:hidden; }
+  .nr-rack { position:absolute; border:1.5px solid var(--line-hover); background:var(--panel2); border-radius:8px; padding:5px 8px; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; overflow:hidden; display:flex; flex-direction:column; justify-content:center; gap:1px; min-width:44px; min-height:30px; }
+  .nr-rack:active { cursor:grabbing; }
+  .nr-rack.sel { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.25), 0 8px 22px rgba(0,0,0,.4); background:#1b2440; }
+  .nr-rack .rnm { font-weight:800; font-size:12.5px; line-height:1.15; white-space:nowrap; }
+  .nr-rack .rsub { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--accent-200); white-space:nowrap; }
+  .nr-rack.vert { flex-direction:row; align-items:center; justify-content:center; gap:5px; }
+  .nr-rack.vert .rnm, .nr-rack.vert .rsub { writing-mode:vertical-rl; white-space:nowrap; }
+  .nr-rackbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+  .nr-rackbar .who { font-weight:800; margin-right:2px; }
+  .nr-rrow { border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-top:8px; cursor:pointer; background:var(--panel); }
+  .nr-rrow:hover { border-color:var(--line-hover); }
+  .nr-rrow.on { border-color:var(--accent); background:var(--tint); }
+  .nr-rrow .rn { font-weight:800; }
+  .nr-rrow .rm { color:var(--muted); font-size:12px; margin-top:2px; font-family:'JetBrains Mono',monospace; }
+  .nr-chiprow { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .nr-uchip { display:inline-flex; gap:8px; align-items:center; border:1px solid var(--amber); color:var(--amber-t); border-radius:999px; padding:6px 8px 6px 13px; font-size:12.5px; font-weight:700; background:rgba(245,158,11,.08); }
+  .nr-elev-cols { display:grid; grid-template-columns:minmax(330px,520px) minmax(0,1fr); gap:14px; align-items:start; }
+  .nr-rackcol { border:1px solid var(--line-hover); border-radius:16px; background:var(--panel); padding:10px; }
+  .nr-block { display:flex; align-items:stretch; gap:8px; margin-bottom:2px; }
+  .nr-ulab { flex:none; width:52px; display:flex; align-items:center; justify-content:flex-end; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted-dark); padding-right:2px; }
+  .nr-dev { flex:1; min-width:0; border:1px solid var(--line); border-radius:8px; background:var(--panel2); padding:0 10px; display:flex; align-items:center; gap:8px; cursor:pointer; overflow:hidden; }
+  .nr-dev:hover { border-color:var(--line-hover); }
+  .nr-dev.sel { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.22); }
+  .nr-dev .dn { font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nr-dev .dt { color:var(--muted); font-size:12px; white-space:nowrap; }
+  .nr-dev.t-switch { border-color:rgba(99,102,241,.55); background:linear-gradient(180deg, rgba(99,102,241,.22), rgba(99,102,241,.10)); }
+  .nr-dev.t-ups { border-color:rgba(16,185,129,.45); }
+  .nr-dev.t-pdu { border-color:rgba(245,158,11,.5); }
+  .nr-dev.t-blank, .nr-dev.t-cable_manager { border-style:dashed; color:var(--muted); background:transparent; }
+  .nr-ticks { margin-left:auto; flex:none; width:34%; max-width:190px; height:12px; border-radius:3px; background-image:repeating-linear-gradient(90deg, rgba(165,180,252,.55) 0 5px, transparent 5px 10px); }
+  .nr-portsbtn { margin-left:auto; flex:none; border:1px solid rgba(165,180,252,.5); background:rgba(99,102,241,.25); color:#e0e7ff; border-radius:999px; padding:4px 11px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; }
+  .nr-portsbtn:hover { background:rgba(99,102,241,.4); }
+  .nr-empty { flex:1; border:1px dashed rgba(255,255,255,.09); border-radius:8px; background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.018) 0 10px, transparent 10px 20px); display:flex; align-items:center; padding:0 10px; color:var(--muted-dark); font-size:12px; cursor:pointer; }
+  .nr-empty:hover { border-color:var(--line-hover); color:var(--muted); }
+  .nr-strip .nr-pal { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  .nr-pal button { border:1px solid var(--line); background:var(--chip); color:var(--text2); border-radius:999px; padding:7px 13px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .nr-pal button:hover { background:var(--chip-hover); }
+  .nr-pal button.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .nr-pgrid { display:grid; grid-template-columns:repeat(12, 1fr); gap:6px; margin-top:10px; }
+  .nr-port { border:1px solid var(--line); background:var(--panel); border-radius:8px; padding:6px 0 5px; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted-dark); }
+  .nr-port:hover { border-color:var(--line-hover); }
+  .nr-port .dot { width:6px; height:6px; border-radius:99px; background:rgba(255,255,255,.13); }
+  .nr-port.used { color:var(--text); border-color:rgba(99,102,241,.5); background:var(--panel2); }
+  .nr-port.used .dot { background:var(--accent-light); }
+  .nr-port.poe .dot { background:var(--amber); }
+  .nr-banner { border:1px solid rgba(99,102,241,.45); background:var(--tint); border-radius:14px; padding:12px 14px; font-size:13px; margin-top:12px; }
+  @media (max-width:1000px) { .nr-cols { grid-template-columns:1fr; } .nr-elev-cols { grid-template-columns:1fr; } }
+  @media (max-width:700px) { .nr-pgrid { gap:4px; } .nr-port { font-size:10.5px; padding:5px 0 4px; border-radius:6px; } .nr-rack .rnm { font-size:11px; } .nr-rack .rsub { font-size:9px; } .nr-ulab { width:44px; font-size:9.5px; } .nr-dev .dn { font-size:12px; } .nr-dev .dt { display:none; } }
   /* mobile layout (v1.10) — the new chrome is display:none outside the
      phone breakpoint; everything else here lives in the 700px query */
   .menubtn { display:none; width:38px; height:38px; flex:none; align-items:center; justify-content:center; background:transparent; border:1px solid var(--line); border-radius:14px; color:var(--text); cursor:pointer; padding:0; font-family:inherit; font-size:19px; line-height:1; }
@@ -681,7 +735,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.14 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.15 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -740,6 +794,16 @@
   <div class="pal jobform jbwin dlg" id="installCard"></div>
 </div>
 
+<div id="nrFormWrap" class="palwrap dlgwrap hidden">
+  <div class="pal jobform jbwin dlg" id="nrFormCard"></div>
+</div>
+
+<div id="nrConfirmWrap" class="palwrap dlgwrap hidden">
+  <div class="pal jobform jbwin dlg" id="nrConfirmCard"></div>
+</div>
+
+<div id="nrToast" class="nr-toast hidden"></div>
+
 <div id="brief"></div>
 <div id="tsprint"></div>
 <div id="segtip" class="segtip"><div class="tj" id="segtipJob"></div><div class="tm" id="segtipMeta"></div></div>
@@ -754,7 +818,7 @@ var DEMO_NOW = new Date(2026, 10, 3, 8, 12, 0); /* Tue Nov 3 2026, 8:12 AM — t
 
 /* ================= state ================= */
 var sb = null, me = null, isAdmin = false;
-var D = { profiles: [], projects: [], members: [], timers: [], entries: [], pulls: [], admins: [], entriesError: false, loadedAt: null, customers: [], sites: [], custError: false, matCatalog: [], matLog: [], matCats: [], matError: false, matLogError: false, catError: false };
+var D = { profiles: [], projects: [], members: [], timers: [], entries: [], pulls: [], admins: [], entriesError: false, loadedAt: null, customers: [], sites: [], custError: false, matCatalog: [], matLog: [], matCats: [], matError: false, matLogError: false, catError: false, netRooms: [], racks: [], rackDevices: [], siteSwitches: [], portEntries: [], nrError: false };
 var lastVisit = null;
 /* ================= company settings (v1.4) =================
    Manage's first write-capable area. COMPANY is the company_settings row
@@ -2041,11 +2105,11 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.14 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.14 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · The materials tree — categories and per-type forms, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.15 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.15 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · The materials tree — categories and per-type forms, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
-function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') renderCustomers(); } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
+function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') { if (!(NR.sid && cae && /^nr/.test(cae.id || ''))) renderCustomers(); } } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
 
 /* ================= schedule ================= */
 var SCHED = { offset: 0 };
@@ -2272,7 +2336,11 @@ function loadAll() {
     sb.from('customer_sites').select('*'),
     sb.from('materials_catalog').select('*'),
     sb.from('materials').select('name,unit,project_id,deleted_at').limit(2000),
-    sb.from('material_categories').select('*')
+    sb.from('material_categories').select('*'),
+    sb.from('network_rooms').select('*'),
+    sb.from('racks').select('*'),
+    sb.from('rack_devices').select('*'),
+    sb.from('port_switches').select('*').not('site_id', 'is', null)
   ];
   return Promise.all(qs.map(function (p) { return p.then(function (r) { return r; }, function (e) { return { data: null, error: e }; }); })).then(function (rs) {
     D.profiles = rs[0].data || []; D.projects = rs[1].data || []; D.members = rs[2].data || []; D.timers = rs[3].data || [];
@@ -2282,13 +2350,18 @@ function loadAll() {
     D.matError = !!rs[9].error; D.matCatalog = rs[9].data || [];
     D.matLogError = !!rs[10].error; D.matLog = rs[10].data || [];
     D.catError = !!rs[11].error; D.matCats = rs[11].data || [];
+    D.nrError = !!(rs[12].error || rs[13].error || rs[14].error || rs[15].error);
+    D.netRooms = rs[12].data || []; D.racks = rs[13].data || []; D.rackDevices = rs[14].data || []; D.siteSwitches = rs[15].data || [];
+    var swIds = D.siteSwitches.map(function (s) { return s.id; });
+    if (swIds.length) return sb.from('port_entries').select('*').in('switch_id', swIds).then(function (r) { D.portEntries = r.data || []; }, function () { D.portEntries = []; });
+    D.portEntries = [];
   });
 }
 var reloadTimer = null;
 function scheduleReload() { if (reloadTimer) return; reloadTimer = setTimeout(function () { reloadTimer = null; loadAll().then(renderCurrent); }, 1200); }
 function subscribeRT() {
   if (!sb || DEMO) return;
-  try { var ch = sb.channel('fkm-live'); ['projects', 'time_entries', 'running_timers', 'project_members', 'cable_pulls', 'customers', 'customer_sites', 'materials_catalog', 'materials', 'material_categories'].forEach(function (t) { ch.on('postgres_changes', { event: '*', schema: 'public', table: t }, scheduleReload); }); ch.subscribe(); } catch (e) {}
+  try { var ch = sb.channel('fkm-live'); ['projects', 'time_entries', 'running_timers', 'project_members', 'cable_pulls', 'customers', 'customer_sites', 'materials_catalog', 'materials', 'material_categories', 'network_rooms', 'racks', 'rack_devices', 'port_switches', 'port_entries'].forEach(function (t) { ch.on('postgres_changes', { event: '*', schema: 'public', table: t }, scheduleReload); }); ch.subscribe(); } catch (e) {}
 }
 function startTicks() {
   setInterval(function () {
@@ -2332,6 +2405,7 @@ function ptrShow(dy, ready) {
 }
 function ptrHide() { var el = document.getElementById('ptrInd'); if (el) el.style.transform = 'translate(-50%,-70px)'; }
 function ptrBlocked() {
+  if (window.__nrDrag) return true;
   if ($('appView').classList.contains('hidden')) return true;
   if (document.querySelector('.palwrap:not(.hidden)')) return true;
   if (document.querySelector('.jb-menu:not(.hidden)')) return true;
@@ -3100,6 +3174,7 @@ function cuDetailHTML(c) {
       var sc = cuContactHTML(s);
       if (sc) h += '<div class="cu-meta" style="margin-top:4px">' + sc + '</div>';
       if (s.notes && String(s.notes).trim()) h += '<p class="caption" style="margin-top:6px">' + esc(s.notes).replace(/\n/g, '<br>') + '</p>';
+      h += '<div style="margin-top:9px"><button class="btn ghost small" data-curooms="' + s.id + '">Network rooms</button></div>';
       h += '</div>';
     });
     h += '</div>';
@@ -3129,6 +3204,7 @@ function wireCuDetail(c) {
   var as = $('cuAddSite'); if (as) as.addEventListener('click', function () { cuOpenSiteForm(c.id, null, null); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-cujob]'), function (r) { r.addEventListener('click', function () { PJ.pid = r.getAttribute('data-cujob'); JB.msg = ''; JB.err = false; JB.confirmDel = null; showMain('proj'); window.scrollTo(0, 0); }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-cusiterestore]'), function (b) { b.addEventListener('click', function () { cuSetSiteArchived(b.getAttribute('data-cusiterestore'), false); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-curooms]'), function (b) { b.addEventListener('click', function () { NR.sid = b.getAttribute('data-curooms'); NR.roomId = null; NR.rackId = null; NR.swId = null; NR.selRack = null; NR.devSel = null; NR.msg = ''; NR.err = false; renderCustomers(); window.scrollTo(0, 0); }); });
   var lb = $('cuLinkBtn'); if (lb) lb.addEventListener('click', function () { var js = $('cuLinkSel'), ss = $('cuLinkSiteSel'); if (js && js.value) cuLinkJob(js.value, ss && ss.value ? ss.value : null); });
 }
 
@@ -3139,6 +3215,11 @@ function renderCustomers() {
   if (!DEMO && D.custError) {
     el.innerHTML = head + '<div class="costack"><div class="card"><h2>One-time setup needed</h2><p class="caption" style="margin-top:8px">The Customers area keeps the directory in two small tables of its own and links jobs to them. An admin runs the one-time setup file <b>supabase-customers.sql</b> in the Supabase Dashboard SQL Editor — it only adds those tables, two link columns on jobs, and their rules; Field Kit is untouched. Run it, then reopen this screen. Until then, everything else in Manage works exactly as before.</p></div></div>';
     return;
+  }
+  if (NR.sid) {
+    var nsite = siteById(NR.sid);
+    if (nsite && !nsite.deleted_at && CU.cid && nsite.customer_id === CU.cid) { el.innerHTML = head + nrScreenHTML(nsite); wireNRScreen(nsite); return; }
+    NR.sid = null;
   }
   if (CU.cid) {
     var c = custById(CU.cid);
@@ -3479,6 +3560,784 @@ function jfQuickReturn(kind, row) {
     var si = $('jfSite'); if (si) si.value = row.label;
   }
   jfLinkLine();
+}
+
+/* ================= network rooms (v1.15) =================
+   Rooms, racks and devices for a customer SITE, designed in Manage
+   (Customers -> a site -> Network rooms) and read by the field crew
+   in Field Kit. A room holds racks on a top-down map drawn to the
+   room's real floor size; a rack holds devices in units (U1 is the
+   bottom of the rack). A device of type switch links to a SITE
+   switch (port_switches.site_id): one port record per switch per
+   site, shared by every job there -- its entries are the stock
+   port_entries rows Field Kit already keeps (switch_id, port,
+   device, jack, notes; saved with an upsert on id, like Field Kit).
+   The switch's port count is a view preference, exactly as in
+   Field Kit (its chassis density is not a stored column either):
+   Manage keeps it per switch in localStorage, defaulting from the
+   highest logged port. Everything archives softly (deleted_at);
+   nothing here writes to jobs, time entries, or timers. */
+var NR = { sid: null, roomId: null, rackId: null, swId: null, devSel: null, selRack: null, msg: '', err: false, form: null, confirm: null };
+var NR_TYPES = [['switch', 'Switch'], ['patch_panel', 'Patch panel'], ['ups', 'UPS'], ['nvr_server', 'NVR / Server'], ['router_firewall', 'Router / Firewall'], ['pdu', 'PDU'], ['cable_manager', 'Cable manager'], ['blank', 'Blank'], ['other', 'Other']];
+var NR_SETUP_HINT = 'Network rooms need the one-time setup SQL (supabase-network-rooms.sql) — once an admin has run it, this works.';
+var NR_ROW = 26;
+function nrTypeLabel(t) { for (var i = 0; i < NR_TYPES.length; i++) if (NR_TYPES[i][0] === t) return NR_TYPES[i][1]; return 'Other'; }
+function nrErrText(e) {
+  if (!e) return 'check your connection and try again.';
+  var s = (String(e.code || '') + ' ' + String(e.message || '') + ' ' + String(e.details || '')).toLowerCase();
+  if (e.code === '42501' || s.indexOf('row-level security') >= 0 || s.indexOf('permission denied') >= 0 || s.indexOf('policy') >= 0 || s.indexOf('does not exist') >= 0 || s.indexOf('schema cache') >= 0) return NR_SETUP_HINT;
+  return 'Could not save — ' + (e.message || 'check your connection and try again.');
+}
+function nrToast(msg) { var t = $('nrToast'); if (!t) return; t.textContent = msg; t.classList.remove('hidden'); clearTimeout(nrToast._t); nrToast._t = setTimeout(function () { t.classList.add('hidden'); }, 3600); }
+function nrVal(id) { var el = $(id); return el ? el.value.trim() : ''; }
+function nrNum(id, dflt) { var v = parseFloat(nrVal(id)); return isNaN(v) ? dflt : v; }
+function nrInt(id, dflt) { var v = parseInt(nrVal(id), 10); return isNaN(v) ? dflt : v; }
+
+/* ---------- data accessors ---------- */
+function nrRoomById(id) { if (!id) return null; for (var i = 0; i < D.netRooms.length; i++) if (D.netRooms[i].id === id) return D.netRooms[i]; return null; }
+function nrRackById(id) { if (!id) return null; for (var i = 0; i < D.racks.length; i++) if (D.racks[i].id === id) return D.racks[i]; return null; }
+function nrDevById(id) { if (!id) return null; for (var i = 0; i < D.rackDevices.length; i++) if (D.rackDevices[i].id === id) return D.rackDevices[i]; return null; }
+function nrSwitchById(id) { if (!id) return null; for (var i = 0; i < D.siteSwitches.length; i++) if (D.siteSwitches[i].id === id) return D.siteSwitches[i]; return null; }
+function nrSortName(a, b) { return ((a.sort || 0) - (b.sort || 0)) || String(a.name || '').localeCompare(String(b.name || '')); }
+function nrRoomsOf(sid) { return D.netRooms.filter(function (r) { return r.site_id === sid && !r.deleted_at; }).sort(nrSortName); }
+function nrArchRoomsOf(sid) { return D.netRooms.filter(function (r) { return r.site_id === sid && !!r.deleted_at; }).sort(nrSortName); }
+function nrRacksOf(roomId) { return D.racks.filter(function (r) { return r.room_id === roomId && !r.deleted_at; }).sort(nrSortName); }
+function nrDevsOf(rackId) { return D.rackDevices.filter(function (d) { return d.rack_id === rackId && !d.deleted_at; }); }
+function nrUsedU(rackId) { return nrDevsOf(rackId).reduce(function (n, d) { return n + (d.u_size || 1); }, 0); }
+function nrOverlap(rackId, start, size, ignoreId) {
+  return nrDevsOf(rackId).some(function (d) { return d.id !== ignoreId && start < (d.u_start + (d.u_size || 1)) && d.u_start < (start + size); });
+}
+function nrFirstFit(rack, size) {
+  var h = rack.height_u || 42;
+  for (var s = 1; s + size - 1 <= h; s++) if (!nrOverlap(rack.id, s, size, null)) return s;
+  return 0;
+}
+function nrPlacementOf(swId) {
+  var devs = D.rackDevices.filter(function (d) { return d.switch_id === swId && !d.deleted_at; });
+  for (var i = 0; i < devs.length; i++) {
+    var rack = nrRackById(devs[i].rack_id), room = rack ? nrRoomById(rack.room_id) : null;
+    if (rack && room && !rack.deleted_at && !room.deleted_at) return { device: devs[i], rack: rack, room: room };
+  }
+  return null;
+}
+function nrUnplacedSwitches(sid) {
+  return D.siteSwitches.filter(function (sw) { return sw.site_id === sid && !sw.deleted_at && !nrPlacementOf(sw.id); })
+    .sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || '')); });
+}
+function nrPortPrefs() { try { return JSON.parse(localStorage.getItem('fkm.nrPorts') || '{}'); } catch (e) { return {}; } }
+function nrPortCount(sw) {
+  var p = nrPortPrefs()[sw.id];
+  if (p) return p;
+  var mx = 0;
+  D.portEntries.forEach(function (e) { if (e.switch_id === sw.id) { var n = parseFloat(e.port); if (n > mx) mx = n; } });
+  return mx > 24 ? 48 : 24;
+}
+function nrSetPortCount(id, n) { var p = nrPortPrefs(); p[id] = n; try { localStorage.setItem('fkm.nrPorts', JSON.stringify(p)); } catch (e) {} }
+function nrEntryFor(swId, port) { var k = String(port); for (var i = 0; i < D.portEntries.length; i++) if (D.portEntries[i].switch_id === swId && String(D.portEntries[i].port) === k) return D.portEntries[i]; return null; }
+function nrPoeLike(device) { var d = String(device || '').toLowerCase(); return d.indexOf('cam') >= 0 || d.indexOf('ap') >= 0 || d.indexOf('wifi') >= 0 || d.indexOf('phone') >= 0 || d.indexOf('poe') >= 0; }
+
+/* ---------- write plumbing (house pattern: demo mutates, live writes then reloads) ---------- */
+function nrDone(msg) {
+  NR.msg = msg || ''; NR.err = false;
+  nrCloseForm(); nrCloseConfirm();
+  if (DEMO) renderCustomers(); else loadAll().then(renderCurrent);
+}
+function nrFail(e) {
+  NR.msg = nrErrText(e); NR.err = true;
+  nrCloseForm(); nrCloseConfirm(); renderCustomers();
+}
+function nrLive(promise, msg) { promise.then(function (r) { if (r.error) nrFail(r.error); else nrDone(msg); }); }
+function nrBlock(msg) { NR.msg = msg; NR.err = true; renderCustomers(); nrToast(msg); }
+
+/* ================= the screen ================= */
+function nrScreenHTML(site) {
+  if (!DEMO && D.nrError) {
+    return '<span class="ts-back" id="nrBack">‹ ' + esc(site.label) + '</span>'
+      + '<div class="card"><h2>One-time setup needed</h2><p class="caption" style="margin-top:8px">Network rooms keep their rooms, racks and devices in three small tables of their own, and mark a site&rsquo;s switches on the existing switch records. An admin runs the one-time setup file <b>supabase-network-rooms.sql</b> in the Supabase Dashboard SQL Editor — it only adds those tables, one link column on switches, and their rules; jobs and Field Kit are untouched. Run it, then reopen this screen. Until then, everything else in Manage works exactly as before.</p></div>';
+  }
+  if (NR.swId) {
+    var sw = nrSwitchById(NR.swId);
+    if (sw && sw.site_id === site.id && !sw.deleted_at) return nrPortsHTML(site, sw);
+    NR.swId = null;
+  }
+  if (NR.rackId) {
+    var rack = nrRackById(NR.rackId), room0 = rack ? nrRoomById(rack.room_id) : null;
+    if (rack && room0 && !rack.deleted_at && !room0.deleted_at && room0.site_id === site.id) return nrElevHTML(site, room0, rack);
+    NR.rackId = null;
+  }
+  return nrRoomsHTML(site);
+}
+
+function nrHeadHTML(site, title, sub, backLabel) {
+  var cust = custById(site.customer_id);
+  var h = '<span class="ts-back" id="nrBack">‹ ' + esc(backLabel) + '</span>';
+  h += '<div class="pagetitle-row"><div><div class="pagetitle">' + esc(title) + '</div><div class="pagesub">' + esc(sub) + '</div></div></div>';
+  if (NR.msg) h += '<p class="co-msg ' + (NR.err ? 'err' : 'ok') + '" style="margin:2px 2px 10px">' + esc(NR.msg) + '</p>';
+  return h;
+}
+
+/* ---------- rooms + the top-down map ---------- */
+function nrRoomsHTML(site) {
+  var cust = custById(site.customer_id);
+  var rooms = nrRoomsOf(site.id);
+  if (!rooms.some(function (r) { return r.id === NR.roomId; })) NR.roomId = rooms.length ? rooms[0].id : null;
+  var room = NR.roomId ? nrRoomById(NR.roomId) : null;
+  var h = nrHeadHTML(site, 'Network rooms', (cust ? cust.name : '') + ' · ' + site.label + ' — rooms, racks and devices for this site. The same records the field crew sees in Field Kit.', cust ? cust.name : 'Customer');
+  h += '<div class="nr-tabs">' + rooms.map(function (r) { return '<button class="pj-chip' + (room && r.id === room.id ? ' on' : '') + '" data-nrroom="' + r.id + '">' + esc(r.name) + '</button>'; }).join('')
+    + '<button class="btn ghost small" id="nrAddRoom">＋ Add room</button></div>';
+  if (!room) {
+    h += '<div class="card"><h2>No network rooms yet</h2><p class="caption" style="margin-top:6px">Add the room where this site&rsquo;s racks live — the MDF, an IDF closet — then place its racks on the map and build each rack unit by unit.</p>'
+      + (DEMO ? '<div class="btnrow"><button class="btn" id="nrDemoSeed">Load the sample rooms (demo)</button></div>' : '') + '</div>';
+    return h;
+  }
+  var racks = nrRacksOf(room.id);
+  if (!racks.some(function (r) { return r.id === NR.selRack; })) NR.selRack = racks.length ? racks[0].id : null;
+  var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
+  h += '<div class="nr-cols"><div class="card" style="margin:0"><h2>' + esc(room.name) + ' — top-down <span class="hint">Drag racks to arrange them · positions save as you drop</span></h2>';
+  h += '<div class="nr-mapdim" style="margin-top:10px"><span>' + w + ' ft — ' + Math.round(w * 12) + ' in</span><span>' + d + ' ft deep</span></div>';
+  h += '<div class="nr-map" id="nrMap" style="aspect-ratio:' + w + '/' + d + ';background-size:' + (50 / w) + '% ' + (50 / d) + '%">';
+  racks.forEach(function (r) {
+    var rot = ((r.map_rot || 0) % 180) !== 0;
+    var fw = rot ? Number(r.fp_d) : Number(r.fp_w), fd = rot ? Number(r.fp_w) : Number(r.fp_d);
+    h += '<div class="nr-rack' + (NR.selRack === r.id ? ' sel' : '') + (rot ? ' vert' : '') + '" data-nrrack="' + r.id + '" style="left:' + (Number(r.map_x) / w * 100) + '%;top:' + (Number(r.map_y) / d * 100) + '%;width:' + (fw / w * 100) + '%;height:' + (fd / d * 100) + '%">'
+      + '<span class="rnm">' + esc(r.name) + '</span><span class="rsub">' + (r.height_u || 42) + 'U · ' + nrDevsOf(r.id).length + ' devices</span></div>';
+  });
+  h += '</div>';
+  var sel = NR.selRack ? nrRackById(NR.selRack) : null;
+  if (sel) {
+    h += '<div class="nr-rackbar"><span class="who">' + esc(sel.name) + '</span>'
+      + '<button class="btn ghost small" id="nrRotate">Rotate 90°</button>'
+      + '<button class="btn small" id="nrElevOpen">Open elevation</button>'
+      + '<button class="btn ghost small" id="nrRackEdit">Edit rack</button>'
+      + '<button class="btn ghost small" id="nrRackArchive" style="color:var(--red-t)">Archive rack</button></div>';
+  }
+  h += '<div class="nr-rackbar"><button class="btn ghost small" id="nrRoomEdit">Room size &amp; name</button>'
+    + '<button class="btn ghost small" id="nrRoomArchive" style="color:var(--red-t)">Archive room</button></div>';
+  h += '</div>';
+  h += '<div><div class="card" style="margin:0"><h2>Racks in ' + esc(room.name) + '</h2>';
+  if (racks.length) racks.forEach(function (r) {
+    var devs = nrDevsOf(r.id);
+    var kinds = {};
+    devs.forEach(function (dv) { kinds[dv.type] = (kinds[dv.type] || 0) + 1; });
+    var bits = Object.keys(kinds).map(function (k) { return kinds[k] + ' ' + nrTypeLabel(k).toLowerCase() + (kinds[k] > 1 && k !== 'ups' ? 's' : ''); }).slice(0, 3).join(' · ');
+    h += '<div class="nr-rrow' + (NR.selRack === r.id ? ' on' : '') + '" data-nrrackrow="' + r.id + '"><div class="rn">' + esc(r.name) + '</div>'
+      + '<div class="rm">' + (r.height_u || 42) + 'U · ' + nrUsedU(r.id) + 'U used</div>'
+      + (bits ? '<div class="rm">' + esc(bits) + '</div>' : '')
+      + '<div style="margin-top:7px"><button class="btn ghost small" data-nrrackelev="' + r.id + '">Elevation ›</button></div></div>';
+  });
+  else h += '<p class="empty" style="margin-top:8px">No racks in this room yet.</p>';
+  h += '<div class="btnrow"><button class="btn" id="nrAddRack">＋ Add rack</button></div></div>';
+  var unplaced = nrUnplacedSwitches(site.id);
+  if (unplaced.length) {
+    h += '<div class="card" style="margin-top:14px"><h2>Not placed in a rack yet <span class="hint">Site switches with no rack home</span></h2><div class="nr-chiprow">'
+      + unplaced.map(function (sw) { return '<span class="nr-uchip">' + esc(sw.name) + ' · ' + nrPortCount(sw) + '-port <button class="btn small" data-nrplace="' + sw.id + '">Place</button></span>'; }).join('') + '</div></div>';
+  }
+  h += '</div></div>';
+  var arch = nrArchRoomsOf(site.id);
+  if (arch.length) h += '<p class="caption" style="margin-top:12px">Archived rooms: ' + arch.map(function (r) { return esc(r.name) + ' <button class="btn ghost small" data-nrrestore="' + r.id + '">Restore</button>'; }).join(' · ') + '</p>';
+  return h;
+}
+
+/* ---------- the rack elevation editor ---------- */
+function nrElevHTML(site, room, rack) {
+  var cust = custById(site.customer_id);
+  var devs = nrDevsOf(rack.id);
+  var used = nrUsedU(rack.id), height = rack.height_u || 42;
+  var h = nrHeadHTML(site, rack.name + ' — ' + height + 'U', (cust ? cust.name : '') + ' · ' + site.label + ' · ' + room.name + ' — front elevation. U1 is the bottom of the rack. Tap a switch to open its port screen; tap empty units to add a device.', 'Network rooms');
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:2px 2px 12px"><span class="chip">' + used + 'U used</span><span class="chip">' + (height - used) + 'U free</span><button class="btn" id="nrAddDevice" style="margin-left:auto">＋ Add device</button></div>';
+  var byTop = {}, covered = {};
+  devs.forEach(function (dv) { byTop[dv.u_start + (dv.u_size || 1) - 1] = dv; for (var u = dv.u_start; u < dv.u_start + (dv.u_size || 1); u++) covered[u] = dv; });
+  var col = '', u = height;
+  while (u >= 1) {
+    if (byTop[u]) {
+      var dv = byTop[u], sz = dv.u_size || 1;
+      var lab = sz > 1 ? 'U' + dv.u_start + '–' + (dv.u_start + sz - 1) : 'U' + dv.u_start;
+      col += '<div class="nr-block" style="height:' + (sz * NR_ROW) + 'px"><span class="nr-ulab">' + lab + '</span>'
+        + '<div class="nr-dev t-' + esc(dv.type) + (NR.devSel === dv.id ? ' sel' : '') + '" data-nrdev="' + dv.id + '">'
+        + '<span class="dn">' + esc(dv.name) + '</span><span class="dt">· ' + esc(nrTypeLabel(dv.type)) + (dv.type === 'switch' && dv.switch_id ? ' · ' + nrPortCount(nrSwitchById(dv.switch_id) || { id: dv.switch_id }) + '-port' : '') + '</span>'
+        + (dv.type === 'patch_panel' ? '<span class="nr-ticks"></span>' : '')
+        + (dv.type === 'switch' && dv.switch_id ? '<button class="nr-portsbtn" data-nrports="' + dv.switch_id + '">Ports ›</button>' : '')
+        + '</div></div>';
+      u -= sz;
+    } else {
+      var top = u; while (u >= 1 && !covered[u]) u--;
+      var bot = u + 1, n = top - bot + 1;
+      col += '<div class="nr-block" style="height:' + (n * NR_ROW) + 'px"><span class="nr-ulab">' + (n > 1 ? 'U' + bot + '–' + top : 'U' + top) + '</span>'
+        + '<div class="nr-empty" data-nrempty="' + bot + ':' + top + '">Empty — ' + n + 'U free</div></div>';
+    }
+  }
+  h += '<div class="nr-elev-cols"><div class="nr-rackcol">' + col + '</div><div>';
+  var sel = NR.devSel ? nrDevById(NR.devSel) : null;
+  if (sel && sel.rack_id === rack.id) {
+    h += '<div class="card nr-strip" style="margin:0"><h2>Selected device</h2>'
+      + '<div class="jf-field"><label class="flabel" for="nrDevName">Name</label><input class="txtin" id="nrDevName" value="' + esc(sel.name) + '" autocomplete="off"></div>'
+      + '<p class="caption" style="margin-top:8px">' + esc(nrTypeLabel(sel.type)) + (sel.type === 'switch' && sel.switch_id ? ' · site switch · ' + nrPortCount(nrSwitchById(sel.switch_id) || { id: sel.switch_id }) + '-port' : '') + '</p>'
+      + '<div class="jf-grid"><div class="jf-field"><label class="flabel" for="nrDevSize">Size (U)</label><input class="txtin" id="nrDevSize" type="number" min="1" step="1" value="' + (sel.u_size || 1) + '"></div>'
+      + '<div class="jf-field"><label class="flabel" for="nrDevStart">Starts at U</label><input class="txtin" id="nrDevStart" type="number" min="1" step="1" value="' + sel.u_start + '"></div></div>'
+      + '<div class="jf-field"><label class="flabel" for="nrDevNote">Notes</label><input class="txtin" id="nrDevNote" value="' + esc(sel.note || '') + '" autocomplete="off"></div>'
+      + '<div class="cardfoot"><button class="btn ghost" id="nrDevRemove" style="color:var(--red-t);margin-right:auto">Remove</button>'
+      + '<button class="btn ghost" id="nrDevDn">↓ Move</button><button class="btn ghost" id="nrDevUp">↑ Move</button>'
+      + '<button class="btn" id="nrDevSave">Save changes</button></div>'
+      + (sel.type === 'switch' && sel.switch_id ? '<div class="btnrow"><button class="btn" id="nrDevPorts" style="flex:1">Open ports ›</button></div>' : '')
+      + '</div>';
+  } else {
+    h += '<div class="card nr-strip" style="margin:0"><h2>No device selected</h2><p class="caption" style="margin-top:6px">Select a device in the rack to rename it, move it, resize it, or remove it. Switches open their shared port screen from here.</p></div>';
+  }
+  h += '<div class="card nr-strip" style="margin:14px 0 0"><h2>Add device</h2><div class="nr-pal">'
+    + NR_TYPES.map(function (tp) { return '<button type="button" data-nrpal="' + tp[0] + '">' + tp[1] + '</button>'; }).join('') + '</div>'
+    + '<p class="caption" style="margin-top:10px">New devices drop into the first free space that fits. Switches added here become site switches: their port screens are shared by every job at ' + esc(site.label) + '.</p></div>';
+  h += '</div></div>';
+  return h;
+}
+
+/* ---------- the port view (a site switch) ---------- */
+function nrPortsHTML(site, sw) {
+  var place = nrPlacementOf(sw.id);
+  var cust = custById(site.customer_id);
+  var n = nrPortCount(sw);
+  var entries = D.portEntries.filter(function (e) { return e.switch_id === sw.id; });
+  var usedPorts = {};
+  entries.forEach(function (e) { usedPorts[String(e.port)] = e; });
+  var used = Object.keys(usedPorts).filter(function (k) { var v = parseFloat(k); return v >= 1 && v <= n; }).length;
+  var backLabel = place ? place.rack.name + ' · ' + place.room.name : 'Network rooms';
+  var h = nrHeadHTML(site, sw.name, (cust ? cust.name : '') + ' · ' + site.label + (place ? ' · ' + place.room.name + ' · ' + place.rack.name + ' · U' + place.device.u_start : ' · not placed in a rack yet'), backLabel);
+  h += '<div class="nr-banner">Site switch — this port map is shared by every job at ' + esc(site.label) + '.</div>';
+  h += '<div class="card" style="margin-top:14px"><h2>Ports · ' + used + ' of ' + n + ' in use <span class="hint">Tap a port to label it</span></h2>';
+  h += '<div class="nr-tabs" style="margin-top:10px">' + [8, 16, 24, 48].map(function (c) { return '<button class="pj-chip' + (n === c ? ' on' : '') + '" data-nrpc="' + c + '">' + c + '-port</button>'; }).join('') + '</div>';
+  var order = [];
+  for (var p = 1; p <= n; p += 2) order.push(p);
+  for (var q = 2; q <= n; q += 2) order.push(q);
+  h += '<div class="nr-pgrid">' + order.map(function (pn) {
+    var e = usedPorts[String(pn)];
+    return '<button class="nr-port' + (e ? ' used' : '') + (e && nrPoeLike(e.device) ? ' poe' : '') + '" data-nrport="' + pn + '" title="' + (e ? 'Port ' + pn + ': ' + esc(e.device) + (e.jack ? ' [' + esc(e.jack) + ']' : '') : 'Port ' + pn + ' (empty — tap to label)') + '"><span>' + pn + '</span><span class="dot"></span></button>';
+  }).join('') + '</div>';
+  h += '<p class="caption" style="margin-top:10px">A filled dot means the port is labelled; amber marks camera / AP / phone-style loads. Entries here are the site&rsquo;s shared record — the same port entries the field crew keeps in Field Kit.</p></div>';
+  return h;
+}
+
+/* ================= wiring ================= */
+function wireNRScreen(site) {
+  var el = $('cuView');
+  var back = $('nrBack');
+  if (back) back.addEventListener('click', function () {
+    NR.msg = ''; NR.err = false;
+    if (NR.swId) { var pl = nrPlacementOf(NR.swId); NR.swId = null; if (pl) { NR.roomId = pl.room.id; NR.rackId = pl.rack.id; } else { NR.rackId = null; } }
+    else if (NR.rackId) NR.rackId = null;
+    else NR.sid = null;
+    renderCustomers(); window.scrollTo(0, 0);
+  });
+  if (NR.swId || NR.rackId) { wireNRElevPorts(el, site); return; }
+  var addRoom = $('nrAddRoom'); if (addRoom) addRoom.addEventListener('click', function () { nrOpenRoomForm(null); });
+  var seed = $('nrDemoSeed'); if (seed) seed.addEventListener('click', nrDemoSeed);
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrroom]'), function (b) { b.addEventListener('click', function () { NR.roomId = b.getAttribute('data-nrroom'); NR.selRack = null; NR.msg = ''; renderCustomers(); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrrestore]'), function (b) { b.addEventListener('click', function () { nrSetRoomArchived(b.getAttribute('data-nrrestore'), false); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrrackrow]'), function (r) { r.addEventListener('click', function () { NR.selRack = r.getAttribute('data-nrrackrow'); renderCustomers(); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrrackelev]'), function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); nrOpenElevation(b.getAttribute('data-nrrackelev')); }); });
+  var addRack = $('nrAddRack'); if (addRack) addRack.addEventListener('click', function () { nrOpenRackForm(null); });
+  var rot = $('nrRotate'); if (rot) rot.addEventListener('click', function () { var r = nrRackById(NR.selRack); if (r) nrRotateRack(r); });
+  var elev = $('nrElevOpen'); if (elev) elev.addEventListener('click', function () { if (NR.selRack) nrOpenElevation(NR.selRack); });
+  var rEdit = $('nrRackEdit'); if (rEdit) rEdit.addEventListener('click', function () { var r = nrRackById(NR.selRack); if (r) nrOpenRackForm(r); });
+  var rArch = $('nrRackArchive'); if (rArch) rArch.addEventListener('click', function () { var r = nrRackById(NR.selRack); if (r) nrOpenConfirm({ mode: 'rack-archive', id: r.id, name: r.name }); });
+  var rmEdit = $('nrRoomEdit'); if (rmEdit) rmEdit.addEventListener('click', function () { var r = nrRoomById(NR.roomId); if (r) nrOpenRoomForm(r); });
+  var rmArch = $('nrRoomArchive'); if (rmArch) rmArch.addEventListener('click', function () { var r = nrRoomById(NR.roomId); if (r) nrOpenConfirm({ mode: 'room-archive', id: r.id, name: r.name }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrplace]'), function (b) { b.addEventListener('click', function () { nrOpenPlace(b.getAttribute('data-nrplace')); }); });
+  wireNRMapDrag(el);
+}
+
+function nrOpenElevation(rackId) {
+  var rack = nrRackById(rackId); if (!rack) return;
+  NR.rackId = rackId; NR.roomId = rack.room_id; NR.devSel = null; NR.msg = ''; NR.err = false;
+  renderCustomers(); window.scrollTo(0, 0);
+}
+
+function wireNRMapDrag(el) {
+  var map = $('nrMap'); if (!map) return;
+  Array.prototype.forEach.call(map.querySelectorAll('[data-nrrack]'), function (b) {
+    b.addEventListener('pointerdown', function (e) {
+      var rack = nrRackById(b.getAttribute('data-nrrack')); if (!rack) return;
+      var room = nrRoomById(rack.room_id); if (!room) return;
+      NR.selRack = rack.id;
+      Array.prototype.forEach.call(map.querySelectorAll('[data-nrrack]'), function (x) { x.classList.toggle('sel', x === b); });
+      var rect = map.getBoundingClientRect();
+      var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
+      var rot = ((rack.map_rot || 0) % 180) !== 0;
+      var fw = rot ? Number(rack.fp_d) : Number(rack.fp_w), fd = rot ? Number(rack.fp_w) : Number(rack.fp_d);
+      var sx = e.clientX, sy = e.clientY, ox = Number(rack.map_x), oy = Number(rack.map_y), moved = false, nx = null, ny = null;
+      window.__nrDrag = true;
+      try { b.setPointerCapture(e.pointerId); } catch (err) {}
+      function mv(ev) {
+        var dx = (ev.clientX - sx) / rect.width * w, dy = (ev.clientY - sy) / rect.height * d;
+        if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 3) moved = true;
+        nx = Math.min(Math.max(ox + dx, 0), Math.max(0, w - fw));
+        ny = Math.min(Math.max(oy + dy, 0), Math.max(0, d - fd));
+        b.style.left = (nx / w * 100) + '%'; b.style.top = (ny / d * 100) + '%';
+      }
+      function up() {
+        b.removeEventListener('pointermove', mv); b.removeEventListener('pointerup', up); b.removeEventListener('pointercancel', up);
+        window.__nrDrag = false;
+        if (moved && nx !== null) {
+          var fx = Math.min(Math.max(Math.round(nx * 2) / 2, 0), Math.max(0, w - fw));
+          var fy = Math.min(Math.max(Math.round(ny * 2) / 2, 0), Math.max(0, d - fd));
+          b.style.left = (fx / w * 100) + '%'; b.style.top = (fy / d * 100) + '%';
+          nrSaveRackPos(rack, fx, fy);
+        } else renderCustomers();
+      }
+      b.addEventListener('pointermove', mv); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
+      e.preventDefault();
+    });
+  });
+}
+
+function wireNRElevPorts(el, site) {
+  if (NR.swId) {
+    Array.prototype.forEach.call(el.querySelectorAll('[data-nrpc]'), function (b) { b.addEventListener('click', function () { nrSetPortCount(NR.swId, parseInt(b.getAttribute('data-nrpc'), 10)); renderCustomers(); }); });
+    Array.prototype.forEach.call(el.querySelectorAll('[data-nrport]'), function (b) { b.addEventListener('click', function () { var sw = nrSwitchById(NR.swId); if (sw) nrOpenPortForm(sw, parseInt(b.getAttribute('data-nrport'), 10)); }); });
+    return;
+  }
+  var add = $('nrAddDevice'); if (add) add.addEventListener('click', function () { var rack = nrRackById(NR.rackId); if (rack) nrOpenDeviceForm(rack, 'switch', nrFirstFit(rack, 1) || 1); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrpal]'), function (b) { b.addEventListener('click', function () { var rack = nrRackById(NR.rackId); if (rack) nrOpenDeviceForm(rack, b.getAttribute('data-nrpal'), nrFirstFit(rack, 1) || 1); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrdev]'), function (dv) { dv.addEventListener('click', function () { NR.devSel = dv.getAttribute('data-nrdev'); renderCustomers(); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrports]'), function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); NR.swId = b.getAttribute('data-nrports'); NR.msg = ''; renderCustomers(); window.scrollTo(0, 0); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrempty]'), function (em) {
+    em.addEventListener('click', function (e) {
+      var rack = nrRackById(NR.rackId); if (!rack) return;
+      var parts = em.getAttribute('data-nrempty').split(':'), bot = parseInt(parts[0], 10), top = parseInt(parts[1], 10);
+      var rect = em.getBoundingClientRect();
+      var rows = top - bot + 1, idx = Math.min(rows - 1, Math.max(0, Math.floor((e.clientY - rect.top) / NR_ROW)));
+      nrOpenDeviceForm(rack, 'switch', top - idx);
+    });
+  });
+  var sv = $('nrDevSave'); if (sv) sv.addEventListener('click', nrSaveDevStrip);
+  var up = $('nrDevUp'); if (up) up.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d) nrMoveDev(d, 1); });
+  var dn = $('nrDevDn'); if (dn) dn.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d) nrMoveDev(d, -1); });
+  var rm = $('nrDevRemove'); if (rm) rm.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d) nrOpenConfirm({ mode: 'dev-remove', id: d.id, name: d.name }); });
+  var op = $('nrDevPorts'); if (op) op.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d && d.switch_id) { NR.swId = d.switch_id; NR.msg = ''; renderCustomers(); window.scrollTo(0, 0); } });
+}
+
+/* ================= dialogs ================= */
+function nrCloseForm() { var w = $('nrFormWrap'); if (w) w.classList.add('hidden'); NR.form = null; }
+function nrShowForm(html) { $('nrFormCard').innerHTML = html; dlgX('nrFormCard', nrCloseForm); $('nrFormWrap').classList.remove('hidden'); }
+function nrFormFail(msg) { var e = $('nrErr'); if (e) { e.textContent = msg; e.classList.remove('hidden'); } nrToast(msg); }
+function nrField(id, label, val, attrs) { return '<div class="jf-field"><label class="flabel" for="' + id + '">' + label + '</label><input class="txtin" id="' + id + '" value="' + esc(val == null ? '' : val) + '"' + (attrs || '') + ' autocomplete="off"></div>'; }
+
+function nrOpenRoomForm(room) {
+  closeAllPopovers();
+  NR.form = { kind: 'room', id: room ? room.id : null };
+  var o = room || {};
+  var h = '<h2>' + (room ? 'Room size & name' : 'Add room') + '</h2>';
+  h += '<p class="caption">A room of this site — the map is drawn to its real floor size, and racks sit on it to scale.</p>';
+  h += nrField('nrRoomName', 'Room name *', o.name, ' placeholder="e.g. MDF"');
+  h += '<div class="jf-grid">' + nrField('nrRoomW', 'Width (ft)', room ? o.width_ft : 14, ' type="number" min="2" step="0.5"') + nrField('nrRoomD', 'Depth (ft)', room ? o.depth_ft : 10, ' type="number" min="2" step="0.5"') + '</div>';
+  h += '<p class="co-msg err hidden" id="nrErr" style="margin-top:12px"></p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="nrCancel">Cancel</button><button class="btn" id="nrSave">' + (room ? 'Save changes' : 'Add room') + '</button></div>';
+  nrShowForm(h);
+  $('nrCancel').addEventListener('click', nrCloseForm);
+  $('nrSave').addEventListener('click', nrSaveRoomForm);
+  setTimeout(function () { var n = $('nrRoomName'); if (n) n.focus(); }, 30);
+}
+function nrSaveRoomForm() {
+  var name = nrVal('nrRoomName');
+  if (!name) { nrFormFail('Give the room a name first.'); return; }
+  var vals = { name: name, width_ft: nrNum('nrRoomW', 14) || 14, depth_ft: nrNum('nrRoomD', 10) || 10 };
+  var id = NR.form.id, ts = now().toISOString();
+  if (DEMO) {
+    if (id) { var r = nrRoomById(id); if (r) { r.name = vals.name; r.width_ft = vals.width_ft; r.depth_ft = vals.depth_ft; r.updated_at = ts; } nrDone('Room saved.'); }
+    else { var nr = { id: jbGenId(), site_id: NR.sid, sort: nrRoomsOf(NR.sid).length + 1, deleted_at: null, created_at: ts, updated_at: ts }; nr.name = vals.name; nr.width_ft = vals.width_ft; nr.depth_ft = vals.depth_ft; D.netRooms.push(nr); NR.roomId = nr.id; NR.selRack = null; nrDone('Room added.'); }
+    return;
+  }
+  if (!id) {
+    var row = { id: jbGenId(), site_id: NR.sid, sort: nrRoomsOf(NR.sid).length + 1, deleted_at: null, created_at: ts, updated_at: ts };
+    row.name = vals.name; row.width_ft = vals.width_ft; row.depth_ft = vals.depth_ft;
+    NR.roomId = row.id; NR.selRack = null;
+    nrLive(sb.from('network_rooms').insert(row), 'Room added.');
+    return;
+  }
+  var patch = { updated_at: ts }; patch.name = vals.name; patch.width_ft = vals.width_ft; patch.depth_ft = vals.depth_ft;
+  nrLive(sb.from('network_rooms').update(patch).eq('id', id).select('id'), 'Room saved.');
+}
+function nrSetRoomArchived(id, arch) {
+  var ts = now().toISOString();
+  if (DEMO) { var r = nrRoomById(id); if (r) { r.deleted_at = arch ? ts : null; r.updated_at = ts; } if (arch && NR.roomId === id) NR.roomId = null; nrDone(arch ? 'Room archived. Its racks and devices are kept with it.' : 'Room restored.'); return; }
+  nrLive(sb.from('network_rooms').update({ deleted_at: arch ? ts : null, updated_at: ts }).eq('id', id).select('id'), arch ? 'Room archived. Its racks and devices are kept with it.' : 'Room restored.');
+}
+
+function nrOpenRackForm(rack) {
+  closeAllPopovers();
+  var room = nrRoomById(NR.roomId); if (!room && rack) room = nrRoomById(rack.room_id);
+  if (!room) return;
+  NR.form = { kind: 'rack', id: rack ? rack.id : null, roomId: room.id };
+  var o = rack || {};
+  var heights = [12, 18, 24, 42, 45];
+  var curH = rack ? (rack.height_u || 42) : 42;
+  var h = '<h2>' + (rack ? 'Edit rack' : 'Add rack') + '</h2>';
+  h += '<p class="caption">A rack in ' + esc(room.name) + '. Its footprint is how much floor it takes on the map.</p>';
+  h += nrField('nrRackName', 'Rack name *', o.name, ' placeholder="e.g. Rack A"');
+  h += '<div class="jf-grid"><div class="jf-field"><label class="flabel" for="nrRackH">Height</label><select class="txtin" id="nrRackH">'
+    + heights.map(function (x) { return '<option value="' + x + '"' + (curH === x ? ' selected' : '') + '>' + x + 'U</option>'; }).join('')
+    + '<option value="custom"' + (heights.indexOf(curH) < 0 ? ' selected' : '') + '>Custom…</option></select></div>'
+    + nrField('nrRackHCustom', 'Custom height (U)', heights.indexOf(curH) < 0 ? curH : '', ' type="number" min="2" step="1"') + '</div>';
+  h += '<div class="jf-grid">' + nrField('nrRackFw', 'Footprint width (ft)', rack ? o.fp_w : 2, ' type="number" min="0.5" step="0.5"') + nrField('nrRackFd', 'Footprint depth (ft)', rack ? o.fp_d : 3, ' type="number" min="0.5" step="0.5"') + '</div>';
+  h += '<p class="co-msg err hidden" id="nrErr" style="margin-top:12px"></p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="nrCancel">Cancel</button><button class="btn" id="nrSave">' + (rack ? 'Save changes' : 'Add rack') + '</button></div>';
+  nrShowForm(h);
+  $('nrCancel').addEventListener('click', nrCloseForm);
+  $('nrSave').addEventListener('click', nrSaveRackForm);
+  setTimeout(function () { var n = $('nrRackName'); if (n) n.focus(); }, 30);
+}
+function nrSaveRackForm() {
+  var name = nrVal('nrRackName');
+  if (!name) { nrFormFail('Give the rack a name first.'); return; }
+  var hsel = $('nrRackH') ? $('nrRackH').value : '42';
+  var height = hsel === 'custom' ? (nrInt('nrRackHCustom', 42) || 42) : parseInt(hsel, 10);
+  if (!(height >= 2)) { nrFormFail('Height needs to be at least 2U.'); return; }
+  var vals = { name: name, height_u: height, fp_w: nrNum('nrRackFw', 2) || 2, fp_d: nrNum('nrRackFd', 3) || 3 };
+  var id = NR.form.id, roomId = NR.form.roomId, ts = now().toISOString();
+  if (id) {
+    var ex = nrRackById(id);
+    if (ex && nrDevsOf(id).some(function (dv) { return dv.u_start + (dv.u_size || 1) - 1 > height; })) { nrFormFail('Devices already sit above ' + height + 'U in this rack — move them down first.'); return; }
+  }
+  if (DEMO) {
+    if (id) { var r = nrRackById(id); if (r) { r.name = vals.name; r.height_u = vals.height_u; r.fp_w = vals.fp_w; r.fp_d = vals.fp_d; r.updated_at = ts; nrClampRack(r); } nrDone('Rack saved.'); }
+    else {
+      var room = nrRoomById(roomId);
+      var nr = { id: jbGenId(), room_id: roomId, sort: nrRacksOf(roomId).length + 1, map_rot: 0, deleted_at: null, created_at: ts, updated_at: ts };
+      nr.name = vals.name; nr.height_u = vals.height_u; nr.fp_w = vals.fp_w; nr.fp_d = vals.fp_d;
+      nr.map_x = Math.min(1 + nrRacksOf(roomId).length, Math.max(0, (Number(room.width_ft) || 14) - nr.fp_w));
+      nr.map_y = 0.5;
+      D.racks.push(nr); NR.selRack = nr.id; nrDone('Rack added — drag it into place on the map.');
+    }
+    return;
+  }
+  if (!id) {
+    var room2 = nrRoomById(roomId);
+    var row = { id: jbGenId(), room_id: roomId, sort: nrRacksOf(roomId).length + 1, map_rot: 0, deleted_at: null, created_at: ts, updated_at: ts };
+    row.name = vals.name; row.height_u = vals.height_u; row.fp_w = vals.fp_w; row.fp_d = vals.fp_d;
+    row.map_x = Math.min(1 + nrRacksOf(roomId).length, Math.max(0, (Number(room2.width_ft) || 14) - row.fp_w));
+    row.map_y = 0.5;
+    NR.selRack = row.id;
+    nrLive(sb.from('racks').insert(row), 'Rack added — drag it into place on the map.');
+    return;
+  }
+  var patch = { updated_at: ts }; patch.name = vals.name; patch.height_u = vals.height_u; patch.fp_w = vals.fp_w; patch.fp_d = vals.fp_d;
+  var exr = nrRackById(id); if (exr) { var keep = { x: exr.map_x, y: exr.map_y }; exr.fp_w = vals.fp_w; exr.fp_d = vals.fp_d; nrClampRack(exr); patch.map_x = exr.map_x; patch.map_y = exr.map_y; exr.map_x = keep.x; exr.map_y = keep.y; }
+  nrLive(sb.from('racks').update(patch).eq('id', id).select('id'), 'Rack saved.');
+}
+function nrClampRack(rack) {
+  var room = nrRoomById(rack.room_id); if (!room) return;
+  var rot = ((rack.map_rot || 0) % 180) !== 0;
+  var fw = rot ? Number(rack.fp_d) : Number(rack.fp_w), fd = rot ? Number(rack.fp_w) : Number(rack.fp_d);
+  rack.map_x = Math.min(Math.max(Number(rack.map_x) || 0, 0), Math.max(0, (Number(room.width_ft) || 14) - fw));
+  rack.map_y = Math.min(Math.max(Number(rack.map_y) || 0, 0), Math.max(0, (Number(room.depth_ft) || 10) - fd));
+}
+function nrSaveRackPos(rack, x, y) {
+  rack.map_x = x; rack.map_y = y; rack.updated_at = now().toISOString();
+  if (DEMO) return;
+  sb.from('racks').update({ map_x: x, map_y: y, updated_at: rack.updated_at }).eq('id', rack.id).then(function (r) { if (r.error) nrFail(r.error); });
+}
+function nrRotateRack(rack) {
+  rack.map_rot = ((rack.map_rot || 0) + 90) % 360;
+  nrClampRack(rack);
+  rack.updated_at = now().toISOString();
+  if (DEMO) { NR.msg = ''; renderCustomers(); return; }
+  sb.from('racks').update({ map_rot: rack.map_rot, map_x: rack.map_x, map_y: rack.map_y, updated_at: rack.updated_at }).eq('id', rack.id).then(function (r) { if (r.error) nrFail(r.error); else renderCustomers(); });
+}
+function nrSetRackArchived(id) {
+  var ts = now().toISOString();
+  if (DEMO) { var r = nrRackById(id); if (r) { r.deleted_at = ts; r.updated_at = ts; } if (NR.selRack === id) NR.selRack = null; nrDone('Rack archived. Its devices are kept with it; its switches stay at the site, unplaced.'); return; }
+  nrLive(sb.from('racks').update({ deleted_at: ts, updated_at: ts }).eq('id', id).select('id'), 'Rack archived. Its devices are kept with it; its switches stay at the site, unplaced.');
+}
+
+/* ---------- add device ---------- */
+function nrOpenDeviceForm(rack, type, startU) {
+  closeAllPopovers();
+  NR.form = { kind: 'device', rackId: rack.id, type: type || 'switch', name: '', size: 1, start: startU || 1, ports: 48 };
+  nrRenderDeviceForm(rack);
+}
+function nrRenderDeviceForm(rack) {
+  var f = NR.form;
+  var nameEl = $('nrDevFName'); if (nameEl) f.name = nameEl.value;
+  var sizeEl = $('nrDevFSize'); if (sizeEl) f.size = nrInt('nrDevFSize', f.size);
+  var startEl = $('nrDevFStart'); if (startEl) f.start = nrInt('nrDevFStart', f.start);
+  var portEl = $('nrDevFPorts'); if (portEl) f.ports = parseInt(portEl.value, 10) || 48;
+  var h = '<h2>Add device — ' + esc(rack.name) + '</h2>';
+  h += '<p class="caption">Drops into ' + esc(rack.name) + ' at the unit you pick — spaces that are taken are refused, never stacked.</p>';
+  h += '<div class="nr-pal" style="margin-top:10px">' + NR_TYPES.map(function (tp) { return '<button type="button" data-nrdtype="' + tp[0] + '"' + (f.type === tp[0] ? ' class="on"' : '') + '>' + tp[1] + '</button>'; }).join('') + '</div>';
+  h += nrField('nrDevFName', 'Name *', f.name || nrTypeLabel(f.type), ' placeholder="e.g. SW-MDF-1"');
+  h += '<div class="jf-grid">' + nrField('nrDevFSize', 'Size (U)', f.size, ' type="number" min="1" step="1"') + nrField('nrDevFStart', 'Starts at U', f.start, ' type="number" min="1" step="1"') + '</div>';
+  if (f.type === 'switch') {
+    h += '<div class="jf-field"><label class="flabel" for="nrDevFPorts">Switch ports</label><select class="txtin" id="nrDevFPorts">'
+      + [8, 16, 24, 48].map(function (c) { return '<option value="' + c + '"' + (f.ports === c ? ' selected' : '') + '>' + c + '-port</option>'; }).join('') + '</select></div>'
+      + '<p class="caption" style="margin-top:8px">Adding a switch creates its site switch record — the port screen every job at this site will share.</p>';
+  }
+  h += '<p class="co-msg err hidden" id="nrErr" style="margin-top:12px"></p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="nrCancel">Cancel</button><button class="btn" id="nrSave">Add device</button></div>';
+  nrShowForm(h);
+  Array.prototype.forEach.call($('nrFormCard').querySelectorAll('[data-nrdtype]'), function (b) { b.addEventListener('click', function () { NR.form.type = b.getAttribute('data-nrdtype'); nrRenderDeviceForm(rack); }); });
+  $('nrCancel').addEventListener('click', nrCloseForm);
+  $('nrSave').addEventListener('click', function () { nrSaveDeviceForm(rack); });
+}
+function nrSaveDeviceForm(rack) {
+  var f = NR.form;
+  var name = nrVal('nrDevFName');
+  if (!name) { nrFormFail('Give the device a name first.'); return; }
+  var size = nrInt('nrDevFSize', 1), start = nrInt('nrDevFStart', 1);
+  var height = rack.height_u || 42;
+  if (!(size >= 1)) { nrFormFail('Size needs to be at least 1U.'); return; }
+  if (!(start >= 1) || start + size - 1 > height) { nrFormFail('That span does not fit in a ' + height + 'U rack.'); return; }
+  if (nrOverlap(rack.id, start, size, null)) { nrFormFail('That space is taken — ' + name + ' would stack on another device. Pick a free span.'); return; }
+  var ports = f.type === 'switch' && $('nrDevFPorts') ? parseInt($('nrDevFPorts').value, 10) || 48 : 48;
+  var ts = now().toISOString();
+  var dev = { id: jbGenId(), rack_id: rack.id, type: f.type, name: name, u_start: start, u_size: size, switch_id: null, note: '', sort: 0, deleted_at: null, created_at: ts, updated_at: ts };
+  NR.devSel = dev.id;
+  if (DEMO) {
+    if (f.type === 'switch') {
+      var swr = { id: jbGenId(), project_id: null, site_id: NR.sid, name: name, deleted_at: null, created_at: ts, updated_at: ts };
+      D.siteSwitches.push(swr); dev.switch_id = swr.id; nrSetPortCount(swr.id, ports);
+    }
+    D.rackDevices.push(dev);
+    nrDone('Device added to ' + rack.name + '.');
+    return;
+  }
+  function insertDev() { nrLive(sb.from('rack_devices').insert(dev), 'Device added to ' + rack.name + '.'); }
+  if (f.type === 'switch') {
+    var swRow = { id: jbGenId(), project_id: null, site_id: NR.sid, name: name, updated_by: me ? me.id : null };
+    dev.switch_id = swRow.id;
+    sb.from('port_switches').insert(swRow).then(function (r) {
+      if (r.error) { nrFail(r.error); return; }
+      nrSetPortCount(swRow.id, ports);
+      insertDev();
+    });
+    return;
+  }
+  insertDev();
+}
+
+/* ---------- the selected-device strip ---------- */
+function nrSaveDevStrip() {
+  var d = nrDevById(NR.devSel); if (!d) return;
+  var rack = nrRackById(d.rack_id); if (!rack) return;
+  var name = nrVal('nrDevName');
+  if (!name) { nrBlock('Give the device a name first.'); return; }
+  var size = nrInt('nrDevSize', d.u_size || 1), start = nrInt('nrDevStart', d.u_start);
+  var height = rack.height_u || 42;
+  if (!(size >= 1) || !(start >= 1) || start + size - 1 > height) { nrBlock('That span does not fit in a ' + height + 'U rack.'); return; }
+  if (nrOverlap(rack.id, start, size, d.id)) { nrBlock('That space is taken — devices never stack. Pick a free span.'); return; }
+  var note = nrVal('nrDevNote'), ts = now().toISOString();
+  var renamed = name !== d.name;
+  if (DEMO) {
+    d.name = name; d.u_size = size; d.u_start = start; d.note = note; d.updated_at = ts;
+    if (renamed && d.switch_id) { var sw = nrSwitchById(d.switch_id); if (sw) sw.name = name; }
+    nrDone('Device saved.');
+    return;
+  }
+  var patch = { name: name, u_size: size, u_start: start, note: note, updated_at: ts };
+  sb.from('rack_devices').update(patch).eq('id', d.id).select('id').then(function (r) {
+    if (r.error) { nrFail(r.error); return; }
+    if (renamed && d.switch_id) sb.from('port_switches').update({ name: name, updated_by: me ? me.id : null }).eq('id', d.switch_id).then(function () { nrDone('Device saved.'); });
+    else nrDone('Device saved.');
+  });
+}
+function nrMoveDev(d, dir) {
+  var rack = nrRackById(d.rack_id); if (!rack) return;
+  var ns = d.u_start + dir, size = d.u_size || 1, height = rack.height_u || 42;
+  if (ns < 1 || ns + size - 1 > height) { nrBlock(dir > 0 ? 'No room above — the device is at the top of its space.' : 'No room below — the device already sits at U1.'); return; }
+  if (nrOverlap(rack.id, ns, size, d.id)) { nrBlock('No room — that space is taken. Devices never stack.'); return; }
+  var ts = now().toISOString();
+  if (DEMO) { d.u_start = ns; d.updated_at = ts; nrDone('Moved to U' + ns + '.'); return; }
+  nrLive(sb.from('rack_devices').update({ u_start: ns, updated_at: ts }).eq('id', d.id).select('id'), 'Moved to U' + ns + '.');
+}
+function nrRemoveDev(id) {
+  var d = nrDevById(id), ts = now().toISOString();
+  var wasSwitch = d && d.type === 'switch';
+  if (DEMO) { if (d) { d.deleted_at = ts; d.updated_at = ts; } NR.devSel = null; nrDone(wasSwitch ? 'Device removed. Its switch record stays at the site, unplaced.' : 'Device removed.'); return; }
+  NR.devSel = null;
+  nrLive(sb.from('rack_devices').update({ deleted_at: ts, updated_at: ts }).eq('id', id).select('id'), wasSwitch ? 'Device removed. Its switch record stays at the site, unplaced.' : 'Device removed.');
+}
+
+/* ---------- port edit ---------- */
+function nrOpenPortForm(sw, port) {
+  closeAllPopovers();
+  var e = nrEntryFor(sw.id, port);
+  NR.form = { kind: 'port', swId: sw.id, port: port, entryId: e ? e.id : null };
+  var h = '<h2>Port ' + port + ' — ' + esc(sw.name) + '</h2>';
+  h += '<p class="caption">' + (e ? 'This port is labelled. Saving updates the shared site record.' : 'This port is empty. Give it the device it feeds and it joins the site&rsquo;s shared record.') + '</p>';
+  h += nrField('nrPortDev', 'Device *', e ? e.device : '', ' placeholder="e.g. Camera — loading dock wide"');
+  h += nrField('nrPortJack', 'Jack / patch panel', e ? e.jack : '', ' placeholder="e.g. PP-1 · 12"');
+  h += nrField('nrPortNotes', 'Notes', e ? e.notes : '');
+  h += '<p class="co-msg err hidden" id="nrErr" style="margin-top:12px"></p>';
+  h += '<div class="cardfoot">' + (e ? '<button class="btn ghost" id="nrPortClear" style="color:var(--red-t);margin-right:auto">Clear port</button>' : '')
+    + '<button class="btn ghost" id="nrCancel">Cancel</button><button class="btn" id="nrSave">' + (e ? 'Save changes' : 'Add label') + '</button></div>';
+  nrShowForm(h);
+  $('nrCancel').addEventListener('click', nrCloseForm);
+  $('nrSave').addEventListener('click', nrSavePortForm);
+  var cl = $('nrPortClear'); if (cl) cl.addEventListener('click', nrClearPort);
+  setTimeout(function () { var n = $('nrPortDev'); if (n) n.focus(); }, 30);
+}
+function nrSavePortForm() {
+  var f = NR.form, sw = nrSwitchById(f.swId); if (!sw) { nrCloseForm(); return; }
+  var dev = nrVal('nrPortDev');
+  if (!dev) { nrFormFail('Give the port a device label first — or clear the port.'); return; }
+  var row = { id: f.entryId || jbGenId(), switch_id: sw.id, port: String(f.port), device: dev, jack: nrVal('nrPortJack') || null, notes: nrVal('nrPortNotes') || null };
+  if (DEMO) {
+    var e = f.entryId ? nrEntryFor(sw.id, f.port) : null;
+    if (e) { e.device = row.device; e.jack = row.jack; e.notes = row.notes; }
+    else { row.created_at = now().toISOString(); D.portEntries.push(row); }
+    nrDone('Port ' + f.port + ' saved.');
+    return;
+  }
+  row.updated_by = me ? me.id : null;
+  nrLive(sb.from('port_entries').upsert(row, { onConflict: 'id' }), 'Port ' + f.port + ' saved.');
+}
+function nrClearPort() {
+  var f = NR.form; if (!f.entryId) return;
+  if (DEMO) {
+    D.portEntries = D.portEntries.filter(function (e) { return e.id !== f.entryId; });
+    nrDone('Port ' + f.port + ' cleared.');
+    return;
+  }
+  nrLive(sb.from('port_entries').delete().eq('id', f.entryId), 'Port ' + f.port + ' cleared.');
+}
+
+/* ---------- place an unplaced switch ---------- */
+function nrOpenPlace(swId) {
+  closeAllPopovers();
+  var sw = nrSwitchById(swId); if (!sw) return;
+  var rooms = nrRoomsOf(NR.sid);
+  var opts = [];
+  rooms.forEach(function (rm) { nrRacksOf(rm.id).forEach(function (rk) { opts.push({ id: rk.id, label: rm.name + ' — ' + rk.name, rack: rk }); }); });
+  if (!opts.length) { nrToast('Add a room and a rack first — then this switch can be placed.'); return; }
+  NR.form = { kind: 'place', swId: swId };
+  var h = '<h2>Place ' + esc(sw.name) + '</h2>';
+  h += '<p class="caption">The switch takes 1U in the rack you pick. Taken spaces are refused, never stacked.</p>';
+  h += '<div class="jf-field"><label class="flabel" for="nrPlaceRack">Rack</label><select class="txtin" id="nrPlaceRack">'
+    + opts.map(function (o) { return '<option value="' + o.id + '">' + esc(o.label) + '</option>'; }).join('') + '</select></div>';
+  h += nrField('nrPlaceStart', 'Starts at U', nrFirstFit(opts[0].rack, 1) || 1, ' type="number" min="1" step="1"');
+  h += '<p class="co-msg err hidden" id="nrErr" style="margin-top:12px"></p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="nrCancel">Cancel</button><button class="btn" id="nrSave">Place switch</button></div>';
+  nrShowForm(h);
+  $('nrPlaceRack').addEventListener('change', function () { var rk = nrRackById($('nrPlaceRack').value); var st = $('nrPlaceStart'); if (rk && st) st.value = nrFirstFit(rk, 1) || 1; });
+  $('nrCancel').addEventListener('click', nrCloseForm);
+  $('nrSave').addEventListener('click', nrSavePlace);
+}
+function nrSavePlace() {
+  var f = NR.form, sw = nrSwitchById(f.swId); if (!sw) { nrCloseForm(); return; }
+  var rack = nrRackById($('nrPlaceRack') ? $('nrPlaceRack').value : null); if (!rack) { nrFormFail('Pick a rack first.'); return; }
+  var start = nrInt('nrPlaceStart', 1), height = rack.height_u || 42;
+  if (!(start >= 1) || start > height) { nrFormFail('That unit does not exist in a ' + height + 'U rack.'); return; }
+  if (nrOverlap(rack.id, start, 1, null)) { nrFormFail('U' + start + ' in ' + rack.name + ' is taken — pick a free unit.'); return; }
+  var ts = now().toISOString();
+  var dev = { id: jbGenId(), rack_id: rack.id, type: 'switch', name: sw.name, u_start: start, u_size: 1, switch_id: sw.id, note: '', sort: 0, deleted_at: null, created_at: ts, updated_at: ts };
+  NR.roomId = rack.room_id; NR.rackId = rack.id; NR.devSel = dev.id;
+  if (DEMO) { D.rackDevices.push(dev); nrDone(sw.name + ' placed in ' + rack.name + '.'); return; }
+  nrLive(sb.from('rack_devices').insert(dev), sw.name + ' placed in ' + rack.name + '.');
+}
+
+/* ---------- shared confirm ---------- */
+function nrOpenConfirm(c) {
+  closeAllPopovers();
+  NR.confirm = c;
+  var body = {
+    'room-archive': 'Archive the room <b>' + esc(c.name) + '</b>? Its racks and devices are kept with it and come back if the room is restored. Jobs and switches are not touched.',
+    'rack-archive': 'Archive the rack <b>' + esc(c.name) + '</b>? Its devices are kept with it. Any switches in it stay at the site as unplaced switches.',
+    'dev-remove': 'Remove <b>' + esc(c.name) + '</b> from the rack? It leaves the elevation; the record is archived, not erased.'
+  }[c.mode] || '';
+  var h = '<h2>' + (c.mode === 'dev-remove' ? 'Remove device' : 'Archive') + '</h2><p class="caption" style="margin-top:6px">' + body + '</p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="nrConfCancel">Cancel</button><button class="btn danger" id="nrConfGo">' + (c.mode === 'dev-remove' ? 'Remove' : 'Archive') + '</button></div>';
+  $('nrConfirmCard').innerHTML = h;
+  dlgX('nrConfirmCard', nrCloseConfirm);
+  $('nrConfirmWrap').classList.remove('hidden');
+  $('nrConfCancel').addEventListener('click', nrCloseConfirm);
+  $('nrConfGo').addEventListener('click', nrConfirmGo);
+}
+function nrCloseConfirm() { var w = $('nrConfirmWrap'); if (w) w.classList.add('hidden'); NR.confirm = null; }
+function nrConfirmGo() {
+  var c = NR.confirm; if (!c) return;
+  if (c.mode === 'room-archive') { if (NR.roomId === c.id) NR.roomId = null; nrSetRoomArchived(c.id, true); }
+  else if (c.mode === 'rack-archive') nrSetRackArchived(c.id);
+  else if (c.mode === 'dev-remove') nrRemoveDev(c.id);
+}
+
+/* ---------- demo scene (demo mode only): a sample MDF + IDF for the open site ---------- */
+function nrDemoSeed() {
+  if (!DEMO || !NR.sid) return;
+  if (nrRoomsOf(NR.sid).length) return;
+  var ts = now().toISOString();
+  function RM(id, name, w, d, sort) { return { id: id, site_id: NR.sid, name: name, width_ft: w, depth_ft: d, sort: sort, deleted_at: null, created_at: ts, updated_at: ts }; }
+  function RK(id, room, name, hu, x, y, rot, fw, fd, sort) { return { id: id, room_id: room, name: name, height_u: hu, map_x: x, map_y: y, map_rot: rot, fp_w: fw, fp_d: fd, sort: sort, deleted_at: null, created_at: ts, updated_at: ts }; }
+  function SW(id, name) { return { id: id, project_id: null, site_id: NR.sid, name: name, deleted_at: null, created_at: ts, updated_at: ts }; }
+  function DV(id, rack, type, name, u, size, swId, note) { return { id: id, rack_id: rack, type: type, name: name, u_start: u, u_size: size, switch_id: swId || null, note: note || '', sort: 0, deleted_at: null, created_at: ts, updated_at: ts }; }
+  function PE(sw, port, dev, jack, notes) { return { id: 'dnr-pe-' + sw + '-' + port, switch_id: sw, port: String(port), device: dev, jack: jack || null, notes: notes || null, created_at: ts, updated_at: ts }; }
+  D.netRooms.push(RM('dnr-room-mdf', 'MDF', 14, 10, 1), RM('dnr-room-idf', 'IDF 1', 10, 8, 2));
+  D.racks.push(
+    RK('dnr-rack-a', 'dnr-room-mdf', 'Rack A', 42, 1, 0.5, 0, 3, 2, 1),
+    RK('dnr-rack-b', 'dnr-room-mdf', 'Rack B', 42, 5.5, 0.5, 0, 3, 2, 2),
+    RK('dnr-rack-c', 'dnr-room-mdf', 'Rack C', 24, 12.5, 3.5, 90, 3, 1, 3),
+    RK('dnr-rack-idf', 'dnr-room-idf', 'IDF Rack', 12, 1, 1, 0, 2, 2, 1)
+  );
+  D.siteSwitches.push(SW('dnr-sw-mdf1', 'SW-MDF-1'), SW('dnr-sw-mdf2', 'SW-MDF-2'), SW('dnr-sw-mdf3', 'SW-MDF-3'), SW('dnr-sw-mdf4', 'SW-MDF-4'), SW('dnr-sw-idf1', 'SW-IDF-1'), SW('dnr-sw-spare', 'SW-SPARE-1'));
+  nrSetPortCount('dnr-sw-mdf1', 48); nrSetPortCount('dnr-sw-mdf2', 48); nrSetPortCount('dnr-sw-mdf3', 24); nrSetPortCount('dnr-sw-mdf4', 24); nrSetPortCount('dnr-sw-idf1', 24); nrSetPortCount('dnr-sw-spare', 24);
+  D.rackDevices.push(
+    DV('dnr-da-ups', 'dnr-rack-a', 'ups', 'UPS-1', 1, 2, null, 'Battery backup'),
+    DV('dnr-da-pdu', 'dnr-rack-a', 'pdu', 'PDU-1', 23, 1),
+    DV('dnr-da-nvr', 'dnr-rack-a', 'nvr_server', 'NVR-1', 30, 4),
+    DV('dnr-da-b34', 'dnr-rack-a', 'blank', 'Blank plate', 34, 1),
+    DV('dnr-da-fw', 'dnr-rack-a', 'router_firewall', 'FW-1', 35, 1),
+    DV('dnr-da-cm36', 'dnr-rack-a', 'cable_manager', 'Cable manager', 36, 1),
+    DV('dnr-da-sw2', 'dnr-rack-a', 'switch', 'SW-MDF-2', 37, 1, 'dnr-sw-mdf2'),
+    DV('dnr-da-pp2', 'dnr-rack-a', 'patch_panel', 'PP-2', 38, 1),
+    DV('dnr-da-sw1', 'dnr-rack-a', 'switch', 'SW-MDF-1', 39, 1, 'dnr-sw-mdf1', 'Core switch — uplinks to FW-1'),
+    DV('dnr-da-pp1', 'dnr-rack-a', 'patch_panel', 'PP-1', 40, 1),
+    DV('dnr-da-cm41', 'dnr-rack-a', 'cable_manager', 'Cable manager', 41, 1),
+    DV('dnr-da-b42', 'dnr-rack-a', 'blank', 'Blank plate', 42, 1),
+    DV('dnr-db-ups', 'dnr-rack-b', 'ups', 'UPS-2', 1, 2),
+    DV('dnr-db-pdu', 'dnr-rack-b', 'pdu', 'PDU-2', 3, 1),
+    DV('dnr-db-srv', 'dnr-rack-b', 'nvr_server', 'SRV-1', 28, 4),
+    DV('dnr-db-kvm', 'dnr-rack-b', 'other', 'KVM-1', 32, 1),
+    DV('dnr-db-b33', 'dnr-rack-b', 'blank', 'Blank plate', 33, 1),
+    DV('dnr-db-cm36', 'dnr-rack-b', 'cable_manager', 'Cable manager', 36, 1),
+    DV('dnr-db-pp1', 'dnr-rack-b', 'patch_panel', 'PP-B1', 38, 1),
+    DV('dnr-db-sw3', 'dnr-rack-b', 'switch', 'SW-MDF-3', 39, 1, 'dnr-sw-mdf3'),
+    DV('dnr-db-pp2', 'dnr-rack-b', 'patch_panel', 'PP-B2', 40, 1),
+    DV('dnr-db-b41', 'dnr-rack-b', 'blank', 'Blank plate', 41, 1),
+    DV('dnr-db-b42', 'dnr-rack-b', 'blank', 'Blank plate', 42, 1),
+    DV('dnr-dc-ups', 'dnr-rack-c', 'ups', 'UPS-C1', 1, 2),
+    DV('dnr-dc-pdu', 'dnr-rack-c', 'pdu', 'PDU-C1', 14, 1),
+    DV('dnr-dc-nvr', 'dnr-rack-c', 'nvr_server', 'NVR-C1', 15, 4),
+    DV('dnr-dc-b19', 'dnr-rack-c', 'blank', 'Blank plate', 19, 1),
+    DV('dnr-dc-cm20', 'dnr-rack-c', 'cable_manager', 'Cable manager', 20, 1),
+    DV('dnr-dc-sw4', 'dnr-rack-c', 'switch', 'SW-MDF-4', 21, 1, 'dnr-sw-mdf4'),
+    DV('dnr-dc-pp1', 'dnr-rack-c', 'patch_panel', 'PP-C1', 22, 1),
+    DV('dnr-dc-b24', 'dnr-rack-c', 'blank', 'Blank plate', 24, 1),
+    DV('dnr-di-pp', 'dnr-rack-idf', 'patch_panel', 'PP-IDF-1', 12, 1),
+    DV('dnr-di-sw', 'dnr-rack-idf', 'switch', 'SW-IDF-1', 11, 1, 'dnr-sw-idf1'),
+    DV('dnr-di-cm', 'dnr-rack-idf', 'cable_manager', 'Cable manager', 10, 1),
+    DV('dnr-di-ups', 'dnr-rack-idf', 'ups', 'UPS-IDF', 1, 1)
+  );
+  D.portEntries.push(
+    PE('dnr-sw-mdf1', 1, 'Workstation — front office', 'PP-1 · 1'),
+    PE('dnr-sw-mdf1', 3, 'Workstation — office 2', 'PP-1 · 3'),
+    PE('dnr-sw-mdf1', 5, 'Printer — office', 'PP-1 · 5'),
+    PE('dnr-sw-mdf1', 7, 'Workstation — shipping', 'PP-1 · 7'),
+    PE('dnr-sw-mdf1', 9, 'AP — office', 'PP-1 · 9'),
+    PE('dnr-sw-mdf1', 11, 'Workstation — QC', 'PP-1 · 11'),
+    PE('dnr-sw-mdf1', 12, 'Camera — loading dock wide', 'PP-1 · 12', 'Dock wide shot'),
+    PE('dnr-sw-mdf1', 13, 'Camera — parking lot', 'PP-1 · 13'),
+    PE('dnr-sw-mdf1', 14, 'Camera — receiving', 'PP-1 · 14'),
+    PE('dnr-sw-mdf1', 15, 'Camera — warehouse aisle', 'PP-1 · 15'),
+    PE('dnr-sw-mdf1', 16, 'Camera — side gate', 'PP-1 · 16'),
+    PE('dnr-sw-mdf1', 21, 'AP — warehouse', 'PP-1 · 21'),
+    PE('dnr-sw-mdf1', 23, 'Workstation — warehouse office', 'PP-1 · 23'),
+    PE('dnr-sw-mdf1', 24, 'Camera — dock door', 'PP-1 · 24'),
+    PE('dnr-sw-mdf1', 33, 'Phone — front desk', 'PP-2 · 9'),
+    PE('dnr-sw-mdf1', 35, 'Phone — office 2', 'PP-2 · 11'),
+    PE('dnr-sw-mdf1', 48, 'Uplink — FW-1', '', 'Core uplink'),
+    PE('dnr-sw-idf1', 1, 'Camera — lobby', 'PP-IDF-1 · 1'),
+    PE('dnr-sw-idf1', 2, 'AP — second floor', 'PP-IDF-1 · 2'),
+    PE('dnr-sw-idf1', 24, 'Uplink — MDF', '')
+  );
+  NR.roomId = 'dnr-room-mdf'; NR.selRack = 'dnr-rack-a';
+  NR.msg = 'Sample rooms loaded for this demo site.'; NR.err = false;
+  renderCustomers();
 }
 
 /* ================= materials (v1.8) =================
