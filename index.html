@@ -567,6 +567,8 @@
   .nr-item.panel { border:1.5px solid #64748b; background:#334155; color:#e2e8f0; border-radius:4px; }
   .nr-item.vert .inm { writing-mode:vertical-rl; }
   .nr-item.sel { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.3), 0 8px 22px rgba(0,0,0,.4); }
+  .nr-item.above { z-index:3; }
+  .nr-item.drag { z-index:8; }
   .nr-item.door { background:transparent; border:none; border-radius:0; overflow:visible; min-width:0; min-height:0; padding:0; }
   .nr-item.door.sel { box-shadow:0 0 0 2px rgba(99,102,241,.6); border-radius:6px; }
   .nr-item .doorlab { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:10px; font-weight:800; color:#cbd5e1; text-shadow:0 1px 3px rgba(0,0,0,.85); pointer-events:none; }
@@ -747,7 +749,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.16 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.16.1 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -2117,8 +2119,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.16 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.16 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · The materials tree — categories and per-type forms, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.16.1 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.16.1 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · The materials tree — categories and per-type forms, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') { if (!(NR.sid && cae && /^nr/.test(cae.id || ''))) renderCustomers(); } } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -3576,7 +3578,7 @@ function jfQuickReturn(kind, row) {
   jfLinkLine();
 }
 
-/* ================= network rooms (v1.15; room items v1.16) =================
+/* ================= network rooms (v1.15; room items v1.16; layers + single selection v1.16.1) =================
    Rooms, racks and devices for a customer SITE, designed in Manage
    (Customers -> a site -> Network rooms) and read by the field crew
    in Field Kit. A room holds racks on a top-down map drawn to the
@@ -3595,11 +3597,13 @@ var NR = { sid: null, roomId: null, rackId: null, swId: null, devSel: null, selR
 var NR_TYPES = [['switch', 'Switch'], ['patch_panel', 'Patch panel'], ['ups', 'UPS'], ['nvr_server', 'NVR / Server'], ['router_firewall', 'Router / Firewall'], ['pdu', 'PDU'], ['cable_manager', 'Cable manager'], ['blank', 'Blank'], ['other', 'Other']];
 var NR_SETUP_HINT = 'Network rooms need the one-time setup SQL (supabase-network-rooms.sql) — once an admin has run it, this works.';
 var NR_ITEMS_HINT = 'Room items need the one-time setup SQL (supabase-room-items.sql) — once an admin has run it, this works.';
+var NR_LAYER_HINT = 'Map layers need the one-time setup SQL (supabase-room-items-layer.sql) — once an admin has run it, this works.';
 var NR_ROW = 26;
 function nrTypeLabel(t) { for (var i = 0; i < NR_TYPES.length; i++) if (NR_TYPES[i][0] === t) return NR_TYPES[i][1]; return 'Other'; }
 function nrErrText(e) {
   if (!e) return 'check your connection and try again.';
   var s = (String(e.code || '') + ' ' + String(e.message || '') + ' ' + String(e.details || '')).toLowerCase();
+  if (s.indexOf('layer') >= 0) return NR_LAYER_HINT;
   if (s.indexOf('room_items') >= 0) return NR_ITEMS_HINT;
   if (e.code === '42501' || s.indexOf('row-level security') >= 0 || s.indexOf('permission denied') >= 0 || s.indexOf('policy') >= 0 || s.indexOf('does not exist') >= 0 || s.indexOf('schema cache') >= 0) return NR_SETUP_HINT;
   return 'Could not save — ' + (e.message || 'check your connection and try again.');
@@ -3622,6 +3626,8 @@ function nrItemById(id) { if (!id) return null; for (var i = 0; i < D.roomItems.
 function nrItemsOf(roomId) { return D.roomItems.filter(function (it) { return it.room_id === roomId && !it.deleted_at; }).sort(nrSortName); }
 function nrItemFoot(it) { var rot = ((it.map_rot || 0) % 180) !== 0; return { fw: rot ? Number(it.size_d) : Number(it.size_w), fd: rot ? Number(it.size_w) : Number(it.size_d), rot: rot }; }
 function nrItemTypeLabel(t) { return t === 'cable_tray' ? 'Cable tray' : t === 'door' ? 'Door' : 'Wall panel'; }
+function nrItemLayer(it) { return (it.layer === 'above' || it.layer === 'below') ? it.layer : (it.type === 'cable_tray' ? 'above' : 'below'); }
+function nrLayerCol() { if (DEMO) return true; if (!D.roomItems.length) return true; return D.roomItems.some(function (x) { return 'layer' in x; }); }
 function nrDoorWall(it) { var r = ((it.map_rot || 0) % 360 + 360) % 360; return r === 90 ? 'e' : r === 180 ? 's' : r === 270 ? 'w' : 'n'; }
 function nrDoorSpan(it) { var wall = nrDoorWall(it); return (wall === 'n' || wall === 's') ? Number(it.map_x) || 0 : Number(it.map_y) || 0; }
 function nrDoorSet(it, room, wall, span) {
@@ -3719,6 +3725,8 @@ function nrFail(e) {
 }
 function nrLive(promise, msg) { promise.then(function (r) { if (r.error) nrFail(r.error); else nrDone(msg); }); }
 function nrBlock(msg) { NR.msg = msg; NR.err = true; renderCustomers(); nrToast(msg); }
+function nrCloseRoomMenu() { var m = $('nrRoomMenu'); if (m) m.classList.add('hidden'); var g = $('nrRoomGear'); if (g) g.classList.remove('on'); }
+function nrScrollSelBar() { var bar = document.querySelector('#cuView .nr-rackbar'); if (bar && bar.scrollIntoView) bar.scrollIntoView({ block: 'nearest' }); }
 
 /* ================= the screen ================= */
 function nrScreenHTML(site) {
@@ -3763,23 +3771,30 @@ function nrRoomsHTML(site) {
   }
   var racks = nrRacksOf(room.id);
   var items = nrItemsOf(room.id);
-  if (!racks.some(function (r) { return r.id === NR.selRack; })) NR.selRack = racks.length ? racks[0].id : null;
+  if (!racks.some(function (r) { return r.id === NR.selRack; })) NR.selRack = null;
   if (NR.selItem && !items.some(function (it) { return it.id === NR.selItem; })) NR.selItem = null;
   var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
   if (!DEMO && D.nrItemsError) h += '<div class="card" style="margin:0 0 14px"><h2>Room items need one more setup file</h2><p class="caption" style="margin-top:6px">Cable trays and wall panels on the map keep their own small table. An admin runs the one-time setup file <b>supabase-room-items.sql</b> in the Supabase Dashboard SQL Editor — it only adds that table and its rules; rooms, racks, devices and jobs are untouched. Until then, the map works exactly as before, just without trays and panels.</p></div>';
-  h += '<div class="nr-cols"><div class="card" style="margin:0"><h2>' + esc(room.name) + ' — top-down <span class="hint">Drag racks and room items to arrange them · positions save as you drop</span></h2>';
+  if (!DEMO && !D.nrItemsError && nrRoomsColOK && D.roomItems.length && !nrLayerCol()) h += '<div class="card" style="margin:0 0 14px"><h2>Map layers need one more setup file</h2><p class="caption" style="margin-top:6px">Whether a tray, panel or door draws above or below the racks is kept on each item. An admin runs the one-time setup file <b>supabase-room-items-layer.sql</b> in the Supabase Dashboard SQL Editor — it only adds that one field; nothing else changes. Until then, trays ride above the racks while panels and doors sit below, and everything else works exactly as before.</p></div>';
+  h += '<div class="nr-cols"><div class="card" style="margin:0"><div style="display:flex;align-items:flex-start;gap:10px"><h2 style="flex:1;min-width:0">' + esc(room.name) + ' — top-down <span class="hint">Drag racks and room items to arrange them · positions save as you drop</span></h2>'
+    + '<span class="jb-gearwrap"><button type="button" class="gearbtn" id="nrRoomGear" title="Room options" aria-label="Room options" aria-haspopup="true">' + JB_GEAR_SVG + '</button>'
+    + '<span class="jb-menu hidden" id="nrRoomMenu" role="menu">'
+    + '<button type="button" id="nrRoomEdit">Room size &amp; name</button>'
+    + '<span class="jb-mdiv"></span>'
+    + '<button type="button" class="danger" id="nrRoomArchive">Archive room</button>'
+    + '</span></span></div>';
   h += '<div class="nr-mapdim" style="margin-top:10px"><span>' + w + ' ft — ' + Math.round(w * 12) + ' in</span><span>' + d + ' ft deep</span></div>';
   h += '<div class="nr-map" id="nrMap" style="aspect-ratio:' + w + '/' + d + ';background-size:' + (50 / w) + '% ' + (50 / d) + '%">';
   items.forEach(function (it) {
     if (it.type === 'door') {
       var dst = nrDoorStyle(it, w, d);
-      h += '<div class="nr-item door' + (NR.selItem === it.id ? ' sel' : '') + '" data-nritem="' + it.id + '" title="Door' + (it.name ? ' — ' + esc(it.name) : '') + '" style="left:' + dst.left + ';top:' + dst.top + ';width:' + dst.width + ';height:' + dst.height + ';transform:' + dst.transform + '">'
+      h += '<div class="nr-item door' + (nrItemLayer(it) === 'above' ? ' above' : '') + (NR.selItem === it.id ? ' sel' : '') + '" data-nritem="' + it.id + '" title="Door' + (it.name ? ' — ' + esc(it.name) : '') + '" style="left:' + dst.left + ';top:' + dst.top + ';width:' + dst.width + ';height:' + dst.height + ';transform:' + dst.transform + '">'
         + nrDoorSVG(it) + (it.name ? '<span class="inm doorlab">' + esc(it.name) + '</span>' : '') + '</div>';
       return;
     }
     var f = nrItemFoot(it);
     var lab = it.type === 'cable_tray' ? (it.name || 'Cable tray') + ' · ' + nrItemWidthIn(it) + ' in' : (it.name || 'Wall panel');
-    h += '<div class="nr-item ' + (it.type === 'cable_tray' ? 'tray' : 'panel') + (NR.selItem === it.id ? ' sel' : '') + (f.rot ? ' vert' : '') + '" data-nritem="' + it.id + '" style="left:' + (Number(it.map_x) / w * 100) + '%;top:' + (Number(it.map_y) / d * 100) + '%;width:' + (f.fw / w * 100) + '%;height:' + (f.fd / d * 100) + '%">'
+    h += '<div class="nr-item ' + (it.type === 'cable_tray' ? 'tray' : 'panel') + (nrItemLayer(it) === 'above' ? ' above' : '') + (NR.selItem === it.id ? ' sel' : '') + (f.rot ? ' vert' : '') + '" data-nritem="' + it.id + '" style="left:' + (Number(it.map_x) / w * 100) + '%;top:' + (Number(it.map_y) / d * 100) + '%;width:' + (f.fw / w * 100) + '%;height:' + (f.fd / d * 100) + '%">'
       + '<span class="inm">' + esc(lab) + '</span></div>';
   });
   racks.forEach(function (r) {
@@ -3790,23 +3805,23 @@ function nrRoomsHTML(site) {
   });
   h += '</div>';
   var sel = NR.selRack ? nrRackById(NR.selRack) : null;
-  if (sel) {
+  var selIt = NR.selItem ? nrItemById(NR.selItem) : null;
+  if (selIt) {
+    var itMeta = selIt.type === 'door' ? 'Door · ' + Number(selIt.size_w) + ' ft · swings ' + (selIt.door_swing || 'in') + ' · hinge ' + (selIt.door_hinge || 'left') : nrItemTypeLabel(selIt.type) + ' · ' + Number(selIt.size_w) + ' ft × ' + (selIt.type === 'cable_tray' ? nrItemWidthIn(selIt) + ' in' : Number(selIt.size_d) + ' ft');
+    itMeta += ' · ' + (nrItemLayer(selIt) === 'above' ? 'Above racks' : 'Below racks');
+    h += '<div class="nr-rackbar"><span class="who">' + esc(selIt.name || nrItemTypeLabel(selIt.type)) + '</span><span class="hint">' + itMeta + '</span>'
+      + '<button class="btn ghost small" id="nrItemRotate">Rotate 90°</button>'
+      + '<button class="btn ghost small" id="nrItemEdit">Edit</button>'
+      + '<button class="btn ghost small" id="nrItemArchive" style="color:var(--red-t)">Archive</button></div>';
+  } else if (sel) {
     h += '<div class="nr-rackbar"><span class="who">' + esc(sel.name) + '</span>'
       + '<button class="btn ghost small" id="nrRotate">Rotate 90°</button>'
       + '<button class="btn small" id="nrElevOpen">Open elevation</button>'
       + '<button class="btn ghost small" id="nrRackEdit">Edit rack</button>'
       + '<button class="btn ghost small" id="nrRackArchive" style="color:var(--red-t)">Archive rack</button></div>';
+  } else {
+    h += '<p class="hint" style="margin:12px 2px 0">Select a rack or item to edit it.</p>';
   }
-  var selIt = NR.selItem ? nrItemById(NR.selItem) : null;
-  if (selIt) {
-    var itMeta = selIt.type === 'door' ? 'Door · ' + Number(selIt.size_w) + ' ft · swings ' + (selIt.door_swing || 'in') + ' · hinge ' + (selIt.door_hinge || 'left') : nrItemTypeLabel(selIt.type) + ' · ' + Number(selIt.size_w) + ' ft × ' + (selIt.type === 'cable_tray' ? nrItemWidthIn(selIt) + ' in' : Number(selIt.size_d) + ' ft');
-    h += '<div class="nr-rackbar"><span class="who">' + esc(selIt.name || nrItemTypeLabel(selIt.type)) + '</span><span class="hint">' + itMeta + '</span>'
-      + '<button class="btn ghost small" id="nrItemRotate">Rotate 90°</button>'
-      + '<button class="btn ghost small" id="nrItemEdit">Edit</button>'
-      + '<button class="btn ghost small" id="nrItemArchive" style="color:var(--red-t)">Archive</button></div>';
-  }
-  h += '<div class="nr-rackbar"><button class="btn ghost small" id="nrRoomEdit">Room size &amp; name</button>'
-    + '<button class="btn ghost small" id="nrRoomArchive" style="color:var(--red-t)">Archive room</button></div>';
   h += '</div>';
   h += '<div><div class="card" style="margin:0"><h2>Racks in ' + esc(room.name) + '</h2>';
   if (racks.length) racks.forEach(function (r) {
@@ -3930,9 +3945,9 @@ function wireNRScreen(site) {
   if (NR.swId || NR.rackId) { wireNRElevPorts(el, site); return; }
   var addRoom = $('nrAddRoom'); if (addRoom) addRoom.addEventListener('click', function () { nrOpenRoomForm(null); });
   var seed = $('nrDemoSeed'); if (seed) seed.addEventListener('click', nrDemoSeed);
-  Array.prototype.forEach.call(el.querySelectorAll('[data-nrroom]'), function (b) { b.addEventListener('click', function () { NR.roomId = b.getAttribute('data-nrroom'); NR.selRack = null; NR.msg = ''; renderCustomers(); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrroom]'), function (b) { b.addEventListener('click', function () { NR.roomId = b.getAttribute('data-nrroom'); NR.selRack = null; NR.selItem = null; NR.msg = ''; renderCustomers(); }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-nrrestore]'), function (b) { b.addEventListener('click', function () { nrSetRoomArchived(b.getAttribute('data-nrrestore'), false); }); });
-  Array.prototype.forEach.call(el.querySelectorAll('[data-nrrackrow]'), function (r) { r.addEventListener('click', function () { NR.selRack = r.getAttribute('data-nrrackrow'); renderCustomers(); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrrackrow]'), function (r) { r.addEventListener('click', function () { NR.selRack = r.getAttribute('data-nrrackrow'); NR.selItem = null; renderCustomers(); nrScrollSelBar(); }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-nrrackelev]'), function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); nrOpenElevation(b.getAttribute('data-nrrackelev')); }); });
   var addRack = $('nrAddRack'); if (addRack) addRack.addEventListener('click', function () { nrOpenRackForm(null); });
   var addTray = $('nrAddTray'); if (addTray) addTray.addEventListener('click', function () { nrAddItem('cable_tray'); });
@@ -3941,13 +3956,21 @@ function wireNRScreen(site) {
   var iRot = $('nrItemRotate'); if (iRot) iRot.addEventListener('click', function () { var it = nrItemById(NR.selItem); if (it) nrRotateItem(it); });
   var iEdit = $('nrItemEdit'); if (iEdit) iEdit.addEventListener('click', function () { var it = nrItemById(NR.selItem); if (it) nrOpenItemForm(it); });
   var iArch = $('nrItemArchive'); if (iArch) iArch.addEventListener('click', function () { var it = nrItemById(NR.selItem); if (it) nrOpenConfirm({ mode: 'item-archive', id: it.id, name: it.name || nrItemTypeLabel(it.type) }); });
-  Array.prototype.forEach.call(el.querySelectorAll('[data-nritemrow]'), function (r) { r.addEventListener('click', function () { NR.selItem = r.getAttribute('data-nritemrow'); renderCustomers(); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nritemrow]'), function (r) { r.addEventListener('click', function () { NR.selItem = r.getAttribute('data-nritemrow'); NR.selRack = null; renderCustomers(); nrScrollSelBar(); }); });
   var rot = $('nrRotate'); if (rot) rot.addEventListener('click', function () { var r = nrRackById(NR.selRack); if (r) nrRotateRack(r); });
   var elev = $('nrElevOpen'); if (elev) elev.addEventListener('click', function () { if (NR.selRack) nrOpenElevation(NR.selRack); });
   var rEdit = $('nrRackEdit'); if (rEdit) rEdit.addEventListener('click', function () { var r = nrRackById(NR.selRack); if (r) nrOpenRackForm(r); });
   var rArch = $('nrRackArchive'); if (rArch) rArch.addEventListener('click', function () { var r = nrRackById(NR.selRack); if (r) nrOpenConfirm({ mode: 'rack-archive', id: r.id, name: r.name }); });
-  var rmEdit = $('nrRoomEdit'); if (rmEdit) rmEdit.addEventListener('click', function () { var r = nrRoomById(NR.roomId); if (r) nrOpenRoomForm(r); });
-  var rmArch = $('nrRoomArchive'); if (rmArch) rmArch.addEventListener('click', function () { var r = nrRoomById(NR.roomId); if (r) nrOpenConfirm({ mode: 'room-archive', id: r.id, name: r.name }); });
+  var rGear = $('nrRoomGear');
+  if (rGear) rGear.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var m = $('nrRoomMenu'); if (!m) return;
+    var wasOpen = !m.classList.contains('hidden');
+    closeAllPopovers();
+    if (!wasOpen) { m.classList.remove('hidden'); rGear.classList.add('on'); }
+  });
+  var rmEdit = $('nrRoomEdit'); if (rmEdit) rmEdit.addEventListener('click', function () { nrCloseRoomMenu(); var r = nrRoomById(NR.roomId); if (r) nrOpenRoomForm(r); });
+  var rmArch = $('nrRoomArchive'); if (rmArch) rmArch.addEventListener('click', function () { nrCloseRoomMenu(); var r = nrRoomById(NR.roomId); if (r) nrOpenConfirm({ mode: 'room-archive', id: r.id, name: r.name }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-nrplace]'), function (b) { b.addEventListener('click', function () { nrOpenPlace(b.getAttribute('data-nrplace')); }); });
   wireNRMapDrag(el);
   wireNRItemDrag(el);
@@ -3961,12 +3984,18 @@ function nrOpenElevation(rackId) {
 
 function wireNRMapDrag(el) {
   var map = $('nrMap'); if (!map) return;
+  map.addEventListener('pointerdown', function (e) {
+    if (e.target !== map) return;
+    if (!NR.selRack && !NR.selItem) return;
+    NR.selRack = null; NR.selItem = null; renderCustomers();
+  });
   Array.prototype.forEach.call(map.querySelectorAll('[data-nrrack]'), function (b) {
     b.addEventListener('pointerdown', function (e) {
       var rack = nrRackById(b.getAttribute('data-nrrack')); if (!rack) return;
       var room = nrRoomById(rack.room_id); if (!room) return;
-      NR.selRack = rack.id;
+      NR.selRack = rack.id; NR.selItem = null;
       Array.prototype.forEach.call(map.querySelectorAll('[data-nrrack]'), function (x) { x.classList.toggle('sel', x === b); });
+      Array.prototype.forEach.call(map.querySelectorAll('[data-nritem]'), function (x) { x.classList.remove('sel'); });
       var rect = map.getBoundingClientRect();
       var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
       var rot = ((rack.map_rot || 0) % 180) !== 0;
@@ -4003,8 +4032,10 @@ function wireNRItemDrag(el) {
     b.addEventListener('pointerdown', function (e) {
       var it = nrItemById(b.getAttribute('data-nritem')); if (!it) return;
       var room = nrRoomById(it.room_id); if (!room) return;
-      NR.selItem = it.id;
+      NR.selItem = it.id; NR.selRack = null;
+      b.classList.add('drag');
       Array.prototype.forEach.call(map.querySelectorAll('[data-nritem]'), function (x) { x.classList.toggle('sel', x === b); });
+      Array.prototype.forEach.call(map.querySelectorAll('[data-nrrack]'), function (x) { x.classList.remove('sel'); });
       var rect = map.getBoundingClientRect();
       var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
       var isDoor = it.type === 'door';
@@ -4041,6 +4072,7 @@ function wireNRItemDrag(el) {
       function up() {
         b.removeEventListener('pointermove', mv); b.removeEventListener('pointerup', up); b.removeEventListener('pointercancel', up);
         window.__nrDrag = false;
+        b.classList.remove('drag');
         if (isDoor) {
           if (moved) {
             nrDoorSet(it, room, doorWall, Math.round(doorSpan * 2) / 2);
@@ -4180,7 +4212,7 @@ function nrSaveRackForm() {
       nr.name = vals.name; nr.height_u = vals.height_u; nr.fp_w = vals.fp_w; nr.fp_d = vals.fp_d;
       nr.map_x = Math.min(1 + nrRacksOf(roomId).length, Math.max(0, (Number(room.width_ft) || 14) - nr.fp_w));
       nr.map_y = 0.5;
-      D.racks.push(nr); NR.selRack = nr.id; nrDone('Rack added — drag it into place on the map.');
+      D.racks.push(nr); NR.selRack = nr.id; NR.selItem = null; nrDone('Rack added — drag it into place on the map.');
     }
     return;
   }
@@ -4190,7 +4222,7 @@ function nrSaveRackForm() {
     row.name = vals.name; row.height_u = vals.height_u; row.fp_w = vals.fp_w; row.fp_d = vals.fp_d;
     row.map_x = Math.min(1 + nrRacksOf(roomId).length, Math.max(0, (Number(room2.width_ft) || 14) - row.fp_w));
     row.map_y = 0.5;
-    NR.selRack = row.id;
+    NR.selRack = row.id; NR.selItem = null;
     nrLive(sb.from('racks').insert(row), 'Rack added — drag it into place on the map.');
     return;
   }
@@ -4224,7 +4256,8 @@ function nrSetRackArchived(id) {
 }
 
 /* ---------- room items: cable trays + wall panels ----------
-   Non-rack pieces of the room, drawn UNDER the racks on the map.
+   Non-rack pieces of the room, drawn on the map in each item's
+   own layer (v1.16.1).
    Doors are the third kind: a door sits ON a wall (its map_rot
    names the wall — 0 north, 90 east, 180 south, 270 west — and
    its free coordinate runs along that wall), drags along the
@@ -4232,9 +4265,14 @@ function nrSetRackArchived(id) {
    and a hinge side, drawn as the plan symbol: a gap in the wall,
    a leaf, and a quarter-circle swing arc. A door's size_w is its
    width in feet; size_d is unused.
-   A tray run passes over racks physically, so items carry NO
-   overlap rules at all: they may cross racks and each other
-   freely. Everything else mirrors the racks: pointer drag with a
+   Items carry NO overlap rules at all: they may cross racks and
+   each other freely. Each item also carries a layer ('above' or
+   'below' — room_items.layer, supabase-room-items-layer.sql): an
+   'above' item draws over the rack blocks and can be grabbed where
+   it crosses one; a 'below' item tucks under them. Unset, trays
+   default above and panels and doors below, and while an item is
+   being dragged it rides on top regardless. Everything else
+   mirrors the racks: pointer drag with a
    half-foot snap, clamped inside the room, saved on drop, rotate
    in 90-degree steps, an edit dialog, and a soft archive. */
 function nrClampItem(it) {
@@ -4250,8 +4288,9 @@ function nrAddItem(type) {
     var dts = now().toISOString();
     var dit = { id: jbGenId(), room_id: room.id, type: 'door', name: '', map_rot: 180, size_w: 3, size_d: 0.5, door_swing: 'in', door_hinge: 'left', sort: nrItemsOf(room.id).length + 1, deleted_at: null, created_at: dts, updated_at: dts };
     dit.map_x = (Number(room.width_ft) || 14) / 2 - 1.5; dit.map_y = Number(room.depth_ft) || 10;
+    if (nrLayerCol()) dit.layer = 'below';
     nrDoorSet(dit, room, 's', dit.map_x);
-    NR.selItem = dit.id;
+    NR.selItem = dit.id; NR.selRack = null;
     if (DEMO) { D.roomItems.push(dit); NR.msg = 'Door added on the south wall — drag it along the walls.'; NR.err = false; renderCustomers(); return; }
     nrLive(sb.from('room_items').insert(dit), 'Door added on the south wall — drag it along the walls.');
     return;
@@ -4263,9 +4302,10 @@ function nrAddItem(type) {
   while (taken[name]) { name = base + ' ' + n; n++; }
   var ts = now().toISOString();
   var it = { id: jbGenId(), room_id: room.id, type: type, name: name, map_rot: 0, size_w: tray ? 8 : 4, size_d: tray ? 1.5 : 0.5, sort: nrItemsOf(room.id).length + 1, deleted_at: null, created_at: ts, updated_at: ts };
+  if (nrLayerCol()) it.layer = tray ? 'above' : 'below';
   it.map_x = tray ? 1 : 0.5; it.map_y = tray ? 0.5 : 0;
   nrClampItem(it);
-  NR.selItem = it.id;
+  NR.selItem = it.id; NR.selRack = null;
   if (DEMO) { D.roomItems.push(it); NR.msg = name + ' added — drag it into place on the map.'; NR.err = false; renderCustomers(); return; }
   nrLive(sb.from('room_items').insert(it), name + ' added — drag it into place on the map.');
 }
@@ -4305,7 +4345,7 @@ function nrOpenItemForm(it) {
   NR.form = { kind: 'item', id: it.id };
   var tray = it.type === 'cable_tray', door = it.type === 'door';
   var h = '<h2>Edit ' + (door ? 'door' : tray ? 'cable tray' : 'wall panel') + '</h2>';
-  h += '<p class="caption">' + (door ? 'A door in one of this room&rsquo;s walls. Drag it along the walls on the map; here you set its width and how it swings.' : tray ? 'A tray run on the room map. Trays pass over racks and other items freely — nothing blocks them.' : 'A panel on the room map — where wall jacks and terminations live. It may sit over racks and other items freely.') + '</p>';
+  h += '<p class="caption">' + (door ? 'A door in one of this room&rsquo;s walls. Drag it along the walls on the map; here you set its width and how it swings.' : tray ? 'A tray run on the room map. Trays cross racks and other items freely — the layer below picks whether this one draws over the racks or under them.' : 'A panel on the room map — where wall jacks and terminations live. It may sit over racks and other items freely.') + '</p>';
   h += nrField('nrItemName', door ? 'Name (optional)' : 'Name *', it.name, ' placeholder="e.g. ' + (door ? 'Entry' : tray ? 'Cable tray' : 'Wall panel') + '"');
   if (door) {
     h += nrField('nrItemLen', 'Width (ft)', it.size_w, ' type="number" min="1" step="0.5"');
@@ -4315,6 +4355,7 @@ function nrOpenItemForm(it) {
     h += '<div class="jf-grid">' + nrField('nrItemLen', 'Length (ft)', it.size_w, ' type="number" min="0.5" step="0.5"') + nrField('nrItemWid', tray ? 'Width (ft)' : 'Depth (ft)', it.size_d, ' type="number" min="0.25" step="0.25"') + '</div>';
     if (tray) h += '<div class="nr-pal" style="margin-top:8px">' + [1, 1.5, 2].map(function (x) { return '<button type="button" data-nritemw="' + x + '">' + Math.round(x * 12) + ' in wide</button>'; }).join('') + '</div>';
   }
+  if (nrLayerCol()) h += '<div class="jf-field"><label class="flabel" for="nrItemLayer">Layer</label><select class="txtin" id="nrItemLayer"><option value="above"' + (nrItemLayer(it) === 'above' ? ' selected' : '') + '>Above racks — drawn over them; grabbable where it crosses a rack</option><option value="below"' + (nrItemLayer(it) === 'below' ? ' selected' : '') + '>Below racks — tucked under the rack blocks</option></select></div>';
   h += '<p class="co-msg err hidden" id="nrErr" style="margin-top:12px"></p>';
   h += '<div class="cardfoot"><button class="btn ghost" id="nrCancel">Cancel</button><button class="btn" id="nrSave">Save changes</button></div>';
   nrShowForm(h);
@@ -4326,6 +4367,7 @@ function nrOpenItemForm(it) {
 function nrSaveItemForm() {
   var it = nrItemById(NR.form.id); if (!it) { nrCloseForm(); return; }
   var name = nrVal('nrItemName');
+  var layer = $('nrItemLayer') ? $('nrItemLayer').value : nrItemLayer(it);
   var len = nrNum('nrItemLen', Number(it.size_w)), wid = nrNum('nrItemWid', Number(it.size_d));
   if (it.type === 'door') {
     if (!(len >= 1)) { nrFormFail('Width needs to be at least 1 ft.'); return; }
@@ -4334,7 +4376,7 @@ function nrSaveItemForm() {
     var dts2 = now().toISOString();
     var droom = nrRoomById(it.room_id);
     if (DEMO) {
-      it.name = name; it.size_w = len; it.door_swing = swing; it.door_hinge = hinge; it.updated_at = dts2;
+      it.name = name; it.size_w = len; it.door_swing = swing; it.door_hinge = hinge; it.layer = layer; it.updated_at = dts2;
       if (droom) nrDoorSet(it, droom, nrDoorWall(it), nrDoorSpan(it));
       nrDone('Door saved.');
       return;
@@ -4343,6 +4385,7 @@ function nrSaveItemForm() {
     it.size_w = len;
     if (droom) nrDoorSet(it, droom, nrDoorWall(it), nrDoorSpan(it));
     var patchD = { name: name, size_w: len, door_swing: swing, door_hinge: hinge, map_x: it.map_x, map_y: it.map_y, map_rot: it.map_rot, updated_at: dts2 };
+      if (nrLayerCol()) patchD.layer = layer;
     it.map_x = keepD.x; it.map_y = keepD.y; it.map_rot = keepD.r; it.size_w = keepD.w;
     nrLive(sb.from('room_items').update(patchD).eq('id', it.id).select('id'), 'Door saved.');
     return;
@@ -4352,13 +4395,14 @@ function nrSaveItemForm() {
   if (!(wid >= 0.25)) { nrFormFail((it.type === 'cable_tray' ? 'Width' : 'Depth') + ' needs to be at least 0.25 ft.'); return; }
   var ts = now().toISOString();
   if (DEMO) {
-    it.name = name; it.size_w = len; it.size_d = wid; it.updated_at = ts; nrClampItem(it);
+    it.name = name; it.size_w = len; it.size_d = wid; it.layer = layer; it.updated_at = ts; nrClampItem(it);
     nrDone('Item saved.');
     return;
   }
   var keep = { x: it.map_x, y: it.map_y, w: it.size_w, d: it.size_d };
   it.size_w = len; it.size_d = wid; nrClampItem(it);
   var patch = { name: name, size_w: len, size_d: wid, map_x: it.map_x, map_y: it.map_y, updated_at: ts };
+  if (nrLayerCol()) patch.layer = layer;
   it.map_x = keep.x; it.map_y = keep.y; it.size_w = keep.w; it.size_d = keep.d;
   nrLive(sb.from('room_items').update(patch).eq('id', it.id).select('id'), 'Item saved.');
 }
@@ -4659,7 +4703,7 @@ function nrDemoSeed() {
     PE('dnr-sw-idf1', 2, 'AP — second floor', 'PP-IDF-1 · 2'),
     PE('dnr-sw-idf1', 24, 'Uplink — MDF', '')
   );
-  NR.roomId = 'dnr-room-mdf'; NR.selRack = 'dnr-rack-a';
+  NR.roomId = 'dnr-room-mdf'; NR.selRack = null; NR.selItem = null;
   NR.msg = 'Sample rooms loaded for this demo site.'; NR.err = false;
   renderCustomers();
 }
@@ -4793,7 +4837,7 @@ function maCloseMenus() {
    helper below nulls its state AND hides its DOM nodes, so calling
    this from every dialog opener fixes the whole app at once. */
 function closeAllPopovers() {
-  jbCloseMenu(); pplCloseMenus(); cuCloseMenus(); maCloseMenus();
+  jbCloseMenu(); pplCloseMenus(); cuCloseMenus(); maCloseMenus(); nrCloseRoomMenu();
 }
 function wireMaMenus(el) {
   Array.prototype.forEach.call(el.querySelectorAll('[data-mamenu-btn]'), function (b) {
