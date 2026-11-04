@@ -29,6 +29,9 @@
   ::selection { background:rgba(99,102,241,.35); }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Plus Jakarta Sans',-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background-color:var(--bg); background-image:radial-gradient(circle at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(16,185,129,0.05) 0%, transparent 40%); background-attachment:fixed; color:var(--text); font-size:14px; }
+  html, body { overscroll-behavior:none; }
+  @keyframes ptrspin { to { transform:rotate(360deg); } }
+  @media print { #ptrInd { display:none !important; } }
   .wrap { max-width:1400px; margin:0 auto; padding:18px 22px 30px; }
   .hidden { display:none !important; }
   /* header */
@@ -688,7 +691,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.13.1 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.13.2 · Dashboard · Read-only — the working views never change Field Kit data</div>
   </div>
 </div>
 
@@ -2048,8 +2051,8 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.13.1 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.13.1 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · The materials tree — categories, per-type forms, and cable lists, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
+  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.13.2 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
+  else $('footLine').textContent = 'Field Kit Manage v1.13.2 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · The materials tree — categories, per-type forms, and cable lists, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') renderCustomers(); } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -2309,6 +2312,79 @@ function startTicks() {
   setInterval(function () { if ($('palView').classList.contains('hidden') && !$('appView').classList.contains('hidden')) loadAll().then(renderCurrent); }, 300000);
 }
 
+/* ================= pull-to-refresh (v1.13.2) =================
+   Ported from Field Kit's pull-to-refresh (its v5.7.1 change): the
+   same gesture, the same 70px threshold, the same damped pill that
+   follows the finger. A downward pull from the very top of a view
+   re-runs loadAll() and re-renders the CURRENT view in place - the
+   loadAll().then(renderCurrent) path the realtime and 5-minute
+   refreshes already use - never a page reload, never a view change.
+   Touch only: mouse drags never produce touch events. Blocked while
+   any dialog or popover is open, while the palette is up, while a
+   form field has focus, and when the pull starts inside an inner
+   scroller that is not at its own top - the gesture belongs to the
+   page scroll alone. */
+var ptrStartY = null, ptrStartX = null, ptrActive = false, ptrBusy = false, ptrInner = null;
+function ptrIndEl() {
+  var el = document.getElementById('ptrInd');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'ptrInd';
+    el.style.cssText = 'position:fixed;left:50%;top:10px;transform:translate(-50%,-70px);z-index:90;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:8px 16px;border-radius:999px;font-size:12.5px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.45);transition:transform .15s ease;pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:7px';
+    el.innerHTML = '<span id="ptrArrow" style="display:inline-block;transition:transform .15s ease">\u2193</span><span id="ptrTxt">Pull to refresh</span>';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function ptrShow(dy, ready) {
+  var el = ptrIndEl();
+  var a = document.getElementById('ptrArrow'), t = document.getElementById('ptrTxt');
+  if (ptrBusy) { t.textContent = 'Refreshing\u2026'; a.textContent = '\u21bb'; a.style.transform = ''; a.style.animation = 'ptrspin .8s linear infinite'; }
+  else { a.style.animation = ''; a.textContent = '\u2193'; a.style.transform = ready ? 'rotate(180deg)' : ''; t.textContent = ready ? 'Release to refresh' : 'Pull to refresh'; }
+  el.style.transform = 'translate(-50%,' + Math.min(56, Math.max(0, dy * 0.5)) + 'px)';
+}
+function ptrHide() { var el = document.getElementById('ptrInd'); if (el) el.style.transform = 'translate(-50%,-70px)'; }
+function ptrBlocked() {
+  if ($('appView').classList.contains('hidden')) return true;
+  if (document.querySelector('.palwrap:not(.hidden)')) return true;
+  if (document.querySelector('.jb-menu:not(.hidden)')) return true;
+  var mm = $('mobileMenu'); if (mm && mm.classList.contains('open')) return true;
+  var ae = document.activeElement;
+  if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT')) return true;
+  return false;
+}
+function ptrInnerScroller(t) {
+  var n = t;
+  while (n && n !== document.body) {
+    var s = window.getComputedStyle(n);
+    if ((s.overflowY === 'auto' || s.overflowY === 'scroll') && n.scrollHeight > n.clientHeight + 2) return n;
+    n = n.parentElement;
+  }
+  return null;
+}
+document.addEventListener('touchstart', function (e) {
+  if (e.touches.length !== 1 || window.scrollY > 0 || ptrBlocked()) { ptrActive = false; return; }
+  ptrInner = ptrInnerScroller(e.target);
+  if (ptrInner && ptrInner.scrollTop > 0) { ptrActive = false; return; }
+  ptrStartY = e.touches[0].clientY; ptrStartX = e.touches[0].clientX; ptrActive = true;
+}, { passive: true });
+document.addEventListener('touchmove', function (e) {
+  if (!ptrActive) return;
+  if (window.scrollY > 0 || (ptrInner && ptrInner.scrollTop > 0)) { ptrActive = false; ptrHide(); return; }
+  var dy = e.touches[0].clientY - ptrStartY, dx = Math.abs(e.touches[0].clientX - ptrStartX);
+  if (dy <= 0 || dx > dy) { if (dy <= -4) { ptrActive = false; ptrHide(); } return; }
+  if (e.cancelable) e.preventDefault();
+  ptrShow(dy, dy >= 70);
+}, { passive: false });
+document.addEventListener('touchend', function (e) {
+  if (!ptrActive) return; ptrActive = false;
+  var dy = e.changedTouches[0].clientY - ptrStartY;
+  if (dy >= 70 && !ptrBusy) {
+    ptrBusy = true; ptrShow(56, true);
+    var done = function () { ptrBusy = false; var a = document.getElementById('ptrArrow'); if (a) a.style.animation = ''; ptrHide(); };
+    try { loadAll().then(function () { renderCurrent(); done(); }, done); } catch (err) { done(); }
+  } else ptrHide();
+});
+document.addEventListener('touchcancel', function () { ptrActive = false; ptrHide(); });
 
 /* ================= company management view (v1.4) ================= */
 function demoLogoURI() {
