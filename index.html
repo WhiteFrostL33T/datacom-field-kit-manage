@@ -749,7 +749,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.16.2 · Dashboard · Read-only — the working views never change Field Kit data</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.16.3</div>
   </div>
 </div>
 
@@ -2119,8 +2119,7 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  if (view === 'company') $('footLine').textContent = 'Field Kit Manage v1.16.2 · Company · Company setup and accounts are managed here — time entries and timers are never changed';
-  else $('footLine').textContent = 'Field Kit Manage v1.16.2 · ' + (view === 'ts' ? 'Timesheets' : view === 'proj' ? 'Projects' : view === 'sched' ? 'Schedule' : view === 'cust' ? 'Customers' : view === 'mat' ? 'Materials' : 'Dashboard') + (view === 'proj' ? ' · Jobs are managed here — time entries and timers are never changed' : view === 'cust' ? ' · The customer directory — jobs link to it; time entries and timers are never changed' : view === 'mat' ? ' · The materials tree — categories and per-type forms, set here for the field — log entries are never changed' : ' · Read-only — the working views never change Field Kit data');
+  $('footLine').textContent = 'Field Kit Manage v1.16.3';
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') { if (!(NR.sid && cae && /^nr/.test(cae.id || ''))) renderCustomers(); } } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
