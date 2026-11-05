@@ -436,6 +436,7 @@
   .ppl-wrap { margin-left:auto; }
   .ppl-dots { width:40px; height:40px; }
   .jb-menu.up { top:auto; bottom:calc(100% + 8px); }
+  .jb-menu.fixed { position:fixed; right:auto; margin:0; }
   .jb-menu button:disabled { color:var(--muted-dark); cursor:default; }
   .jb-menu button:disabled:hover { background:transparent; }
   .jb-menu .jb-why { display:block; font-size:11px; font-weight:500; color:var(--muted); margin-top:1px; }
@@ -559,6 +560,10 @@
   .nr-rackbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px; }
   .nr-rackbar .who { font-weight:800; margin-right:2px; }
   .nr-rack { z-index:2; }
+  /* fitted maps (v1.16.4): when the scale drops under the 44px label
+     floor, rack blocks render at their exact footprint instead of the
+     floor pushing them past the room wall */
+  .nr-map.nr-exact .nr-rack { min-width:0; min-height:0; }
   .nr-item { position:absolute; z-index:1; border-radius:6px; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:2px 6px; min-width:30px; min-height:14px; }
   .nr-item:active { cursor:grabbing; }
   .nr-item .inm { font-weight:800; font-size:11.5px; line-height:1.15; white-space:nowrap; }
@@ -611,6 +616,29 @@
   .nr-banner { border:1px solid rgba(99,102,241,.45); background:var(--tint); border-radius:14px; padding:12px 14px; font-size:13px; margin-top:12px; }
   @media (max-width:1000px) { .nr-cols { grid-template-columns:1fr; } .nr-elev-cols { grid-template-columns:1fr; } }
   @media (max-width:700px) { .nr-pgrid { gap:4px; } .nr-port { font-size:10.5px; padding:5px 0 4px; border-radius:6px; } .nr-rack .rnm { font-size:11px; } .nr-rack .rsub { font-size:9px; } .nr-item .inm { font-size:10px; } .nr-ulab { width:44px; font-size:9.5px; } .nr-dev .dn { font-size:12px; } .nr-dev .dt { display:none; } }
+  /* ---------- viewport-fit work screens: .fitview (v1.16.4) ----------
+     A screen wrapped in .fitview sizes itself to the window on desktop:
+     the app chrome (topbar, nav, dateline, footer) and the screen's own
+     head stay put, the work area flexes to the height that is left, and
+     the page itself never scrolls — side rails scroll internally
+     instead. .wrap carries .fitwrap for exactly the screen's lifetime.
+     Generic on purpose: any view can adopt the pattern by wrapping its
+     screen in .fitview and toggling .fitwrap on .wrap while it shows.
+     Below the desktop breakpoint all of this is inert and the page
+     flows and scrolls exactly as it always has. */
+  @media screen and (min-width:1024px) {
+    .wrap.fitwrap { display:flex; flex-direction:column; height:100vh; height:100dvh; }
+    .wrap.fitwrap > * { flex:none; }
+    .wrap.fitwrap > #cuView { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+    .wrap.fitwrap > #cuView > .fitview { flex:1 1 auto; }
+    .fitview { min-height:0; display:flex; flex-direction:column; }
+    .fitview .nr-cols { flex:1 1 auto; min-height:0; align-items:stretch; }
+    .fitview .nr-mapcard { display:flex; flex-direction:column; min-height:0; height:100%; }
+    .nr-mapzone { flex:1 1 auto; min-height:0; display:flex; align-items:center; justify-content:center; }
+    .fitview .nr-rail { min-height:0; overflow-y:auto; }
+    .fitview .nr-elev-cols { flex:1 1 auto; min-height:0; align-items:stretch; }
+    .fitview .nr-rackcol { height:100%; min-height:0; overflow-y:auto; }
+  }
   /* mobile layout (v1.10) — the new chrome is display:none outside the
      phone breakpoint; everything else here lives in the 700px query */
   .menubtn { display:none; width:38px; height:38px; flex:none; align-items:center; justify-content:center; background:transparent; border:1px solid var(--line); border-radius:14px; color:var(--text); cursor:pointer; padding:0; font-family:inherit; font-size:19px; line-height:1; }
@@ -749,7 +777,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.16.3</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.16.4</div>
   </div>
 </div>
 
@@ -1915,7 +1943,7 @@ function jbGearHTML(p) {
     + '</span></span>';
 }
 function jbCloseMenu() { var m = $('jbMenu'); if (m) m.classList.add('hidden'); }
-function jbToggleMenu() { var m = $('jbMenu'); if (m) m.classList.toggle('hidden'); }
+function jbToggleMenu() { var m = $('jbMenu'); if (m) { m.classList.toggle('hidden'); jbPlaceMenu(m); } }
 function wirePJDetail(row) {
   var pid = row.p.id;
   var gb = $('jbGearBtn');
@@ -2116,10 +2144,11 @@ function showMain(view) {
   $('mmMat').classList.toggle('on', view === 'mat');
   $('mmCompany').classList.toggle('on', view === 'company');
   mmClose();
+  if (view !== 'cust') { var wel = $('cuView'); if (wel && wel.parentNode && wel.parentNode.classList) wel.parentNode.classList.remove('fitwrap'); }
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  $('footLine').textContent = 'Field Kit Manage v1.16.3';
+  $('footLine').textContent = 'Field Kit Manage v1.16.4';
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') { if (!(NR.sid && cae && /^nr/.test(cae.id || ''))) renderCustomers(); } } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -2603,9 +2632,8 @@ function coWireCompany() {
       pplCloseMenus();
       if (willOpen) {
         pplMenuUid = uid;
-        var r = b.getBoundingClientRect();
-        if (r.bottom + 260 > window.innerHeight) m.classList.add('up'); else m.classList.remove('up');
         m.classList.remove('hidden');
+        jbPlaceMenu(m);
         b.classList.add('on');
       }
     });
@@ -3119,7 +3147,7 @@ function cuCloseMenus() {
 }
 function wireCuMenus(el) {
   Array.prototype.forEach.call(el.querySelectorAll('[data-cumenu-btn]'), function (b) {
-    b.addEventListener('click', function (e) { e.stopPropagation(); var k = b.getAttribute('data-cumenu-btn'); CU.menu = CU.menu === k ? null : k; renderCustomers(); });
+    b.addEventListener('click', function (e) { e.stopPropagation(); var k = b.getAttribute('data-cumenu-btn'); CU.menu = CU.menu === k ? null : k; renderCustomers(); jbPlaceOpenMenus(); });
   });
   Array.prototype.forEach.call(el.querySelectorAll('[data-cuact]'), function (b) {
     b.addEventListener('click', function () {
@@ -3226,6 +3254,7 @@ function wireCuDetail(c) {
 /* ---------- root render ---------- */
 function renderCustomers() {
   var el = $('cuView');
+  var wrapEl = el.parentNode; if (wrapEl && wrapEl.classList) wrapEl.classList.remove('fitwrap');
   var head = '<div class="pagetitle-row"><div><div class="pagetitle">Customers</div><div class="pagesub">The customer directory — addresses, contacts, and site locations, linked to jobs.</div></div></div>';
   if (!DEMO && D.custError) {
     el.innerHTML = head + '<div class="costack"><div class="card"><h2>One-time setup needed</h2><p class="caption" style="margin-top:8px">The Customers area keeps the directory in two small tables of its own and links jobs to them. An admin runs the one-time setup file <b>supabase-customers.sql</b> in the Supabase Dashboard SQL Editor — it only adds those tables, two link columns on jobs, and their rules; Field Kit is untouched. Run it, then reopen this screen. Until then, everything else in Manage works exactly as before.</p></div></div>';
@@ -3233,7 +3262,13 @@ function renderCustomers() {
   }
   if (NR.sid) {
     var nsite = siteById(NR.sid);
-    if (nsite && !nsite.deleted_at && CU.cid && nsite.customer_id === CU.cid) { el.innerHTML = head + nrScreenHTML(nsite); wireNRScreen(nsite); return; }
+    if (nsite && !nsite.deleted_at && CU.cid && nsite.customer_id === CU.cid) {
+      var nrFit = !NR.swId; /* rooms + elevation fit the viewport (.fitview); the port grid keeps the flowing page */
+      el.innerHTML = head + (nrFit ? '<div class="fitview">' + nrScreenHTML(nsite) + '</div>' : nrScreenHTML(nsite));
+      if (wrapEl && wrapEl.classList) wrapEl.classList.toggle('fitwrap', nrFit);
+      wireNRScreen(nsite);
+      return;
+    }
     NR.sid = null;
   }
   if (CU.cid) {
@@ -3726,6 +3761,28 @@ function nrLive(promise, msg) { promise.then(function (r) { if (r.error) nrFail(
 function nrBlock(msg) { NR.msg = msg; NR.err = true; renderCustomers(); nrToast(msg); }
 function nrCloseRoomMenu() { var m = $('nrRoomMenu'); if (m) m.classList.add('hidden'); var g = $('nrRoomGear'); if (g) g.classList.remove('on'); }
 function nrScrollSelBar() { var bar = document.querySelector('#cuView .nr-rackbar'); if (bar && bar.scrollIntoView) bar.scrollIntoView({ block: 'nearest' }); }
+/* ---------- .fitview map sizing (v1.16.4) ----------
+   In the fit layout the map's box is whatever height the window leaves
+   over, so the map is sized in px to the largest room-aspect box that
+   fits its zone (whole room visible, both dimensions). Positions live
+   in feet and render in %, and both drag wirings convert pixels
+   through the map's live rect, so a resized map drags exactly as it
+   did at full width. Below the desktop breakpoint the px size is
+   cleared and the map returns to its width-driven aspect-ratio box. */
+function nrFitMap() {
+  var map = $('nrMap'); if (!map) return;
+  var zone = map.parentNode;
+  var wide = !!(window.matchMedia && window.matchMedia('(min-width:1024px)').matches);
+  if (!wide || !zone || zone.className !== 'nr-mapzone') { map.style.width = ''; map.style.height = ''; map.classList.remove('nr-exact'); return; }
+  var room = NR.roomId ? nrRoomById(NR.roomId) : null; if (!room) return;
+  var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
+  var zw = zone.clientWidth, zh = zone.clientHeight;
+  if (zw < 60 || zh < 60) return;
+  var s = Math.min(zw / w, zh / d);
+  map.classList.toggle('nr-exact', s < 44);
+  map.style.width = Math.floor(w * s) + 'px';
+  map.style.height = Math.floor(d * s) + 'px';
+}
 
 /* ================= the screen ================= */
 function nrScreenHTML(site) {
@@ -3775,7 +3832,7 @@ function nrRoomsHTML(site) {
   var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
   if (!DEMO && D.nrItemsError) h += '<div class="card" style="margin:0 0 14px"><h2>Room items need one more setup file</h2><p class="caption" style="margin-top:6px">Cable trays and wall panels on the map keep their own small table. An admin runs the one-time setup file <b>supabase-room-items.sql</b> in the Supabase Dashboard SQL Editor — it only adds that table and its rules; rooms, racks, devices and jobs are untouched. Until then, the map works exactly as before, just without trays and panels.</p></div>';
   if (!DEMO && !D.nrItemsError && D.roomItems.length && !nrLayerCol()) h += '<div class="card" style="margin:0 0 14px"><h2>Map layers need one more setup file</h2><p class="caption" style="margin-top:6px">Whether a tray, panel or door draws above or below the racks is kept on each item. An admin runs the one-time setup file <b>supabase-room-items-layer.sql</b> in the Supabase Dashboard SQL Editor — it only adds that one field; nothing else changes. Until then, trays ride above the racks while panels and doors sit below, and everything else works exactly as before.</p></div>';
-  h += '<div class="nr-cols"><div class="card" style="margin:0"><div style="display:flex;align-items:flex-start;gap:10px"><h2 style="flex:1;min-width:0">' + esc(room.name) + ' — top-down <span class="hint">Drag racks and room items to arrange them · positions save as you drop</span></h2>'
+  h += '<div class="nr-cols"><div class="card nr-mapcard" style="margin:0"><div style="display:flex;align-items:flex-start;gap:10px"><h2 style="flex:1;min-width:0">' + esc(room.name) + ' — top-down <span class="hint">Drag racks and room items to arrange them · positions save as you drop</span></h2>'
     + '<span class="jb-gearwrap"><button type="button" class="gearbtn" id="nrRoomGear" title="Room options" aria-label="Room options" aria-haspopup="true">' + JB_GEAR_SVG + '</button>'
     + '<span class="jb-menu hidden" id="nrRoomMenu" role="menu">'
     + '<button type="button" id="nrRoomEdit">Room size &amp; name</button>'
@@ -3783,7 +3840,7 @@ function nrRoomsHTML(site) {
     + '<button type="button" class="danger" id="nrRoomArchive">Archive room</button>'
     + '</span></span></div>';
   h += '<div class="nr-mapdim" style="margin-top:10px"><span>' + w + ' ft — ' + Math.round(w * 12) + ' in</span><span>' + d + ' ft deep</span></div>';
-  h += '<div class="nr-map" id="nrMap" style="aspect-ratio:' + w + '/' + d + ';background-size:' + (50 / w) + '% ' + (50 / d) + '%">';
+  h += '<div class="nr-mapzone"><div class="nr-map" id="nrMap" style="aspect-ratio:' + w + '/' + d + ';background-size:' + (50 / w) + '% ' + (50 / d) + '%">';
   items.forEach(function (it) {
     if (it.type === 'door') {
       var dst = nrDoorStyle(it, w, d);
@@ -3802,7 +3859,7 @@ function nrRoomsHTML(site) {
     h += '<div class="nr-rack' + (NR.selRack === r.id ? ' sel' : '') + (rot ? ' vert' : '') + '" data-nrrack="' + r.id + '" style="left:' + (Number(r.map_x) / w * 100) + '%;top:' + (Number(r.map_y) / d * 100) + '%;width:' + (fw / w * 100) + '%;height:' + (fd / d * 100) + '%">'
       + '<span class="rnm">' + esc(r.name) + '</span><span class="rsub">' + (r.height_u || 42) + 'U · ' + nrDevsOf(r.id).length + ' devices</span></div>';
   });
-  h += '</div>';
+  h += '</div></div>';
   var sel = NR.selRack ? nrRackById(NR.selRack) : null;
   var selIt = NR.selItem ? nrItemById(NR.selItem) : null;
   if (selIt) {
@@ -3822,7 +3879,7 @@ function nrRoomsHTML(site) {
     h += '<p class="hint" style="margin:12px 2px 0">Select a rack or item to edit it.</p>';
   }
   h += '</div>';
-  h += '<div><div class="card" style="margin:0"><h2>Racks in ' + esc(room.name) + '</h2>';
+  h += '<div class="nr-rail"><div class="card" style="margin:0"><h2>Racks in ' + esc(room.name) + '</h2>';
   if (racks.length) racks.forEach(function (r) {
     var devs = nrDevsOf(r.id);
     var kinds = {};
@@ -3881,7 +3938,7 @@ function nrElevHTML(site, room, rack) {
         + '<div class="nr-empty" data-nrempty="' + bot + ':' + top + '">Empty — ' + n + 'U free</div></div>';
     }
   }
-  h += '<div class="nr-elev-cols"><div class="nr-rackcol">' + col + '</div><div>';
+  h += '<div class="nr-elev-cols"><div class="nr-rackcol">' + col + '</div><div class="nr-rail">';
   var sel = NR.devSel ? nrDevById(NR.devSel) : null;
   if (sel && sel.rack_id === rack.id) {
     h += '<div class="card nr-strip" style="margin:0"><h2>Selected device</h2>'
@@ -3918,7 +3975,13 @@ function nrPortsHTML(site, sw) {
   var h = nrHeadHTML(site, sw.name, (cust ? cust.name : '') + ' · ' + site.label + (place ? ' · ' + place.room.name + ' · ' + place.rack.name + ' · U' + place.device.u_start : ' · not placed in a rack yet'), backLabel);
   h += '<div class="nr-banner">Site switch — this port map is shared by every job at ' + esc(site.label) + '.</div>';
   h += '<div class="card" style="margin-top:14px"><h2>Ports · ' + used + ' of ' + n + ' in use <span class="hint">Tap a port to label it</span></h2>';
-  h += '<div class="nr-tabs" style="margin-top:10px">' + [8, 16, 24, 48].map(function (c) { return '<button class="pj-chip' + (n === c ? ' on' : '') + '" data-nrpc="' + c + '">' + c + '-port</button>'; }).join('') + '</div>';
+  if (place) {
+    /* v1.16.4: once a switch sits in an elevation, its own details are
+       edited there — this screen only labels its ports. */
+    h += '<p class="caption" style="margin-top:10px"><b>' + n + '-port</b> switch &middot; Switch details are edited in Elevation &mdash; this screen only labels its ports.</p>';
+  } else {
+    h += '<div class="nr-tabs" style="margin-top:10px">' + [8, 16, 24, 48].map(function (c) { return '<button class="pj-chip' + (n === c ? ' on' : '') + '" data-nrpc="' + c + '">' + c + '-port</button>'; }).join('') + '</div>';
+  }
   var order = [];
   for (var p = 1; p <= n; p += 2) order.push(p);
   for (var q = 2; q <= n; q += 2) order.push(q);
@@ -3966,13 +4029,14 @@ function wireNRScreen(site) {
     var m = $('nrRoomMenu'); if (!m) return;
     var wasOpen = !m.classList.contains('hidden');
     closeAllPopovers();
-    if (!wasOpen) { m.classList.remove('hidden'); rGear.classList.add('on'); }
+    if (!wasOpen) { m.classList.remove('hidden'); rGear.classList.add('on'); jbPlaceMenu(m); }
   });
   var rmEdit = $('nrRoomEdit'); if (rmEdit) rmEdit.addEventListener('click', function () { nrCloseRoomMenu(); var r = nrRoomById(NR.roomId); if (r) nrOpenRoomForm(r); });
   var rmArch = $('nrRoomArchive'); if (rmArch) rmArch.addEventListener('click', function () { nrCloseRoomMenu(); var r = nrRoomById(NR.roomId); if (r) nrOpenConfirm({ mode: 'room-archive', id: r.id, name: r.name }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-nrplace]'), function (b) { b.addEventListener('click', function () { nrOpenPlace(b.getAttribute('data-nrplace')); }); });
   wireNRMapDrag(el);
   wireNRItemDrag(el);
+  nrFitMap();
 }
 
 function nrOpenElevation(rackId) {
@@ -4827,6 +4891,44 @@ function maCloseMenus() {
   Array.prototype.forEach.call(document.querySelectorAll('[data-mamenu-btn]'), function (b) { b.classList.remove('on'); });
 }
 
+/* ---------- popover placement (v1.16.4) ----------
+   .jb-menu popovers are absolutely positioned inside their row, so any
+   ancestor with overflow hidden/auto clips a menu that opens past the
+   ancestor's bottom edge — in Materials the .mt-shell clips the last
+   rows' menus mid-item, unreadable (the field screenshot that
+   reported it). On open,
+   every popover is switched to fixed positioning computed from its
+   trigger's rect: a fixed box escapes ancestor clipping entirely,
+   flips above the trigger when the viewport bottom is near, and
+   clamps horizontally to the window. Scroll and resize re-place
+   whatever is open; a trigger scrolled out of the viewport closes
+   the popovers rather than stranding them. */
+function jbPlaceMenu(m) {
+  if (!m || m.classList.contains('hidden')) return;
+  var wrap = m.parentNode;
+  var btn = wrap ? wrap.querySelector('button') : null;
+  if (!btn) return;
+  var r = btn.getBoundingClientRect();
+  if (r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth) { closeAllPopovers(); return; }
+  m.classList.add('fixed');
+  m.style.visibility = 'hidden';
+  m.style.left = '0px'; m.style.top = '0px'; m.style.maxHeight = ''; m.style.overflowY = '';
+  var mw = m.offsetWidth, mh = m.offsetHeight;
+  var vw = window.innerWidth, vh = window.innerHeight, gap = 8, edge = 8;
+  var left = Math.min(Math.max(r.right - mw, edge), Math.max(edge, vw - mw - edge));
+  var top = r.bottom + gap;
+  if (top + mh > vh - edge) {
+    var up = r.top - gap - mh;
+    if (up >= edge || r.top > vh - r.bottom) top = Math.max(edge, up);
+    if (top + mh > vh - edge) { m.style.maxHeight = Math.max(80, vh - top - edge) + 'px'; m.style.overflowY = 'auto'; }
+  }
+  m.style.left = left + 'px'; m.style.top = top + 'px';
+  m.style.visibility = '';
+}
+function jbPlaceOpenMenus() {
+  Array.prototype.forEach.call(document.querySelectorAll('.jb-menu:not(.hidden)'), jbPlaceMenu);
+}
+
 /* ---------- shared popover hygiene ----------
    Every .jb-menu popover in the app (job gear, people, customers,
    materials) closes before any dialog opens. The menus ride at
@@ -4840,7 +4942,7 @@ function closeAllPopovers() {
 }
 function wireMaMenus(el) {
   Array.prototype.forEach.call(el.querySelectorAll('[data-mamenu-btn]'), function (b) {
-    b.addEventListener('click', function (e) { e.stopPropagation(); var k = b.getAttribute('data-mamenu-btn'); MA.menu = MA.menu === k ? null : k; renderMaterials(); });
+    b.addEventListener('click', function (e) { e.stopPropagation(); var k = b.getAttribute('data-mamenu-btn'); MA.menu = MA.menu === k ? null : k; renderMaterials(); jbPlaceOpenMenus(); });
   });
   Array.prototype.forEach.call(el.querySelectorAll('[data-maact]'), function (b) {
     b.addEventListener('click', function () {
@@ -5647,6 +5749,9 @@ function init() {
     if (e.target && e.target.closest && e.target.closest('[data-pwrap]')) return;
     pplCloseMenus();
   });
+  window.addEventListener('resize', function () { jbPlaceOpenMenus(); nrFitMap(); });
+  window.addEventListener('scroll', function () { jbPlaceOpenMenus(); }, true);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { nrFitMap(); });
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); if (!$('appView').classList.contains('hidden')) openPal(); }
     if (e.key === 'Escape') { closePal(); mmClose(); closeInstallHelp(); jbCloseForm(); jbCloseMenu(); pplCloseMenus(); jbCloseCrew(); jbCloseDelete(); muCloseForm(); muCloseTemp(); muCloseConfirm(); cuCloseForm(); cuCloseMenus(); maCloseForm(); maCloseConfirm(); maCloseMenus(); }
