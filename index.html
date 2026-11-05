@@ -777,7 +777,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.16.4</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.16.5</div>
   </div>
 </div>
 
@@ -2148,7 +2148,7 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  $('footLine').textContent = 'Field Kit Manage v1.16.4';
+  $('footLine').textContent = 'Field Kit Manage v1.16.5';
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') { if (!(NR.sid && cae && /^nr/.test(cae.id || ''))) renderCustomers(); } } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -3902,7 +3902,7 @@ function nrRoomsHTML(site) {
   var unplaced = nrUnplacedSwitches(site.id);
   if (unplaced.length) {
     h += '<div class="card" style="margin-top:14px"><h2>Not placed in a rack yet <span class="hint">Site switches with no rack home</span></h2><div class="nr-chiprow">'
-      + unplaced.map(function (sw) { return '<span class="nr-uchip">' + esc(sw.name) + ' · ' + nrPortCount(sw) + '-port <button class="btn small" data-nrplace="' + sw.id + '">Place</button></span>'; }).join('') + '</div></div>';
+      + unplaced.map(function (sw) { return '<span class="nr-uchip">' + esc(sw.name) + ' · ' + nrPortCount(sw) + '-port <button class="btn small" data-nrplace="' + sw.id + '">Place</button><button class="btn small danger" data-nrdelswitch="' + sw.id + '">Delete</button></span>'; }).join('') + '</div></div>';
   }
   h += '</div></div>';
   var arch = nrArchRoomsOf(site.id);
@@ -4034,6 +4034,7 @@ function wireNRScreen(site) {
   var rmEdit = $('nrRoomEdit'); if (rmEdit) rmEdit.addEventListener('click', function () { nrCloseRoomMenu(); var r = nrRoomById(NR.roomId); if (r) nrOpenRoomForm(r); });
   var rmArch = $('nrRoomArchive'); if (rmArch) rmArch.addEventListener('click', function () { nrCloseRoomMenu(); var r = nrRoomById(NR.roomId); if (r) nrOpenConfirm({ mode: 'room-archive', id: r.id, name: r.name }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-nrplace]'), function (b) { b.addEventListener('click', function () { nrOpenPlace(b.getAttribute('data-nrplace')); }); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrdelswitch]'), function (b) { b.addEventListener('click', function () { var sw = nrSwitchById(b.getAttribute('data-nrdelswitch')); if (sw) nrOpenConfirm({ mode: 'switch-delete', id: sw.id, name: sw.name, portN: nrPortCount(sw), count: D.portEntries.filter(function (e) { return e.switch_id === sw.id; }).length }); }); });
   wireNRMapDrag(el);
   wireNRItemDrag(el);
   nrFitMap();
@@ -4577,6 +4578,34 @@ function nrRemoveDev(id) {
   nrLive(sb.from('rack_devices').update({ deleted_at: ts, updated_at: ts }).eq('id', id).select('id'), wasSwitch ? 'Device removed. Its switch record stays at the site, unplaced.' : 'Device removed.');
 }
 
+/* ---------- delete an unplaced site switch (v1.16.5) ----------
+   Mirrors Field Kit's delPortSwitch: a HARD delete — the port_switches
+   row and every port_entries row it owns go together, so the switch
+   vanishes from both apps at once and nothing dangles. Only unplaced
+   switches reach this (the chips render only for them); a placed
+   switch's removal path stays the elevation device remove, which
+   returns it here first. */
+function nrDeleteSwitch(id) {
+  var sw = nrSwitchById(id); if (!sw) { nrCloseConfirm(); return; }
+  /* drop focus off the confirm's buttons now: the live completion path
+     re-renders through renderCurrent, whose NR guard skips the render
+     while focus sits on an nr-* element — the closing dialog's buttons
+     included — so a fast reload could otherwise leave the stale chips
+     on screen after the records are already gone. */
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  var msg = sw.name + ' deleted.';
+  if (DEMO) {
+    D.siteSwitches = D.siteSwitches.filter(function (s) { return s.id !== id; });
+    D.portEntries = D.portEntries.filter(function (e) { return e.switch_id !== id; });
+    nrDone(msg);
+    return;
+  }
+  sb.from('port_entries').delete().eq('switch_id', id).then(function (r) {
+    if (r.error) { nrFail(r.error); return; }
+    nrLive(sb.from('port_switches').delete().eq('id', id), msg);
+  });
+}
+
 /* ---------- port edit ---------- */
 function nrOpenPortForm(sw, port) {
   closeAllPopovers();
@@ -4663,15 +4692,17 @@ function nrOpenConfirm(c) {
     'room-archive': 'Archive the room <b>' + esc(c.name) + '</b>? Its racks and devices are kept with it and come back if the room is restored. Jobs and switches are not touched.',
     'rack-archive': 'Archive the rack <b>' + esc(c.name) + '</b>? Its devices are kept with it. Any switches in it stay at the site as unplaced switches.',
     'dev-remove': 'Remove <b>' + esc(c.name) + '</b> from the rack? It leaves the elevation; the record is archived, not erased.',
-    'item-archive': 'Archive <b>' + esc(c.name) + '</b>? It leaves the room map; the record is kept with the room. Racks and other items are not touched.'
+    'item-archive': 'Archive <b>' + esc(c.name) + '</b>? It leaves the room map; the record is kept with the room. Racks and other items are not touched.',
+    'switch-delete': 'Delete <b>' + esc(c.name) + ' &middot; ' + c.portN + '-port</b>' + (c.count ? ' and its <b>' + c.count + ' port label' + (c.count === 1 ? '' : 's') + '</b>' : '') + '? ' + (c.count ? 'Its port labels are deleted with it. ' : 'It has no port labels. ') + 'The switch record is removed for the whole site &mdash; this cannot be undone.'
   }[c.mode] || '';
-  var h = '<h2>' + (c.mode === 'dev-remove' ? 'Remove device' : 'Archive') + '</h2><p class="caption" style="margin-top:6px">' + body + '</p>';
-  h += '<div class="cardfoot"><button class="btn ghost" id="nrConfCancel">Cancel</button><button class="btn danger" id="nrConfGo">' + (c.mode === 'dev-remove' ? 'Remove' : 'Archive') + '</button></div>';
+  var h = '<h2>' + (c.mode === 'dev-remove' ? 'Remove device' : c.mode === 'switch-delete' ? 'Delete switch' : 'Archive') + '</h2><p class="caption" style="margin-top:6px">' + body + '</p>';
+  h += '<div class="cardfoot"><button class="btn ghost" id="nrConfCancel">Cancel</button><button class="btn danger" id="nrConfGo">' + (c.mode === 'dev-remove' ? 'Remove' : c.mode === 'switch-delete' ? 'Delete' : 'Archive') + '</button></div>';
   $('nrConfirmCard').innerHTML = h;
   dlgX('nrConfirmCard', nrCloseConfirm);
   $('nrConfirmWrap').classList.remove('hidden');
   $('nrConfCancel').addEventListener('click', nrCloseConfirm);
   $('nrConfGo').addEventListener('click', nrConfirmGo);
+  if (c.mode === 'switch-delete') setTimeout(function () { var cb = $('nrConfCancel'); if (cb) cb.focus(); }, 30);
 }
 function nrCloseConfirm() { var w = $('nrConfirmWrap'); if (w) w.classList.add('hidden'); NR.confirm = null; }
 function nrConfirmGo() {
@@ -4680,6 +4711,7 @@ function nrConfirmGo() {
   else if (c.mode === 'rack-archive') nrSetRackArchived(c.id);
   else if (c.mode === 'dev-remove') nrRemoveDev(c.id);
   else if (c.mode === 'item-archive') nrSetItemArchived(c.id);
+  else if (c.mode === 'switch-delete') nrDeleteSwitch(c.id);
 }
 
 /* ---------- demo scene (demo mode only): a sample MDF + IDF for the open site ---------- */
