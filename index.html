@@ -545,38 +545,118 @@
     .setrow .datein { width:100%; }
   }
   /* network rooms (v1.15) */
+/* =====================================================================
+   Shared Core — room renderer CSS (Phase 1)
+   Namespace: every class is prefixed `sc-` so it cannot collide with
+   either host app. In particular there is NO bare `.tray` class here:
+   Manage's Schedule `.tray { margin-top:14px }` rule silently shifted
+   every cable tray on its map by 14px (Phase 0 quirk (a)); the tray
+   modifier here is `.sc-tray`, always paired with `.sc-item`.
+
+   Canonical geometry policy (see CORE.md):
+   - NO size floors anywhere. No min-width / min-height on map items or
+     racks, at any scale, in any mode. Elements render at their exact
+     footprint (percentages of the map), so there is no equivalent of
+     Manage's `.nr-exact` fitted-map exemption — it is never needed.
+   - Item/rack padding lives on the INNER label wrapper, never on the
+     positioned element itself, so padding can never become a de-facto
+     floor the way Field Kit's `.net-item` padding did at phone scale.
+   - Elevation spacing is Manage's model (the editor is canonical):
+     blocks are block-layout with margin-bottom:2px inside a column
+     padded 10px. Field Kit's flex gap:3px / padding:8px model is NOT
+     used; FK columns shrink ~1px per block (~12px on a 42U column)
+     when it adopts the core.
+
+   Colours resolve through the host app's own CSS variables first
+   (both apps share the dark indigo palette), with literal fallbacks.
+   ===================================================================== */
+
+/* ---------- top-down room map ---------- */
+.sc-map { position:relative; border:1.5px solid var(--line-hover, rgba(255,255,255,.16)); border-radius:14px; background-color:var(--panel2, #161e31); background-image:linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); overflow:hidden; box-sizing:border-box; }
+.sc-map * { box-sizing:border-box; }
+
+.sc-rack { position:absolute; z-index:2; border:1.5px solid var(--line-hover, rgba(255,255,255,.16)); background:var(--panel2, #161e31); border-radius:8px; padding:0; overflow:hidden; color:var(--text, #f8fafc); font:inherit; text-align:left; }
+.sc-rack .sc-rin { display:flex; flex-direction:column; justify-content:center; gap:1px; width:100%; height:100%; padding:5px 8px; overflow:hidden; }
+.sc-rack .sc-rnm { font-weight:800; font-size:12.5px; line-height:1.15; white-space:nowrap; display:block; }
+.sc-rack .sc-rsub { font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--accent-200, #a5b4fc); white-space:nowrap; display:block; }
+.sc-rack.sc-vert .sc-rin { flex-direction:row; align-items:center; justify-content:center; gap:5px; }
+.sc-rack.sc-vert .sc-rnm, .sc-rack.sc-vert .sc-rsub { writing-mode:vertical-rl; }
+
+.sc-item { position:absolute; z-index:1; border-radius:6px; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:0; margin:0; min-width:0; min-height:0; }
+.sc-item.sc-above { z-index:3; }
+.sc-item .sc-inm { font-weight:800; font-size:11.5px; line-height:1.15; white-space:nowrap; padding:2px 6px; }
+.sc-item.sc-tray { border:1.5px solid var(--amber, #f59e0b); color:var(--amber-t, #fcd34d); background-color:rgba(245,158,11,.10); background-image:repeating-linear-gradient(45deg, rgba(245,158,11,.22) 0 7px, transparent 7px 14px), linear-gradient(180deg, transparent calc(50% - 1px), rgba(245,158,11,.75) calc(50% - 1px), rgba(245,158,11,.75) calc(50% + 1px), transparent calc(50% + 1px)); }
+.sc-item.sc-tray.sc-vert { background-image:repeating-linear-gradient(45deg, rgba(245,158,11,.22) 0 7px, transparent 7px 14px), linear-gradient(90deg, transparent calc(50% - 1px), rgba(245,158,11,.75) calc(50% - 1px), rgba(245,158,11,.75) calc(50% + 1px), transparent calc(50% + 1px)); }
+.sc-item.sc-panel { border:1.5px solid #64748b; background:#334155; color:#e2e8f0; border-radius:4px; }
+.sc-item.sc-vert .sc-inm { writing-mode:vertical-rl; }
+/* Doors: the 0.4 ft wall strip itself is transparent; the gap, leaf and
+   swing arc are the SVG the renderer inlines. Overflow must stay
+   visible or the swing arc (drawn outside the strip) is clipped. */
+.sc-item.sc-door { background:transparent; border:none; border-radius:0; overflow:visible; padding:0; }
+.sc-item .sc-doorlab { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:10px; font-weight:800; color:#cbd5e1; text-shadow:0 1px 3px rgba(0,0,0,.85); pointer-events:none; white-space:nowrap; }
+
+/* ---------- editable-mode affordances ---------- */
+.sc-map.sc-edit .sc-rack, .sc-map.sc-edit .sc-item { cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+.sc-map.sc-edit .sc-rack:active, .sc-map.sc-edit .sc-item:active { cursor:grabbing; }
+.sc-map.sc-edit .sc-rack { cursor:grab; }
+.sc-sel { border-color:var(--accent, #6366f1) !important; box-shadow:0 0 0 3px rgba(99,102,241,.28), 0 8px 22px rgba(0,0,0,.4); }
+.sc-item.sc-drag { z-index:8; }
+.sc-rsz { position:absolute; right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize; touch-action:none; z-index:9; background:linear-gradient(135deg, transparent 50%, rgba(99,102,241,.85) 50%); border-radius:0 0 6px 0; }
+
+/* ---------- read-only mode (Field Kit semantics) ----------
+   Items never swallow a tap meant for a rack underneath them: every
+   item is pointer-events:none, exactly as FK's `.net-item` is today.
+   Racks stay activatable (they are <button>s in this mode). */
+.sc-map.sc-ro .sc-item { pointer-events:none; }
+.sc-map.sc-ro .sc-rack { cursor:pointer; }
+.sc-map.sc-ro button.sc-rack { appearance:none; -webkit-appearance:none; }
+
+/* ---------- legend (opt-in; FK shows one today, Manage does not) ---------- */
+.sc-legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:.75rem; color:var(--muted, #94a3b8); }
+.sc-lg { display:inline-flex; align-items:center; gap:6px; }
+.sc-sw { width:16px; height:10px; border-radius:3px; flex:none; display:inline-block; }
+.sc-sw.sc-sw-rack { border:1px solid rgba(99,102,241,.55); background:rgba(99,102,241,.22); }
+.sc-sw.sc-sw-tray { border:1px solid rgba(245,158,11,.6); background:repeating-linear-gradient(45deg, rgba(245,158,11,.4) 0 3px, rgba(245,158,11,.12) 3px 6px); }
+.sc-sw.sc-sw-panel { border:1px solid rgba(148,163,184,.6); background:rgba(148,163,184,.28); }
+.sc-sw.sc-sw-door { border:1px solid rgba(226,232,240,.5); background:radial-gradient(circle at 0 100%, transparent 52%, rgba(226,232,240,.55) 53%, rgba(226,232,240,.55) 63%, transparent 64%); }
+
+/* ---------- rack elevation ---------- */
+.sc-rackcol { border:1px solid var(--line-hover, rgba(255,255,255,.16)); border-radius:16px; background:var(--panel, #0f1523); padding:10px; box-sizing:border-box; }
+.sc-rackcol * { box-sizing:border-box; }
+.sc-block { display:flex; align-items:stretch; gap:8px; margin-bottom:2px; }
+.sc-block:last-child { margin-bottom:2px; }
+.sc-ulab { flex:none; width:52px; display:flex; align-items:center; justify-content:flex-end; font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--muted-dark, #64748b); padding-right:2px; }
+.sc-dev { flex:1; min-width:0; border:1px solid var(--line, rgba(255,255,255,.08)); border-radius:8px; background:var(--panel2, #161e31); color:var(--text, #f8fafc); padding:0 10px; display:flex; align-items:center; gap:8px; overflow:hidden; }
+.sc-dev .sc-dn { font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sc-dev .sc-dt { color:var(--muted, #94a3b8); font-size:12px; white-space:nowrap; }
+.sc-dev.sc-t-switch { border-color:rgba(99,102,241,.55); background:linear-gradient(180deg, rgba(99,102,241,.22), rgba(99,102,241,.10)); }
+.sc-dev.sc-t-ups { border-color:rgba(16,185,129,.45); }
+.sc-dev.sc-t-pdu { border-color:rgba(245,158,11,.5); }
+.sc-dev.sc-t-blank, .sc-dev.sc-t-cable_manager { border-style:dashed; color:var(--muted, #94a3b8); background:transparent; }
+.sc-elev.sc-edit .sc-dev { cursor:pointer; }
+.sc-elev.sc-edit .sc-dev:hover { border-color:var(--line-hover, rgba(255,255,255,.16)); }
+.sc-dev.sc-seldev { border-color:var(--accent, #6366f1); box-shadow:0 0 0 3px rgba(99,102,241,.22); }
+.sc-ticks { margin-left:auto; flex:none; width:34%; max-width:190px; height:12px; border-radius:3px; background-image:repeating-linear-gradient(90deg, rgba(165,180,252,.55) 0 5px, transparent 5px 10px); }
+.sc-portsbtn { margin-left:auto; flex:none; border:1px solid rgba(165,180,252,.5); background:rgba(99,102,241,.25); color:#e0e7ff; border-radius:999px; padding:4px 11px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; }
+.sc-portsbtn:hover { background:rgba(99,102,241,.4); }
+.sc-empty { flex:1; border:1px dashed rgba(255,255,255,.09); border-radius:8px; background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.018) 0 10px, transparent 10px 20px); display:flex; align-items:center; padding:0 10px; color:var(--muted-dark, #64748b); font-size:12px; }
+.sc-elev.sc-edit .sc-empty { cursor:pointer; }
+.sc-elev.sc-edit .sc-empty:hover { border-color:var(--line-hover, rgba(255,255,255,.16)); color:var(--muted, #94a3b8); }
+
+@media (max-width:700px) {
+  .sc-rack .sc-rnm { font-size:11px; }
+  .sc-rack .sc-rsub { font-size:9px; }
+  .sc-item .sc-inm { font-size:10px; }
+  .sc-ulab { width:44px; font-size:9.5px; }
+  .sc-dev .sc-dn { font-size:12px; }
+  .sc-dev .sc-dt { display:none; }
+}
   .nr-toast { position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:95; background:var(--panel2); border:1px solid var(--line-hover); color:var(--text); padding:10px 18px; border-radius:999px; font-size:13px; font-weight:700; box-shadow:0 12px 32px rgba(0,0,0,.5); max-width:92vw; text-align:center; }
   .nr-tabs { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:2px 2px 12px; }
   .nr-cols { display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:14px; align-items:start; }
   .nr-mapdim { display:flex; justify-content:space-between; color:var(--muted-dark); font-size:11.5px; font-family:'JetBrains Mono',monospace; margin:0 2px 6px; }
-  .nr-map { position:relative; border:1.5px solid var(--line-hover); border-radius:14px; background-color:rgba(255,255,255,.012); background-image:linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); overflow:hidden; }
-  .nr-rack { position:absolute; border:1.5px solid var(--line-hover); background:var(--panel2); border-radius:8px; padding:5px 8px; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; overflow:hidden; display:flex; flex-direction:column; justify-content:center; gap:1px; min-width:44px; min-height:30px; }
-  .nr-rack:active { cursor:grabbing; }
-  .nr-rack.sel { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.25), 0 8px 22px rgba(0,0,0,.4); background:#1b2440; }
-  .nr-rack .rnm { font-weight:800; font-size:12.5px; line-height:1.15; white-space:nowrap; }
-  .nr-rack .rsub { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--accent-200); white-space:nowrap; }
-  .nr-rack.vert { flex-direction:row; align-items:center; justify-content:center; gap:5px; }
-  .nr-rack.vert .rnm, .nr-rack.vert .rsub { writing-mode:vertical-rl; white-space:nowrap; }
   .nr-rackbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px; }
   .nr-rackbar .who { font-weight:800; margin-right:2px; }
-  .nr-rack { z-index:2; }
-  /* fitted maps (v1.16.4): when the scale drops under the 44px label
-     floor, rack blocks render at their exact footprint instead of the
-     floor pushing them past the room wall */
-  .nr-map.nr-exact .nr-rack { min-width:0; min-height:0; }
-  .nr-item { position:absolute; z-index:1; border-radius:6px; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:2px 6px; min-width:30px; min-height:14px; }
-  .nr-item:active { cursor:grabbing; }
-  .nr-item .inm { font-weight:800; font-size:11.5px; line-height:1.15; white-space:nowrap; }
-  .nr-item.tray { border:1.5px solid var(--amber); color:var(--amber-t); background-color:rgba(245,158,11,.10); background-image:repeating-linear-gradient(45deg, rgba(245,158,11,.22) 0 7px, transparent 7px 14px), linear-gradient(180deg, transparent calc(50% - 1px), rgba(245,158,11,.75) calc(50% - 1px), rgba(245,158,11,.75) calc(50% + 1px), transparent calc(50% + 1px)); }
-  .nr-item.tray.vert { background-image:repeating-linear-gradient(45deg, rgba(245,158,11,.22) 0 7px, transparent 7px 14px), linear-gradient(90deg, transparent calc(50% - 1px), rgba(245,158,11,.75) calc(50% - 1px), rgba(245,158,11,.75) calc(50% + 1px), transparent calc(50% + 1px)); }
-  .nr-item.panel { border:1.5px solid #64748b; background:#334155; color:#e2e8f0; border-radius:4px; }
-  .nr-item.vert .inm { writing-mode:vertical-rl; }
-  .nr-item.sel { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.3), 0 8px 22px rgba(0,0,0,.4); }
-  .nr-item.above { z-index:3; }
-  .nr-item.drag { z-index:8; }
-  .nr-item.door { background:transparent; border:none; border-radius:0; overflow:visible; min-width:0; min-height:0; padding:0; }
-  .nr-item.door.sel { box-shadow:0 0 0 2px rgba(99,102,241,.6); border-radius:6px; }
-  .nr-item .doorlab { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:10px; font-weight:800; color:#cbd5e1; text-shadow:0 1px 3px rgba(0,0,0,.85); pointer-events:none; }
   .nr-rrow { border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-top:8px; cursor:pointer; background:var(--panel); }
   .nr-rrow:hover { border-color:var(--line-hover); }
   .nr-rrow.on { border-color:var(--accent); background:var(--tint); }
@@ -585,23 +665,6 @@
   .nr-chiprow { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
   .nr-uchip { display:inline-flex; gap:8px; align-items:center; border:1px solid var(--amber); color:var(--amber-t); border-radius:999px; padding:6px 8px 6px 13px; font-size:12.5px; font-weight:700; background:rgba(245,158,11,.08); }
   .nr-elev-cols { display:grid; grid-template-columns:minmax(330px,520px) minmax(0,1fr); gap:14px; align-items:start; }
-  .nr-rackcol { border:1px solid var(--line-hover); border-radius:16px; background:var(--panel); padding:10px; }
-  .nr-block { display:flex; align-items:stretch; gap:8px; margin-bottom:2px; }
-  .nr-ulab { flex:none; width:52px; display:flex; align-items:center; justify-content:flex-end; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted-dark); padding-right:2px; }
-  .nr-dev { flex:1; min-width:0; border:1px solid var(--line); border-radius:8px; background:var(--panel2); padding:0 10px; display:flex; align-items:center; gap:8px; cursor:pointer; overflow:hidden; }
-  .nr-dev:hover { border-color:var(--line-hover); }
-  .nr-dev.sel { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.22); }
-  .nr-dev .dn { font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .nr-dev .dt { color:var(--muted); font-size:12px; white-space:nowrap; }
-  .nr-dev.t-switch { border-color:rgba(99,102,241,.55); background:linear-gradient(180deg, rgba(99,102,241,.22), rgba(99,102,241,.10)); }
-  .nr-dev.t-ups { border-color:rgba(16,185,129,.45); }
-  .nr-dev.t-pdu { border-color:rgba(245,158,11,.5); }
-  .nr-dev.t-blank, .nr-dev.t-cable_manager { border-style:dashed; color:var(--muted); background:transparent; }
-  .nr-ticks { margin-left:auto; flex:none; width:34%; max-width:190px; height:12px; border-radius:3px; background-image:repeating-linear-gradient(90deg, rgba(165,180,252,.55) 0 5px, transparent 5px 10px); }
-  .nr-portsbtn { margin-left:auto; flex:none; border:1px solid rgba(165,180,252,.5); background:rgba(99,102,241,.25); color:#e0e7ff; border-radius:999px; padding:4px 11px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; }
-  .nr-portsbtn:hover { background:rgba(99,102,241,.4); }
-  .nr-empty { flex:1; border:1px dashed rgba(255,255,255,.09); border-radius:8px; background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.018) 0 10px, transparent 10px 20px); display:flex; align-items:center; padding:0 10px; color:var(--muted-dark); font-size:12px; cursor:pointer; }
-  .nr-empty:hover { border-color:var(--line-hover); color:var(--muted); }
   .nr-strip .nr-pal { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
   .nr-pal button { border:1px solid var(--line); background:var(--chip); color:var(--text2); border-radius:999px; padding:7px 13px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
   .nr-pal button:hover { background:var(--chip-hover); }
@@ -626,7 +689,7 @@
   .nr-ctx { color:var(--muted); font-size:12.5px; font-weight:600; }
   .nr-titlebar .sp { flex:1 1 auto; }
   @media (max-width:1000px) { .nr-cols { grid-template-columns:1fr; } .nr-elev-cols { grid-template-columns:1fr; } }
-  @media (max-width:700px) { .nr-pgrid { gap:4px; } .nr-port { font-size:10.5px; padding:5px 0 4px; border-radius:6px; } .nr-rack .rnm { font-size:11px; } .nr-rack .rsub { font-size:9px; } .nr-item .inm { font-size:10px; } .nr-ulab { width:44px; font-size:9.5px; } .nr-dev .dn { font-size:12px; } .nr-dev .dt { display:none; } }
+  @media (max-width:700px) { .nr-pgrid { gap:4px; } .nr-port { font-size:10.5px; padding:5px 0 4px; border-radius:6px; } }
   /* ---------- viewport-fit work screens: .fitview (v1.16.4) ----------
      A screen wrapped in .fitview sizes itself to the window on desktop:
      the app chrome (topbar, nav, dateline, footer) and the screen's own
@@ -648,7 +711,7 @@
     .nr-mapzone { flex:1 1 auto; min-height:0; display:flex; align-items:center; justify-content:center; }
     .fitview .nr-rail { min-height:0; overflow-y:auto; }
     .fitview .nr-elev-cols { flex:1 1 auto; min-height:0; align-items:stretch; }
-    .fitview .nr-rackcol { height:100%; min-height:0; overflow-y:auto; }
+    .fitview .sc-rackcol { height:100%; min-height:0; overflow-y:auto; }
   }
   /* mobile layout (v1.10) — the new chrome is display:none outside the
      phone breakpoint; everything else here lives in the 700px query */
@@ -788,7 +851,7 @@
     <div id="coView" class="hidden"></div>
     <div id="cuView" class="hidden"></div>
     <div id="maView" class="hidden"></div>
-    <div class="foot" id="footLine">Field Kit Manage v1.16.6</div>
+    <div class="foot" id="footLine">Field Kit Manage v1.17</div>
   </div>
 </div>
 
@@ -2159,7 +2222,7 @@ function showMain(view) {
   $('printNav').classList.toggle('hidden', view !== 'home');
   $('tsPrintNav').classList.toggle('hidden', view !== 'ts');
   $('tsCsvNav').classList.toggle('hidden', view !== 'ts');
-  $('footLine').textContent = 'Field Kit Manage v1.16.6';
+  $('footLine').textContent = 'Field Kit Manage v1.17';
   if (view === 'ts') renderTimesheets(); else if (view === 'proj') renderProjects(); else if (view === 'sched') renderSchedule(); else if (view === 'cust') renderCustomers(); else if (view === 'mat') renderMaterials(); else if (view === 'company') { coSeedForm(); renderCompany(); } else renderHome();
 }
 function renderCurrent() { hideSegTip(); if (VIEW === 'ts') renderTimesheets(); else if (VIEW === 'proj') renderProjects(); else if (VIEW === 'sched') renderSchedule(); else if (VIEW === 'cust') { var cae = document.activeElement; if (CU.cid || !cae || cae.id !== 'cuSearch') { if (!(NR.sid && cae && /^nr/.test(cae.id || ''))) renderCustomers(); } } else if (VIEW === 'mat') { var mae = document.activeElement; var maTyping = mae && $('maView').contains(mae) && (mae.tagName === 'INPUT' || mae.tagName === 'TEXTAREA' || mae.tagName === 'SELECT'); if (!maTyping) renderMaterials(); } else if (VIEW === 'company') { /* the Company view holds unsaved form state; background refreshes leave it alone */ } else renderHome(); }
@@ -3625,6 +3688,563 @@ function jfQuickReturn(kind, row) {
   jfLinkLine();
 }
 
+/* =====================================================================
+   Shared Core — room renderer (Phase 1)
+   One renderer for the network-room map + rack elevation, shared by
+   Field Kit (view-only) and Field Kit Manage (editor). Plain script:
+   no modules, no imports/exports — at ship time each app inlines this
+   file (and room-renderer.css) at its include marker; see CORE.md.
+
+   Namespace: window.SCR. Collision-checked against both apps
+   (Field Kit v5.18, Manage v1.16.6): neither defines a global `SCR`
+   (the only "SCR" bytes in either file are inside the bundled
+   Supabase client's SUBSCRIBED enum), and every CSS class here is
+   prefixed `sc-`.
+
+   Canonical decisions (full rationale in CORE.md):
+   - Footprints are EXACT at every scale. No min-size floors anywhere
+     (Manage's .nr-item 30x14px floors and FK's rack 48x38px floors
+     are deliberately NOT carried over).
+   - Manage's .tray margin-top collision is NOT carried over: core
+     classes are sc-prefixed and .sc-item sets margin:0.
+   - DOORS use Manage's model as canonical: a 0.4 ft strip centred on
+     the wall line, wall re-derived from map_rot alone, with gap +
+     leaf + swing-arc SVG. FK's size_w-square door model is dropped
+     (it rendered Manage-canonical S/E doors ~invisible).
+   - Elevation spacing is Manage's: u_size x 26px blocks, block
+     layout, margin-bottom:2px, column padding 10px. (FK's flex
+     gap:3px model drifts +1px/block; a 42U FK column shrinks ~12px.)
+   - Labels use Manage's superset conventions by default: trays get
+     " · N in" (size_d x 12), elevation switches get " · N-port".
+     opts.labels can turn either off (Field Kit's bare-label mode).
+   - Long labels clip symmetrically (Manage): nowrap, no ellipsis,
+     centred inside an overflow:hidden item.
+   ===================================================================== */
+window.SCR = (function () {
+  'use strict';
+
+  var ROW = 26;          /* px per rack U — NR_ROW / NET_ROW in both apps */
+  var DOOR_T = 0.4;      /* door strip thickness, ft (Manage nrDoorStyle) */
+  var SNAP = 0.5;        /* drag snap, ft (Manage editor) */
+  var TYPES = [['switch', 'Switch'], ['patch_panel', 'Patch panel'], ['ups', 'UPS'], ['nvr_server', 'NVR / Server'], ['router_firewall', 'Router / Firewall'], ['pdu', 'PDU'], ['cable_manager', 'Cable manager'], ['blank', 'Blank'], ['other', 'Other']];
+
+  /* ---------- basics ---------- */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function num(v, dflt) { var n = Number(v); return isFinite(n) ? n : (dflt || 0); }
+  function typeLabel(t) { for (var i = 0; i < TYPES.length; i++) if (TYPES[i][0] === t) return TYPES[i][1]; return 'Other'; }
+  function normRot(rot) { return ((num(rot) % 360) + 360) % 360; }
+  function isVert(rot) { return (normRot(rot) % 180) !== 0; }
+  function pct(part, whole) { return (num(part) / num(whole) * 100) + '%'; }
+
+  /* ---------- footprint geometry (the shared math, Phase 0) ---------- */
+  /* Odd rotation swaps the axes: footprint w = size_d, d = size_w. */
+  function itemFoot(it) {
+    var rot = isVert(it.map_rot);
+    return { fw: rot ? num(it.size_d) : num(it.size_w), fd: rot ? num(it.size_w) : num(it.size_d), rot: rot };
+  }
+  function rackFoot(r) {
+    var rot = isVert(r.map_rot);
+    return { fw: rot ? num(r.fp_d) : num(r.fp_w), fd: rot ? num(r.fp_w) : num(r.fp_d), rot: rot };
+  }
+  /* Layer: stored value wins; unset, trays ride above, the rest below.
+     (Manage nrItemLayer / FK netItemAbove — identical rules.) */
+  function itemLayer(it) {
+    if (it.layer === 'above' || it.layer === 'below') return it.layer;
+    return it.type === 'cable_tray' ? 'above' : 'below';
+  }
+  function trayWidthIn(it) { return Math.round(num(it.size_d) * 12); }
+
+  function clampToRoom(x, y, fw, fd, room) {
+    var w = num(room.width_ft, 14), d = num(room.depth_ft, 10);
+    return {
+      x: Math.min(Math.max(num(x), 0), Math.max(0, w - fw)),
+      y: Math.min(Math.max(num(y), 0), Math.max(0, d - fd))
+    };
+  }
+  function clampRack(rack, room) {
+    var f = rackFoot(rack), p = clampToRoom(rack.map_x, rack.map_y, f.fw, f.fd, room);
+    rack.map_x = p.x; rack.map_y = p.y; return rack;
+  }
+  function clampItem(it, room) {
+    if (it.type === 'door') { doorSet(it, room, doorWall(it), doorSpan(it)); return it; }
+    var f = itemFoot(it), p = clampToRoom(it.map_x, it.map_y, f.fw, f.fd, room);
+    it.map_x = p.x; it.map_y = p.y; return it;
+  }
+  /* Form size rules from Manage's edit dialogs (the only "resize"
+     either app has today — there are no map resize handles in
+     v1.16.6/v5.18): items length >= 0.5, width/depth >= 0.25,
+     doors width >= 1. Used by the opt-in map resize handle. */
+  function sizeRules(kind, obj) {
+    if (kind === 'item' && obj && obj.type === 'door') return { minW: 1, minD: 0, step: 0.25 };
+    if (kind === 'item') return { minW: 0.5, minD: 0.25, step: 0.25 };
+    return { minW: 0.5, minD: 0.5, step: 0.25 };
+  }
+  function clampSize(kind, obj, wFt, dFt) {
+    var r = sizeRules(kind, obj);
+    return { w: Math.max(r.minW, wFt), d: Math.max(r.minD, dFt) };
+  }
+  /* Rotation, Manage semantics, returned as a NEW geometry object
+     (the core never mutates app state outside the clamp/doorSet
+     helpers the editor already treats as mutating): rot +90 in
+     90-degree steps, position re-clamped with the swapped footprint.
+     Doors rotate to the next wall (n->e->s->w) keeping their span. */
+  function rotateRackGeom(rack, room) {
+    var tmp = { map_rot: (normRot(rack.map_rot) + 90) % 360, map_x: num(rack.map_x), map_y: num(rack.map_y), fp_w: rack.fp_w, fp_d: rack.fp_d };
+    var f = rackFoot(tmp), p = clampToRoom(tmp.map_x, tmp.map_y, f.fw, f.fd, room);
+    return { x: p.x, y: p.y, rot: tmp.map_rot, w: num(rack.fp_w), d: num(rack.fp_d) };
+  }
+  function rotateItemGeom(it, room) {
+    if (it.type === 'door') {
+      var order = ['n', 'e', 's', 'w'], cur = doorWall(it);
+      var tmp = { type: 'door', size_w: it.size_w, size_d: it.size_d, map_rot: it.map_rot, map_x: it.map_x, map_y: it.map_y };
+      doorSet(tmp, room, order[(order.indexOf(cur) + 1) % 4], doorSpan(it));
+      return { x: num(tmp.map_x), y: num(tmp.map_y), rot: normRot(tmp.map_rot), w: num(it.size_w), d: num(it.size_d) };
+    }
+    var t2 = { map_rot: (normRot(it.map_rot) + 90) % 360, map_x: num(it.map_x), map_y: num(it.map_y), size_w: it.size_w, size_d: it.size_d };
+    var f = itemFoot(t2), p = clampToRoom(t2.map_x, t2.map_y, f.fw, f.fd, room);
+    return { x: p.x, y: p.y, rot: t2.map_rot, w: num(it.size_w), d: num(it.size_d) };
+  }
+
+  /* ---------- doors (Manage model, canonical) ---------- */
+  function doorWall(it) { var r = normRot(it.map_rot); return r === 90 ? 'e' : r === 180 ? 's' : r === 270 ? 'w' : 'n'; }
+  function doorSpan(it) { var wall = doorWall(it); return (wall === 'n' || wall === 's') ? num(it.map_x) : num(it.map_y); }
+  function doorSet(it, room, wall, span) {
+    var W = num(it.size_w) || 3;
+    var w = num(room.width_ft, 14), d = num(room.depth_ft, 10);
+    var len = (wall === 'n' || wall === 's') ? w : d;
+    span = Math.min(Math.max(num(span), 0), Math.max(0, len - W));
+    it.map_rot = wall === 'e' ? 90 : wall === 's' ? 180 : wall === 'w' ? 270 : 0;
+    if (wall === 'n') { it.map_x = span; it.map_y = 0; }
+    else if (wall === 's') { it.map_x = span; it.map_y = d; }
+    else if (wall === 'e') { it.map_x = w; it.map_y = span; }
+    else { it.map_x = 0; it.map_y = span; }
+    return it;
+  }
+  function doorCenter(it, room) {
+    var wall = doorWall(it), W = num(it.size_w) || 3;
+    var w = num(room.width_ft, 14), d = num(room.depth_ft, 10);
+    if (wall === 'n') return { x: num(it.map_x) + W / 2, y: 0 };
+    if (wall === 's') return { x: num(it.map_x) + W / 2, y: d };
+    if (wall === 'e') return { x: w, y: num(it.map_y) + W / 2 };
+    return { x: 0, y: num(it.map_y) + W / 2 };
+  }
+  /* The strip's own box: thickness DOOR_T centred on the wall line.
+     Its top-left in feet (for measurement) is therefore -0.2 ft
+     outside the room on the wall axis. */
+  function doorStripFt(it, room) {
+    var wall = doorWall(it), W = num(it.size_w) || 3;
+    var w = num(room.width_ft, 14), d = num(room.depth_ft, 10);
+    if (wall === 'n') return { x: num(it.map_x), y: -DOOR_T / 2, w: W, h: DOOR_T };
+    if (wall === 's') return { x: num(it.map_x), y: d - DOOR_T / 2, w: W, h: DOOR_T };
+    if (wall === 'e') return { x: w - DOOR_T / 2, y: num(it.map_y), w: DOOR_T, h: W };
+    return { x: -DOOR_T / 2, y: num(it.map_y), w: DOOR_T, h: W };
+  }
+  function doorStyle(it, w, d) {
+    var wall = doorWall(it), W = num(it.size_w) || 3, T = DOOR_T;
+    if (wall === 'n' || wall === 's') return { left: pct(it.map_x, w), top: wall === 'n' ? '0%' : '100%', width: pct(W, w), height: pct(T, d), transform: 'translateY(-50%)' };
+    return { left: wall === 'w' ? '0%' : '100%', top: pct(it.map_y, d), width: pct(T, w), height: pct(W, d), transform: 'translateX(-50%)' };
+  }
+  /* Plan symbol (ported from Manage nrDoorSVG): a gap line across the
+     wall, the leaf, and a quarter-circle swing arc, in an SVG square
+     of side size_w that overflows the strip on the swing side. */
+  function doorSVG(it) {
+    var W = num(it.size_w) || 3, wall = doorWall(it), swing = it.door_swing || 'in', hinge = it.door_hinge || 'left';
+    var uh = ((wall === 'n' || wall === 'e') === (hinge === 'left')) ? 0 : W;
+    var vin = swing === 'in' ? W : -W;
+    function pt(u, v) {
+      if (wall === 'n') return swing === 'in' ? [u, v] : [u, v + W];
+      if (wall === 's') return swing === 'in' ? [u, W - v] : [u, -v];
+      if (wall === 'e') return swing === 'in' ? [W - v, u] : [-v, u];
+      return swing === 'in' ? [v, u] : [W + v, u];
+    }
+    function R(n) { return Math.round(n * 100) / 100; }
+    function P(p) { return R(p[0]) + ',' + R(p[1]); }
+    var H = pt(uh, 0), C = pt(W - uh, 0), O = pt(uh, vin), G0 = pt(0, 0), G1 = pt(W, 0);
+    var arc = [];
+    for (var i = 0; i <= 8; i++) { var t = i / 8 * Math.PI / 2; arc.push(P(pt(uh + (W - 2 * uh) * Math.cos(t), vin * Math.sin(t)))); }
+    var horiz = wall === 'n' || wall === 's', pos;
+    if (horiz) pos = 'left:0;width:100%;aspect-ratio:1;' + ((wall === 'n') === (swing === 'in') ? 'top:50%;' : 'bottom:50%;');
+    else pos = 'top:0;height:100%;aspect-ratio:1;' + ((wall === 'e') === (swing === 'in') ? 'right:50%;' : 'left:50%;');
+    return '<svg viewBox="0 0 ' + W + ' ' + W + '" style="position:absolute;pointer-events:none;overflow:visible;' + pos + '" aria-hidden="true">'
+      + '<line x1="' + R(G0[0]) + '" y1="' + R(G0[1]) + '" x2="' + R(G1[0]) + '" y2="' + R(G1[1]) + '" style="stroke:var(--panel, #0f1523)" stroke-width="0.18"/>'
+      + '<polyline points="' + arc.join(' ') + '" fill="none" stroke="#94a3b8" stroke-width="0.05"/>'
+      + '<line x1="' + R(H[0]) + '" y1="' + R(H[1]) + '" x2="' + R(O[0]) + '" y2="' + R(O[1]) + '" stroke="#e2e8f0" stroke-width="0.09"/>'
+      + '<circle cx="' + R(H[0]) + '" cy="' + R(H[1]) + '" r="0.1" fill="#e2e8f0"/></svg>';
+  }
+
+  /* ---------- fit (Manage nrFitMap, generalised) ----------
+     Largest room-aspect box fitting availW x availH. `exact` reports
+     pxPerFt < 44 — informational only now: Manage used it to switch
+     its floor exemption on; the core has no floors to exempt. */
+  function fitSize(room, availW, availH) {
+    var w = num(room.width_ft, 14), d = num(room.depth_ft, 10);
+    if (!(availW > 0) || !(availH > 0)) return null;
+    var s = Math.min(availW / w, availH / d);
+    return { widthPx: Math.floor(w * s), heightPx: Math.floor(d * s), pxPerFt: s, exact: s < 44 };
+  }
+
+  /* ---------- labels ---------- */
+  function labelsOf(opts) {
+    var L = (opts && opts.labels) || {};
+    return {
+      trayWidthIn: L.trayWidthIn !== false,     /* Manage default ON; FK today: off (bare name) */
+      switchPorts: L.switchPorts !== false      /* Manage default ON; FK today: off */
+    };
+  }
+  function itemLabel(it, opts) {
+    var L = labelsOf(opts);
+    if (it.type === 'cable_tray') {
+      var base = it.name || 'Cable tray';
+      return L.trayWidthIn ? base + ' · ' + trayWidthIn(it) + ' in' : base;
+    }
+    return it.name || 'Wall panel';
+  }
+  function rackSublabel(rack, devCount) { return (rack.height_u || 42) + 'U · ' + devCount + ' devices'; }
+
+  /* ---------- room map ----------
+     renderRoomMap(room, racks, items, opts) -> HTML string.
+     DOM order mirrors Manage (items in given order, then racks);
+     paint order is by z-index, not DOM: below items 1, racks 2,
+     above items 3 — the stacking both apps agree on. */
+  function renderRoomMap(room, racks, items, opts) {
+    opts = opts || {};
+    var E = opts.esc || esc;
+    var editable = !!opts.editable;
+    var w = num(room.width_ft, 14), d = num(room.depth_ft, 10);
+    var counts = opts.deviceCounts || null;
+    if (!counts && opts.devices) {
+      counts = {};
+      opts.devices.forEach(function (dv) { if (!dv.deleted_at) counts[dv.rack_id] = (counts[dv.rack_id] || 0) + 1; });
+    }
+    var style = '';
+    if (opts.fit && opts.fit.widthPx) style = 'width:' + opts.fit.widthPx + 'px;height:' + opts.fit.heightPx + 'px';
+    else style = 'aspect-ratio:' + w + '/' + d;
+    style += ';background-size:' + (50 / w) + '% ' + (50 / d) + '%';
+    var h = '<div class="sc-map' + (editable ? ' sc-edit' : ' sc-ro') + '"' + (opts.mapId ? ' id="' + E(opts.mapId) + '"' : '') + ' style="' + style + '">';
+    (items || []).forEach(function (it) {
+      if (it.deleted_at) return;
+      var layer = itemLayer(it);
+      var sel = editable && opts.selectedItemId === it.id ? ' sc-sel' : '';
+      if (it.type === 'door') {
+        var dst = doorStyle(it, w, d);
+        h += '<div class="sc-item sc-door' + (layer === 'above' ? ' sc-above' : '') + sel + '" data-scitem="' + E(it.id) + '" data-sckind="item" title="Door' + (it.name ? ' — ' + E(it.name) : '') + '" style="left:' + dst.left + ';top:' + dst.top + ';width:' + dst.width + ';height:' + dst.height + ';transform:' + dst.transform + '">'
+          + doorSVG(it) + (it.name ? '<span class="sc-doorlab">' + E(it.name) + '</span>' : '') + '</div>';
+        return;
+      }
+      var f = itemFoot(it);
+      h += '<div class="sc-item ' + (it.type === 'cable_tray' ? 'sc-tray' : 'sc-panel') + (layer === 'above' ? ' sc-above' : '') + sel + (f.rot ? ' sc-vert' : '') + '" data-scitem="' + E(it.id) + '" data-sckind="item" style="left:' + pct(it.map_x, w) + ';top:' + pct(it.map_y, d) + ';width:' + pct(f.fw, w) + ';height:' + pct(f.fd, d) + '">'
+        + '<span class="sc-inm">' + E(itemLabel(it, opts)) + '</span></div>';
+    });
+    (racks || []).forEach(function (r) {
+      if (r.deleted_at) return;
+      var f2 = rackFoot(r);
+      var sel2 = editable && opts.selectedRackId === r.id ? ' sc-sel' : '';
+      var inner = '<span class="sc-rin"><span class="sc-rnm">' + E(r.name) + '</span><span class="sc-rsub">' + E(rackSublabel(r, counts ? (counts[r.id] || 0) : 0)) + '</span></span>';
+      var st = ' style="left:' + pct(r.map_x, w) + ';top:' + pct(r.map_y, d) + ';width:' + pct(f2.fw, w) + ';height:' + pct(f2.fd, d) + '"';
+      if (editable) h += '<div class="sc-rack' + sel2 + (f2.rot ? ' sc-vert' : '') + '" data-scrack="' + E(r.id) + '" data-sckind="rack"' + st + '>' + inner + '</div>';
+      else h += '<button type="button" class="sc-rack' + (f2.rot ? ' sc-vert' : '') + '" data-scrack="' + E(r.id) + '" data-sckind="rack"' + st + '>' + inner + '</button>';
+    });
+    h += '</div>';
+    if (opts.legend) {
+      h += '<div class="sc-legend"><span class="sc-lg"><span class="sc-sw sc-sw-rack"></span>Rack</span><span class="sc-lg"><span class="sc-sw sc-sw-tray"></span>Cable tray</span><span class="sc-lg"><span class="sc-sw sc-sw-panel"></span>Wall panel</span><span class="sc-lg"><span class="sc-sw sc-sw-door"></span>Door</span></div>';
+    }
+    return h;
+  }
+
+  /* ---------- rack elevation ----------
+     Blocks run bottom-up (U1 at the bottom): the column is built
+     from the top U down, devices keyed by their top unit, empty
+     runs aggregated into one block — both apps' algorithm, kept. */
+  function elevBlocks(rack, devices) {
+    var height = rack.height_u || 42;
+    var byTop = {}, covered = {};
+    (devices || []).forEach(function (dv) {
+      if (dv.deleted_at) return;
+      byTop[dv.u_start + (dv.u_size || 1) - 1] = dv;
+      for (var u = dv.u_start; u < dv.u_start + (dv.u_size || 1); u++) covered[u] = dv;
+    });
+    var blocks = [], u = height;
+    while (u >= 1) {
+      if (byTop[u]) {
+        var dv = byTop[u], sz = dv.u_size || 1;
+        blocks.push({ kind: 'dev', device: dv, uStart: dv.u_start, uSize: sz, label: sz > 1 ? 'U' + dv.u_start + '–' + (dv.u_start + sz - 1) : 'U' + dv.u_start });
+        u -= sz;
+      } else {
+        var top = u; while (u >= 1 && !covered[u]) u--;
+        var bot = u + 1, n = top - bot + 1;
+        blocks.push({ kind: 'empty', uStart: bot, uSize: n, label: n > 1 ? 'U' + bot + '–' + top : 'U' + top });
+      }
+    }
+    return blocks;
+  }
+  function renderElevation(rack, devices, opts) {
+    opts = opts || {};
+    var E = opts.esc || esc;
+    var L = labelsOf(opts);
+    var editable = !!opts.editable;
+    var h = '<div class="sc-rackcol sc-elev' + (editable ? ' sc-edit' : ' sc-ro') + '">';
+    elevBlocks(rack, devices).forEach(function (b) {
+      if (b.kind === 'dev') {
+        var dv = b.device;
+        var portTxt = '';
+        if (dv.type === 'switch' && dv.switch_id && L.switchPorts && typeof opts.portCountFor === 'function') {
+          var pc = opts.portCountFor(dv.switch_id);
+          if (pc) portTxt = ' · ' + pc + '-port';
+        }
+        h += '<div class="sc-block" style="height:' + (b.uSize * ROW) + 'px"><span class="sc-ulab">' + b.label + '</span>'
+          + '<div class="sc-dev sc-t-' + E(dv.type) + (editable && opts.selectedDeviceId === dv.id ? ' sc-seldev' : '') + '" data-scdev="' + E(dv.id) + '">'
+          + '<span class="sc-dn">' + E(dv.name) + '</span><span class="sc-dt">· ' + E(typeLabel(dv.type)) + portTxt + '</span>'
+          + (dv.type === 'patch_panel' ? '<span class="sc-ticks"></span>' : '')
+          + (dv.type === 'switch' && dv.switch_id ? '<button type="button" class="sc-portsbtn" data-scports="' + E(dv.switch_id) + '">Ports ›</button>' : '')
+          + '</div></div>';
+      } else {
+        h += '<div class="sc-block" style="height:' + (b.uSize * ROW) + 'px"><span class="sc-ulab">' + b.label + '</span>'
+          + '<div class="sc-empty"' + (editable ? ' data-scempty="' + b.uStart + ':' + (b.uStart + b.uSize - 1) + '"' : '') + '>Empty — ' + b.uSize + 'U free</div></div>';
+      }
+    });
+    return h + '</div>';
+  }
+
+  /* ---------- map interactions ----------
+     Port of Manage's wireNRMapDrag + wireNRItemDrag behaviour:
+     - pointer drag with a 3px move threshold; below it, a tap
+     - positions clamp inside the room by footprint; trays/panels may
+       overlap racks and each other freely (no collision rules)
+     - drop snaps to 0.5 ft and reports through onDragEnd in FEET;
+       the core never writes app state — the app persists + re-renders
+     - doors drag by their centre to the nearest wall, snap to it,
+       and slide along it (span snapped 0.5 ft on drop)
+     - selection is single (rack XOR item), Manage-style: selecting
+       one clears the other; pointerdown on empty map clears it
+     Read-only mode wires activation taps only: racks report through
+     onRackActivate; items are pointer-events:none (CSS) so taps pass
+     through to whatever is beneath, exactly as in FK today.
+     opts.resizeHandles (default FALSE — neither app has map resize
+     handles today; sizing lives in their Edit forms) adds a corner
+     handle to the selected element that resizes by footprint under
+     sizeRules(), snapped to 0.25 ft, reported via onDragEnd. */
+  function attachMapInteractions(rootEl, opts) {
+    opts = opts || {};
+    var map = rootEl.classList && rootEl.classList.contains('sc-map') ? rootEl : rootEl.querySelector('.sc-map');
+    if (!map) return { detach: function () {} };
+    var room = opts.room;
+    var racks = opts.racks || [], items = opts.items || [];
+    var cleanups = [];
+    function on(el, ev, fn) { el.addEventListener(ev, fn); cleanups.push(function () { el.removeEventListener(ev, fn); }); }
+    function rackById(id) { for (var i = 0; i < racks.length; i++) if (racks[i].id === id) return racks[i]; return null; }
+    function itemById(id) { for (var i = 0; i < items.length; i++) if (items[i].id === id) return items[i]; return null; }
+    function selectVisual(kind, id) {
+      Array.prototype.forEach.call(map.querySelectorAll('.sc-rack, .sc-item'), function (x) { x.classList.remove('sc-sel'); });
+      Array.prototype.forEach.call(map.querySelectorAll('.sc-rsz'), function (x) { x.parentNode.removeChild(x); });
+      if (!kind || !id) return;
+      var el = map.querySelector(kind === 'rack' ? '[data-scrack="' + id + '"]' : '[data-scitem="' + id + '"]');
+      if (el) {
+        el.classList.add('sc-sel');
+        if (opts.resizeHandles) {
+          var hd = document.createElement('span');
+          hd.className = 'sc-rsz'; hd.setAttribute('data-scrsz', '1');
+          el.appendChild(hd);
+          wireResize(el, hd, kind, kind === 'rack' ? rackById(id) : itemById(id));
+        }
+      }
+    }
+    function fireSelect(kind, id) { selectVisual(kind, id); if (typeof opts.onSelect === 'function') opts.onSelect(kind, id); }
+    function fireDragEnd(kind, id, g) { if (typeof opts.onDragEnd === 'function') opts.onDragEnd(kind, id, g); }
+
+    if (!opts.editable) {
+      Array.prototype.forEach.call(map.querySelectorAll('[data-scrack]'), function (b) {
+        on(b, 'click', function () { if (typeof opts.onRackActivate === 'function') opts.onRackActivate(b.getAttribute('data-scrack')); });
+      });
+      return { detach: detach };
+    }
+
+    on(map, 'pointerdown', function (e) {
+      if (e.target !== map) return;
+      if (map.querySelector('.sc-sel')) fireSelect(null, null);
+    });
+
+    function dragGeom(kind, obj) {
+      if (kind === 'rack') return { w: num(obj.fp_w), d: num(obj.fp_d) };
+      return { w: num(obj.size_w), d: num(obj.size_d) };
+    }
+    function wireResize(el, hd, kind, obj) {
+      if (!obj || !room) return;
+      on(hd, 'pointerdown', function (e) {
+        e.stopPropagation(); e.preventDefault();
+        var rect = map.getBoundingClientRect();
+        var w = num(room.width_ft, 14), d = num(room.depth_ft, 10);
+        var isDoor = kind === 'item' && obj.type === 'door';
+        var f0 = isDoor ? { fw: num(obj.size_w) || 3, fd: DOOR_T } : (kind === 'rack' ? rackFoot(obj) : itemFoot(obj));
+        var sx = e.clientX, sy = e.clientY, nw = f0.fw, nd = f0.fd;
+        try { hd.setPointerCapture(e.pointerId); } catch (err) {}
+        function mv(ev) {
+          nw = f0.fw + (ev.clientX - sx) / rect.width * w;
+          nd = f0.fd + (ev.clientY - sy) / rect.height * d;
+          var cs = clampSize(kind, obj, nw, nd);
+          nw = Math.min(cs.w, (kind === 'rack' ? w - num(obj.map_x) : w - num(obj.map_x)) || cs.w);
+          nd = Math.min(cs.d, d - num(obj.map_y));
+          if (!isDoor) { el.style.width = pct(nw, w); el.style.height = pct(nd, d); }
+        }
+        function up() {
+          hd.removeEventListener('pointermove', mv); hd.removeEventListener('pointerup', up); hd.removeEventListener('pointercancel', up);
+          var step = sizeRules(kind, obj).step;
+          var fw = Math.round(nw / step) * step, fd = Math.round(nd / step) * step;
+          var cs = clampSize(kind, obj, fw, fd);
+          var g = dragGeom(kind, obj);
+          if (isDoor) g.w = cs.w;
+          else if (isVert(obj.map_rot)) { g.w = cs.d; g.d = cs.w; }
+          else { g.w = cs.w; g.d = cs.d; }
+          fireDragEnd(kind, obj.id, { x: num(obj.map_x), y: num(obj.map_y), rot: normRot(obj.map_rot), w: g.w, d: g.d });
+        }
+        hd.addEventListener('pointermove', mv); hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up);
+      });
+    }
+
+    function wireDrag(el, kind, obj) {
+      on(el, 'pointerdown', function (e) {
+        if (e.target && e.target.getAttribute && e.target.getAttribute('data-scrsz')) return;
+        if (!obj || !room) return;
+        fireSelect(kind, obj.id);
+        var rect = map.getBoundingClientRect();
+        var w = num(room.width_ft, 14), d = num(room.depth_ft, 10);
+        var isDoor = kind === 'item' && obj.type === 'door';
+        var f = isDoor ? null : (kind === 'rack' ? rackFoot(obj) : itemFoot(obj));
+        var ctr = isDoor ? doorCenter(obj, room) : null;
+        var sx = e.clientX, sy = e.clientY;
+        var ox = isDoor ? ctr.x : num(obj.map_x), oy = isDoor ? ctr.y : num(obj.map_y);
+        var moved = false, nx = null, ny = null;
+        var doorWallV = isDoor ? doorWall(obj) : null, doorSpanV = isDoor ? doorSpan(obj) : 0, lastWall = doorWallV;
+        el.classList.add('sc-drag');
+        try { el.setPointerCapture(e.pointerId); } catch (err) {}
+        function applyDoor(wall, span) {
+          var tmp = { type: 'door', name: obj.name, size_w: obj.size_w, size_d: obj.size_d, door_swing: obj.door_swing, door_hinge: obj.door_hinge, map_rot: obj.map_rot, map_x: obj.map_x, map_y: obj.map_y };
+          doorSet(tmp, room, wall, span);
+          var st = doorStyle(tmp, w, d);
+          el.style.left = st.left; el.style.top = st.top; el.style.width = st.width; el.style.height = st.height; el.style.transform = st.transform;
+          if (wall !== lastWall) { lastWall = wall; el.innerHTML = doorSVG(tmp) + (obj.name ? '<span class="sc-doorlab">' + (opts.esc || esc)(obj.name) + '</span>' : ''); }
+        }
+        function mv(ev) {
+          var dx = (ev.clientX - sx) / rect.width * w, dy = (ev.clientY - sy) / rect.height * d;
+          if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 3) moved = true;
+          if (isDoor) {
+            var cxp = ox + dx, cyp = oy + dy, W = num(obj.size_w) || 3;
+            var dists = { n: cyp, s: d - cyp, w: cxp, e: w - cxp }, wall = 'n', best = Infinity;
+            ['n', 's', 'w', 'e'].forEach(function (k) { if (dists[k] < best) { best = dists[k]; wall = k; } });
+            var len = (wall === 'n' || wall === 's') ? w : d;
+            doorWallV = wall;
+            doorSpanV = Math.min(Math.max(((wall === 'n' || wall === 's') ? cxp : cyp) - W / 2, 0), Math.max(0, len - W));
+            applyDoor(wall, doorSpanV);
+            return;
+          }
+          var p = clampToRoom(ox + dx, oy + dy, f.fw, f.fd, room);
+          nx = p.x; ny = p.y;
+          el.style.left = pct(nx, w); el.style.top = pct(ny, d);
+        }
+        function up() {
+          el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
+          el.classList.remove('sc-drag');
+          var g = dragGeom(kind, obj);
+          if (isDoor) {
+            if (moved) {
+              var tmp = { type: 'door', size_w: obj.size_w, size_d: obj.size_d, map_rot: obj.map_rot, map_x: obj.map_x, map_y: obj.map_y };
+              doorSet(tmp, room, doorWallV, Math.round(doorSpanV * 2) / 2);
+              fireDragEnd(kind, obj.id, { x: num(tmp.map_x), y: num(tmp.map_y), rot: normRot(tmp.map_rot), w: g.w, d: g.d });
+            }
+            return;
+          }
+          if (moved && nx !== null) {
+            var fx = Math.min(Math.max(Math.round(nx * 2) / 2, 0), Math.max(0, w - f.fw));
+            var fy = Math.min(Math.max(Math.round(ny * 2) / 2, 0), Math.max(0, d - f.fd));
+            el.style.left = pct(fx, w); el.style.top = pct(fy, d);
+            fireDragEnd(kind, obj.id, { x: fx, y: fy, rot: normRot(obj.map_rot), w: g.w, d: g.d });
+          }
+        }
+        el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+        e.preventDefault();
+      });
+    }
+    Array.prototype.forEach.call(map.querySelectorAll('[data-scrack]'), function (el) { wireDrag(el, 'rack', rackById(el.getAttribute('data-scrack'))); });
+    Array.prototype.forEach.call(map.querySelectorAll('[data-scitem]'), function (el) { wireDrag(el, 'item', itemById(el.getAttribute('data-scitem'))); });
+    /* Honour a selection the app rendered with (selectedRackId /
+       selectedItemId), so the resize handle appears without a tap. */
+    if (opts.selectedRackId) selectVisual('rack', opts.selectedRackId);
+    else if (opts.selectedItemId) selectVisual('item', opts.selectedItemId);
+    return { detach: detach };
+    function detach() { cleanups.forEach(function (f) { f(); }); cleanups = []; }
+  }
+
+  /* ---------- elevation interactions ----------
+     Editable: device click -> onDeviceSelect(id); empty-block click
+     -> onEmptyActivate(botU, topU, clickedU) with clickedU derived
+     from the click's Y inside the block (Manage's behaviour);
+     Ports button -> onPorts(switchId), stopPropagation.
+     Read-only: only the Ports button is wired. */
+  function attachElevationInteractions(rootEl, opts) {
+    opts = opts || {};
+    var col = rootEl.classList && rootEl.classList.contains('sc-rackcol') ? rootEl : rootEl.querySelector('.sc-rackcol');
+    if (!col) return { detach: function () {} };
+    var cleanups = [];
+    function on(el, ev, fn) { el.addEventListener(ev, fn); cleanups.push(function () { el.removeEventListener(ev, fn); }); }
+    Array.prototype.forEach.call(col.querySelectorAll('[data-scports]'), function (b) {
+      on(b, 'click', function (e) { e.stopPropagation(); if (typeof opts.onPorts === 'function') opts.onPorts(b.getAttribute('data-scports')); });
+    });
+    if (opts.editable) {
+      Array.prototype.forEach.call(col.querySelectorAll('[data-scdev]'), function (dv) {
+        on(dv, 'click', function () { if (typeof opts.onDeviceSelect === 'function') opts.onDeviceSelect(dv.getAttribute('data-scdev')); });
+      });
+      Array.prototype.forEach.call(col.querySelectorAll('[data-scempty]'), function (em) {
+        on(em, 'click', function (e) {
+          var parts = em.getAttribute('data-scempty').split(':'), bot = parseInt(parts[0], 10), top = parseInt(parts[1], 10);
+          var rect = em.getBoundingClientRect();
+          var rows = top - bot + 1, idx = Math.min(rows - 1, Math.max(0, Math.floor((e.clientY - rect.top) / ROW)));
+          if (typeof opts.onEmptyActivate === 'function') opts.onEmptyActivate(bot, top, top - idx);
+        });
+      });
+    }
+    return { detach: function () { cleanups.forEach(function (f) { f(); }); } };
+  }
+
+  return {
+    VERSION: '1.0.0-phase1',
+    ROW: ROW,
+    DOOR_T: DOOR_T,
+    TYPES: TYPES,
+    esc: esc,
+    typeLabel: typeLabel,
+    normRot: normRot,
+    isVert: isVert,
+    itemFoot: itemFoot,
+    rackFoot: rackFoot,
+    itemLayer: itemLayer,
+    trayWidthIn: trayWidthIn,
+    clampToRoom: clampToRoom,
+    clampRack: clampRack,
+    clampItem: clampItem,
+    sizeRules: sizeRules,
+    clampSize: clampSize,
+    rotateRackGeom: rotateRackGeom,
+    rotateItemGeom: rotateItemGeom,
+    doorWall: doorWall,
+    doorSpan: doorSpan,
+    doorSet: doorSet,
+    doorCenter: doorCenter,
+    doorStripFt: doorStripFt,
+    doorStyle: doorStyle,
+    doorSVG: doorSVG,
+    fitSize: fitSize,
+    itemLabel: itemLabel,
+    rackSublabel: rackSublabel,
+    renderRoomMap: renderRoomMap,
+    elevBlocks: elevBlocks,
+    renderElevation: renderElevation,
+    attachMapInteractions: attachMapInteractions,
+    attachElevationInteractions: attachElevationInteractions
+  };
+})();
 /* ================= network rooms (v1.15; room items v1.16; layers + single selection v1.16.1) =================
    Rooms, racks and devices for a customer SITE, designed in Manage
    (Customers -> a site -> Network rooms) and read by the field crew
@@ -3645,7 +4265,6 @@ var NR_TYPES = [['switch', 'Switch'], ['patch_panel', 'Patch panel'], ['ups', 'U
 var NR_SETUP_HINT = 'Network rooms need the one-time setup SQL (supabase-network-rooms.sql) — once an admin has run it, this works.';
 var NR_ITEMS_HINT = 'Room items need the one-time setup SQL (supabase-room-items.sql) — once an admin has run it, this works.';
 var NR_LAYER_HINT = 'Map layers need the one-time setup SQL (supabase-room-items-layer.sql) — once an admin has run it, this works.';
-var NR_ROW = 26;
 function nrTypeLabel(t) { for (var i = 0; i < NR_TYPES.length; i++) if (NR_TYPES[i][0] === t) return NR_TYPES[i][1]; return 'Other'; }
 function nrErrText(e) {
   if (!e) return 'check your connection and try again.';
@@ -3671,61 +4290,8 @@ function nrArchRoomsOf(sid) { return D.netRooms.filter(function (r) { return r.s
 function nrRacksOf(roomId) { return D.racks.filter(function (r) { return r.room_id === roomId && !r.deleted_at; }).sort(nrSortName); }
 function nrItemById(id) { if (!id) return null; for (var i = 0; i < D.roomItems.length; i++) if (D.roomItems[i].id === id) return D.roomItems[i]; return null; }
 function nrItemsOf(roomId) { return D.roomItems.filter(function (it) { return it.room_id === roomId && !it.deleted_at; }).sort(nrSortName); }
-function nrItemFoot(it) { var rot = ((it.map_rot || 0) % 180) !== 0; return { fw: rot ? Number(it.size_d) : Number(it.size_w), fd: rot ? Number(it.size_w) : Number(it.size_d), rot: rot }; }
 function nrItemTypeLabel(t) { return t === 'cable_tray' ? 'Cable tray' : t === 'door' ? 'Door' : 'Wall panel'; }
-function nrItemLayer(it) { return (it.layer === 'above' || it.layer === 'below') ? it.layer : (it.type === 'cable_tray' ? 'above' : 'below'); }
 function nrLayerCol() { if (DEMO) return true; if (!D.roomItems.length) return true; return D.roomItems.some(function (x) { return 'layer' in x; }); }
-function nrDoorWall(it) { var r = ((it.map_rot || 0) % 360 + 360) % 360; return r === 90 ? 'e' : r === 180 ? 's' : r === 270 ? 'w' : 'n'; }
-function nrDoorSpan(it) { var wall = nrDoorWall(it); return (wall === 'n' || wall === 's') ? Number(it.map_x) || 0 : Number(it.map_y) || 0; }
-function nrDoorSet(it, room, wall, span) {
-  var W = Number(it.size_w) || 3;
-  var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
-  var len = (wall === 'n' || wall === 's') ? w : d;
-  span = Math.min(Math.max(Number(span) || 0, 0), Math.max(0, len - W));
-  it.map_rot = wall === 'e' ? 90 : wall === 's' ? 180 : wall === 'w' ? 270 : 0;
-  if (wall === 'n') { it.map_x = span; it.map_y = 0; }
-  else if (wall === 's') { it.map_x = span; it.map_y = d; }
-  else if (wall === 'e') { it.map_x = w; it.map_y = span; }
-  else { it.map_x = 0; it.map_y = span; }
-}
-function nrDoorCenter(it, room) {
-  var wall = nrDoorWall(it), W = Number(it.size_w) || 3;
-  var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
-  if (wall === 'n') return { x: Number(it.map_x) + W / 2, y: 0 };
-  if (wall === 's') return { x: Number(it.map_x) + W / 2, y: d };
-  if (wall === 'e') return { x: w, y: Number(it.map_y) + W / 2 };
-  return { x: 0, y: Number(it.map_y) + W / 2 };
-}
-function nrDoorStyle(it, w, d) {
-  var wall = nrDoorWall(it), W = Number(it.size_w) || 3, T = 0.4;
-  if (wall === 'n' || wall === 's') return { left: (Number(it.map_x) / w * 100) + '%', top: wall === 'n' ? '0%' : '100%', width: (W / w * 100) + '%', height: (T / d * 100) + '%', transform: 'translateY(-50%)' };
-  return { left: wall === 'w' ? '0%' : '100%', top: (Number(it.map_y) / d * 100) + '%', width: (T / w * 100) + '%', height: (W / d * 100) + '%', transform: 'translateX(-50%)' };
-}
-function nrDoorSVG(it) {
-  var W = Number(it.size_w) || 3, wall = nrDoorWall(it), swing = it.door_swing || 'in', hinge = it.door_hinge || 'left';
-  var uh = ((wall === 'n' || wall === 'e') === (hinge === 'left')) ? 0 : W;
-  var vin = swing === 'in' ? W : -W;
-  function pt(u, v) {
-    if (wall === 'n') return swing === 'in' ? [u, v] : [u, v + W];
-    if (wall === 's') return swing === 'in' ? [u, W - v] : [u, -v];
-    if (wall === 'e') return swing === 'in' ? [W - v, u] : [-v, u];
-    return swing === 'in' ? [v, u] : [W + v, u];
-  }
-  function R(n) { return Math.round(n * 100) / 100; }
-  function P(p) { return R(p[0]) + ',' + R(p[1]); }
-  var H = pt(uh, 0), C = pt(W - uh, 0), O = pt(uh, vin), G0 = pt(0, 0), G1 = pt(W, 0);
-  var arc = [];
-  for (var i = 0; i <= 8; i++) { var t = i / 8 * Math.PI / 2; arc.push(P(pt(uh + (W - 2 * uh) * Math.cos(t), vin * Math.sin(t)))); }
-  var horiz = wall === 'n' || wall === 's', pos;
-  if (horiz) pos = 'left:0;width:100%;aspect-ratio:1;' + ((wall === 'n') === (swing === 'in') ? 'top:50%;' : 'bottom:50%;');
-  else pos = 'top:0;height:100%;aspect-ratio:1;' + ((wall === 'e') === (swing === 'in') ? 'right:50%;' : 'left:50%;');
-  return '<svg viewBox="0 0 ' + W + ' ' + W + '" style="position:absolute;pointer-events:none;overflow:visible;' + pos + '" aria-hidden="true">'
-    + '<line x1="' + R(G0[0]) + '" y1="' + R(G0[1]) + '" x2="' + R(G1[0]) + '" y2="' + R(G1[1]) + '" style="stroke:var(--panel)" stroke-width="0.18"/>'
-    + '<polyline points="' + arc.join(' ') + '" fill="none" stroke="#94a3b8" stroke-width="0.05"/>'
-    + '<line x1="' + R(H[0]) + '" y1="' + R(H[1]) + '" x2="' + R(O[0]) + '" y2="' + R(O[1]) + '" stroke="#e2e8f0" stroke-width="0.09"/>'
-    + '<circle cx="' + R(H[0]) + '" cy="' + R(H[1]) + '" r="0.1" fill="#e2e8f0"/></svg>';
-}
-function nrItemWidthIn(it) { return Math.round(Number(it.size_d) * 12); }
 function nrDevsOf(rackId) { return D.rackDevices.filter(function (d) { return d.rack_id === rackId && !d.deleted_at; }); }
 function nrUsedU(rackId) { return nrDevsOf(rackId).reduce(function (n, d) { return n + (d.u_size || 1); }, 0); }
 function nrOverlap(rackId, start, size, ignoreId) {
@@ -3774,27 +4340,28 @@ function nrLive(promise, msg) { promise.then(function (r) { if (r.error) nrFail(
 function nrBlock(msg) { NR.msg = msg; NR.err = true; renderCustomers(); nrToast(msg); }
 function nrCloseRoomMenu() { var m = $('nrRoomMenu'); if (m) m.classList.add('hidden'); var g = $('nrRoomGear'); if (g) g.classList.remove('on'); }
 function nrScrollSelBar() { var bar = document.querySelector('#cuView .nr-rackbar'); if (bar && bar.scrollIntoView) bar.scrollIntoView({ block: 'nearest' }); }
-/* ---------- .fitview map sizing (v1.16.4) ----------
+/* ---------- .fitview map sizing (v1.16.4; core fit math v1.17) ----------
    In the fit layout the map's box is whatever height the window leaves
    over, so the map is sized in px to the largest room-aspect box that
-   fits its zone (whole room visible, both dimensions). Positions live
-   in feet and render in %, and both drag wirings convert pixels
-   through the map's live rect, so a resized map drags exactly as it
-   did at full width. Below the desktop breakpoint the px size is
-   cleared and the map returns to its width-driven aspect-ratio box. */
+   fits its zone (whole room visible, both dimensions) — the sizing now
+   comes from SCR.fitSize in the shared core. Positions live in feet
+   and render in %, and the core's drag wiring converts pixels through
+   the map's live rect, so a resized map drags exactly as it did at
+   full width. Below the desktop breakpoint the px size is cleared and
+   the map returns to its width-driven aspect-ratio box. The core has
+   no min-size floors, so the old fitted-map floor exemption is gone
+   with them (it only ever waived the fork's own floors). */
 function nrFitMap() {
   var map = $('nrMap'); if (!map) return;
   var zone = map.parentNode;
   var wide = !!(window.matchMedia && window.matchMedia('(min-width:1024px)').matches);
-  if (!wide || !zone || zone.className !== 'nr-mapzone') { map.style.width = ''; map.style.height = ''; map.classList.remove('nr-exact'); return; }
+  if (!wide || !zone || zone.className !== 'nr-mapzone') { map.style.width = ''; map.style.height = ''; return; }
   var room = NR.roomId ? nrRoomById(NR.roomId) : null; if (!room) return;
-  var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
   var zw = zone.clientWidth, zh = zone.clientHeight;
   if (zw < 60 || zh < 60) return;
-  var s = Math.min(zw / w, zh / d);
-  map.classList.toggle('nr-exact', s < 44);
-  map.style.width = Math.floor(w * s) + 'px';
-  map.style.height = Math.floor(d * s) + 'px';
+  var fit = SCR.fitSize(room, zw, zh); if (!fit) return;
+  map.style.width = fit.widthPx + 'px';
+  map.style.height = fit.heightPx + 'px';
 }
 
 /* ================= the screen ================= */
@@ -3859,31 +4426,14 @@ function nrRoomsHTML(site) {
     + '<button type="button" class="danger" id="nrRoomArchive">Archive room</button>'
     + '</span></span></div>';
   h += '<div class="nr-mapdim" style="margin-top:10px"><span>' + w + ' ft — ' + Math.round(w * 12) + ' in</span><span>' + d + ' ft deep</span></div>';
-  h += '<div class="nr-mapzone"><div class="nr-map" id="nrMap" style="aspect-ratio:' + w + '/' + d + ';background-size:' + (50 / w) + '% ' + (50 / d) + '%">';
-  items.forEach(function (it) {
-    if (it.type === 'door') {
-      var dst = nrDoorStyle(it, w, d);
-      h += '<div class="nr-item door' + (nrItemLayer(it) === 'above' ? ' above' : '') + (NR.selItem === it.id ? ' sel' : '') + '" data-nritem="' + it.id + '" title="Door' + (it.name ? ' — ' + esc(it.name) : '') + '" style="left:' + dst.left + ';top:' + dst.top + ';width:' + dst.width + ';height:' + dst.height + ';transform:' + dst.transform + '">'
-        + nrDoorSVG(it) + (it.name ? '<span class="inm doorlab">' + esc(it.name) + '</span>' : '') + '</div>';
-      return;
-    }
-    var f = nrItemFoot(it);
-    var lab = it.type === 'cable_tray' ? (it.name || 'Cable tray') + ' · ' + nrItemWidthIn(it) + ' in' : (it.name || 'Wall panel');
-    h += '<div class="nr-item ' + (it.type === 'cable_tray' ? 'tray' : 'panel') + (nrItemLayer(it) === 'above' ? ' above' : '') + (NR.selItem === it.id ? ' sel' : '') + (f.rot ? ' vert' : '') + '" data-nritem="' + it.id + '" style="left:' + (Number(it.map_x) / w * 100) + '%;top:' + (Number(it.map_y) / d * 100) + '%;width:' + (f.fw / w * 100) + '%;height:' + (f.fd / d * 100) + '%">'
-      + '<span class="inm">' + esc(lab) + '</span></div>';
-  });
-  racks.forEach(function (r) {
-    var rot = ((r.map_rot || 0) % 180) !== 0;
-    var fw = rot ? Number(r.fp_d) : Number(r.fp_w), fd = rot ? Number(r.fp_w) : Number(r.fp_d);
-    h += '<div class="nr-rack' + (NR.selRack === r.id ? ' sel' : '') + (rot ? ' vert' : '') + '" data-nrrack="' + r.id + '" style="left:' + (Number(r.map_x) / w * 100) + '%;top:' + (Number(r.map_y) / d * 100) + '%;width:' + (fw / w * 100) + '%;height:' + (fd / d * 100) + '%">'
-      + '<span class="rnm">' + esc(r.name) + '</span><span class="rsub">' + (r.height_u || 42) + 'U · ' + nrDevsOf(r.id).length + ' devices</span></div>';
-  });
-  h += '</div></div>';
+  h += '<div class="nr-mapzone">'
+    + SCR.renderRoomMap(room, racks, items, { editable: true, mapId: 'nrMap', selectedRackId: NR.selRack, selectedItemId: NR.selItem, devices: D.rackDevices, esc: esc })
+    + '</div>';
   var sel = NR.selRack ? nrRackById(NR.selRack) : null;
   var selIt = NR.selItem ? nrItemById(NR.selItem) : null;
   if (selIt) {
-    var itMeta = selIt.type === 'door' ? 'Door · ' + Number(selIt.size_w) + ' ft · swings ' + (selIt.door_swing || 'in') + ' · hinge ' + (selIt.door_hinge || 'left') : nrItemTypeLabel(selIt.type) + ' · ' + Number(selIt.size_w) + ' ft × ' + (selIt.type === 'cable_tray' ? nrItemWidthIn(selIt) + ' in' : Number(selIt.size_d) + ' ft');
-    itMeta += ' · ' + (nrItemLayer(selIt) === 'above' ? 'Above racks' : 'Below racks');
+    var itMeta = selIt.type === 'door' ? 'Door · ' + Number(selIt.size_w) + ' ft · swings ' + (selIt.door_swing || 'in') + ' · hinge ' + (selIt.door_hinge || 'left') : nrItemTypeLabel(selIt.type) + ' · ' + Number(selIt.size_w) + ' ft × ' + (selIt.type === 'cable_tray' ? SCR.trayWidthIn(selIt) + ' in' : Number(selIt.size_d) + ' ft');
+    itMeta += ' · ' + (SCR.itemLayer(selIt) === 'above' ? 'Above racks' : 'Below racks');
     h += '<div class="nr-rackbar"><span class="who">' + esc(selIt.name || nrItemTypeLabel(selIt.type)) + '</span><span class="hint">' + itMeta + '</span>'
       + '<button class="btn ghost small" id="nrItemRotate">Rotate 90°</button>'
       + '<button class="btn ghost small" id="nrItemEdit">Edit</button>'
@@ -3914,7 +4464,7 @@ function nrRoomsHTML(site) {
   h += '<div class="card" style="margin-top:14px"><h2>Room items <span class="hint">Trays &amp; wall panels on this room&rsquo;s map</span></h2>';
   if (items.length) items.forEach(function (it) {
     h += '<div class="nr-rrow' + (NR.selItem === it.id ? ' on' : '') + '" data-nritemrow="' + it.id + '"><div class="rn">' + esc(it.name || nrItemTypeLabel(it.type)) + '</div>'
-      + '<div class="rm">' + (it.type === 'door' ? 'Door · ' + Number(it.size_w) + ' ft · swings ' + (it.door_swing || 'in') + ' · hinge ' + (it.door_hinge || 'left') : nrItemTypeLabel(it.type) + ' · ' + Number(it.size_w) + ' ft × ' + (it.type === 'cable_tray' ? nrItemWidthIn(it) + ' in wide' : Number(it.size_d) + ' ft deep')) + '</div></div>';
+      + '<div class="rm">' + (it.type === 'door' ? 'Door · ' + Number(it.size_w) + ' ft · swings ' + (it.door_swing || 'in') + ' · hinge ' + (it.door_hinge || 'left') : nrItemTypeLabel(it.type) + ' · ' + Number(it.size_w) + ' ft × ' + (it.type === 'cable_tray' ? SCR.trayWidthIn(it) + ' in wide' : Number(it.size_d) + ' ft deep')) + '</div></div>';
   });
   else h += '<p class="empty" style="margin-top:8px">No trays or wall panels in this room yet.</p>';
   h += '</div>';
@@ -3936,28 +4486,8 @@ function nrElevHTML(site, room, rack) {
   var used = nrUsedU(rack.id), height = rack.height_u || 42;
   var h = nrHeadHTML(site, 'Network rooms', rack.name + ' — ' + height + 'U', '',
     '<span class="sp"></span><span class="chip">' + used + 'U used</span><span class="chip">' + (height - used) + 'U free</span><button class="btn" id="nrAddDevice">＋ Add device</button>');
-  var byTop = {}, covered = {};
-  devs.forEach(function (dv) { byTop[dv.u_start + (dv.u_size || 1) - 1] = dv; for (var u = dv.u_start; u < dv.u_start + (dv.u_size || 1); u++) covered[u] = dv; });
-  var col = '', u = height;
-  while (u >= 1) {
-    if (byTop[u]) {
-      var dv = byTop[u], sz = dv.u_size || 1;
-      var lab = sz > 1 ? 'U' + dv.u_start + '–' + (dv.u_start + sz - 1) : 'U' + dv.u_start;
-      col += '<div class="nr-block" style="height:' + (sz * NR_ROW) + 'px"><span class="nr-ulab">' + lab + '</span>'
-        + '<div class="nr-dev t-' + esc(dv.type) + (NR.devSel === dv.id ? ' sel' : '') + '" data-nrdev="' + dv.id + '">'
-        + '<span class="dn">' + esc(dv.name) + '</span><span class="dt">· ' + esc(nrTypeLabel(dv.type)) + (dv.type === 'switch' && dv.switch_id ? ' · ' + nrPortCount(nrSwitchById(dv.switch_id) || { id: dv.switch_id }) + '-port' : '') + '</span>'
-        + (dv.type === 'patch_panel' ? '<span class="nr-ticks"></span>' : '')
-        + (dv.type === 'switch' && dv.switch_id ? '<button class="nr-portsbtn" data-nrports="' + dv.switch_id + '">Ports ›</button>' : '')
-        + '</div></div>';
-      u -= sz;
-    } else {
-      var top = u; while (u >= 1 && !covered[u]) u--;
-      var bot = u + 1, n = top - bot + 1;
-      col += '<div class="nr-block" style="height:' + (n * NR_ROW) + 'px"><span class="nr-ulab">' + (n > 1 ? 'U' + bot + '–' + top : 'U' + top) + '</span>'
-        + '<div class="nr-empty" data-nrempty="' + bot + ':' + top + '">Empty — ' + n + 'U free</div></div>';
-    }
-  }
-  h += '<div class="nr-elev-cols"><div class="nr-rackcol">' + col + '</div><div class="nr-rail">';
+  var col = SCR.renderElevation(rack, devs, { editable: true, selectedDeviceId: NR.devSel, esc: esc, portCountFor: function (swId) { return nrPortCount(nrSwitchById(swId) || { id: swId }); } });
+  h += '<div class="nr-elev-cols">' + col + '<div class="nr-rail">';
   var sel = NR.devSel ? nrDevById(NR.devSel) : null;
   if (sel && sel.rack_id === rack.id) {
     h += '<div class="card nr-strip" style="margin:0"><h2>Selected device</h2>'
@@ -4057,8 +4587,7 @@ function wireNRScreen(site) {
   var rmArch = $('nrRoomArchive'); if (rmArch) rmArch.addEventListener('click', function () { nrCloseRoomMenu(); var r = nrRoomById(NR.roomId); if (r) nrOpenConfirm({ mode: 'room-archive', id: r.id, name: r.name }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-nrplace]'), function (b) { b.addEventListener('click', function () { nrOpenPlace(b.getAttribute('data-nrplace')); }); });
   Array.prototype.forEach.call(el.querySelectorAll('[data-nrdelswitch]'), function (b) { b.addEventListener('click', function () { var sw = nrSwitchById(b.getAttribute('data-nrdelswitch')); if (sw) nrOpenConfirm({ mode: 'switch-delete', id: sw.id, name: sw.name, portN: nrPortCount(sw), count: D.portEntries.filter(function (e) { return e.switch_id === sw.id; }).length }); }); });
-  wireNRMapDrag(el);
-  wireNRItemDrag(el);
+  wireNRMapCore(el);
   nrFitMap();
 }
 
@@ -4068,118 +4597,69 @@ function nrOpenElevation(rackId) {
   renderCustomers(); window.scrollTo(0, 0);
 }
 
-function wireNRMapDrag(el) {
+/* ---------- map + elevation wiring through the shared core (v1.17) ----------
+   Selection, drag, door and elevation behaviour lives in the shared
+   core (SCR.attachMapInteractions / SCR.attachElevationInteractions);
+   Manage keeps the state (NR.selRack / NR.selItem / NR.devSel), the
+   selection control bar under the map, the rails, and every save
+   path. The core reports drags in feet; the handlers below persist
+   through the same nrSave*Pos functions the forked wiring used, with
+   the same field semantics. A tap (no drag) fires no onDragEnd, so a
+   pointerup on the map re-renders once to bring the selection bar in
+   sync — the forked wiring re-rendered on tap-up the same way. */
+function wireNRMapCore(el) {
   var map = $('nrMap'); if (!map) return;
-  map.addEventListener('pointerdown', function (e) {
-    if (e.target !== map) return;
-    if (!NR.selRack && !NR.selItem) return;
-    NR.selRack = null; NR.selItem = null; renderCustomers();
-  });
-  Array.prototype.forEach.call(map.querySelectorAll('[data-nrrack]'), function (b) {
-    b.addEventListener('pointerdown', function (e) {
-      var rack = nrRackById(b.getAttribute('data-nrrack')); if (!rack) return;
-      var room = nrRoomById(rack.room_id); if (!room) return;
-      NR.selRack = rack.id; NR.selItem = null;
-      Array.prototype.forEach.call(map.querySelectorAll('[data-nrrack]'), function (x) { x.classList.toggle('sel', x === b); });
-      Array.prototype.forEach.call(map.querySelectorAll('[data-nritem]'), function (x) { x.classList.remove('sel'); });
-      var rect = map.getBoundingClientRect();
-      var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
-      var rot = ((rack.map_rot || 0) % 180) !== 0;
-      var fw = rot ? Number(rack.fp_d) : Number(rack.fp_w), fd = rot ? Number(rack.fp_w) : Number(rack.fp_d);
-      var sx = e.clientX, sy = e.clientY, ox = Number(rack.map_x), oy = Number(rack.map_y), moved = false, nx = null, ny = null;
-      window.__nrDrag = true;
-      try { b.setPointerCapture(e.pointerId); } catch (err) {}
-      function mv(ev) {
-        var dx = (ev.clientX - sx) / rect.width * w, dy = (ev.clientY - sy) / rect.height * d;
-        if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 3) moved = true;
-        nx = Math.min(Math.max(ox + dx, 0), Math.max(0, w - fw));
-        ny = Math.min(Math.max(oy + dy, 0), Math.max(0, d - fd));
-        b.style.left = (nx / w * 100) + '%'; b.style.top = (ny / d * 100) + '%';
+  var room = NR.roomId ? nrRoomById(NR.roomId) : null; if (!room) return;
+  SCR.attachMapInteractions(map, {
+    editable: true,
+    room: room,
+    racks: nrRacksOf(room.id),
+    items: nrItemsOf(room.id),
+    selectedRackId: NR.selRack,
+    selectedItemId: NR.selItem,
+    esc: esc,
+    onSelect: function (kind, id) {
+      if (kind === 'rack') { NR.selRack = id; NR.selItem = null; }
+      else if (kind === 'item') { NR.selItem = id; NR.selRack = null; }
+      else { NR.selRack = null; NR.selItem = null; renderCustomers(); }
+    },
+    onDragEnd: function (kind, id, geom) {
+      window.__nrDrag = false;
+      if (kind === 'rack') {
+        var rack = nrRackById(id); if (!rack) return;
+        nrSaveRackPos(rack, geom.x, geom.y);
+      } else {
+        var it = nrItemById(id); if (!it) return;
+        if (it.type === 'door') {
+          it.map_x = geom.x; it.map_y = geom.y; it.map_rot = geom.rot;
+          nrSaveDoorPos(it);
+        } else nrSaveItemPos(it, geom.x, geom.y);
       }
-      function up() {
-        b.removeEventListener('pointermove', mv); b.removeEventListener('pointerup', up); b.removeEventListener('pointercancel', up);
-        window.__nrDrag = false;
-        if (moved && nx !== null) {
-          var fx = Math.min(Math.max(Math.round(nx * 2) / 2, 0), Math.max(0, w - fw));
-          var fy = Math.min(Math.max(Math.round(ny * 2) / 2, 0), Math.max(0, d - fd));
-          b.style.left = (fx / w * 100) + '%'; b.style.top = (fy / d * 100) + '%';
-          nrSaveRackPos(rack, fx, fy);
-        } else renderCustomers();
-      }
-      b.addEventListener('pointermove', mv); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
-      e.preventDefault();
-    });
+    }
   });
+  map.addEventListener('pointerdown', function () { window.__nrDrag = true; });
+  map.addEventListener('pointerup', function () {
+    window.__nrDrag = false;
+    if (!document.contains(map)) return;
+    renderCustomers();
+  });
+  map.addEventListener('pointercancel', function () { window.__nrDrag = false; });
 }
 
-function wireNRItemDrag(el) {
-  var map = $('nrMap'); if (!map) return;
-  Array.prototype.forEach.call(map.querySelectorAll('[data-nritem]'), function (b) {
-    b.addEventListener('pointerdown', function (e) {
-      var it = nrItemById(b.getAttribute('data-nritem')); if (!it) return;
-      var room = nrRoomById(it.room_id); if (!room) return;
-      NR.selItem = it.id; NR.selRack = null;
-      b.classList.add('drag');
-      Array.prototype.forEach.call(map.querySelectorAll('[data-nritem]'), function (x) { x.classList.toggle('sel', x === b); });
-      Array.prototype.forEach.call(map.querySelectorAll('[data-nrrack]'), function (x) { x.classList.remove('sel'); });
-      var rect = map.getBoundingClientRect();
-      var w = Number(room.width_ft) || 14, d = Number(room.depth_ft) || 10;
-      var isDoor = it.type === 'door';
-      var f = isDoor ? null : nrItemFoot(it);
-      var ctr = isDoor ? nrDoorCenter(it, room) : null;
-      var sx = e.clientX, sy = e.clientY, ox = isDoor ? ctr.x : Number(it.map_x), oy = isDoor ? ctr.y : Number(it.map_y), moved = false, nx = null, ny = null;
-      var doorWall = nrDoorWall(it), doorSpan = nrDoorSpan(it), lastWall = doorWall;
-      window.__nrDrag = true;
-      try { b.setPointerCapture(e.pointerId); } catch (err) {}
-      function applyDoor(wall, span) {
-        var tmp = { type: 'door', name: it.name, size_w: it.size_w, door_swing: it.door_swing, door_hinge: it.door_hinge, map_rot: it.map_rot, map_x: it.map_x, map_y: it.map_y };
-        nrDoorSet(tmp, room, wall, span);
-        var st = nrDoorStyle(tmp, w, d);
-        b.style.left = st.left; b.style.top = st.top; b.style.width = st.width; b.style.height = st.height; b.style.transform = st.transform;
-        if (wall !== lastWall) { lastWall = wall; b.innerHTML = nrDoorSVG(tmp) + (it.name ? '<span class="inm doorlab">' + esc(it.name) + '</span>' : ''); }
-      }
-      function mv(ev) {
-        var dx = (ev.clientX - sx) / rect.width * w, dy = (ev.clientY - sy) / rect.height * d;
-        if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 3) moved = true;
-        if (isDoor) {
-          var cxp = ox + dx, cyp = oy + dy, W = Number(it.size_w) || 3;
-          var dists = { n: cyp, s: d - cyp, w: cxp, e: w - cxp }, wall = 'n', best = Infinity;
-          ['n', 's', 'w', 'e'].forEach(function (k) { if (dists[k] < best) { best = dists[k]; wall = k; } });
-          var len = (wall === 'n' || wall === 's') ? w : d;
-          doorWall = wall;
-          doorSpan = Math.min(Math.max(((wall === 'n' || wall === 's') ? cxp : cyp) - W / 2, 0), Math.max(0, len - W));
-          applyDoor(wall, doorSpan);
-          return;
-        }
-        nx = Math.min(Math.max(ox + dx, 0), Math.max(0, w - f.fw));
-        ny = Math.min(Math.max(oy + dy, 0), Math.max(0, d - f.fd));
-        b.style.left = (nx / w * 100) + '%'; b.style.top = (ny / d * 100) + '%';
-      }
-      function up() {
-        b.removeEventListener('pointermove', mv); b.removeEventListener('pointerup', up); b.removeEventListener('pointercancel', up);
-        window.__nrDrag = false;
-        b.classList.remove('drag');
-        if (isDoor) {
-          if (moved) {
-            nrDoorSet(it, room, doorWall, Math.round(doorSpan * 2) / 2);
-            var st = nrDoorStyle(it, w, d);
-            b.style.left = st.left; b.style.top = st.top; b.style.width = st.width; b.style.height = st.height; b.style.transform = st.transform;
-            b.innerHTML = nrDoorSVG(it) + (it.name ? '<span class="inm doorlab">' + esc(it.name) + '</span>' : '');
-            nrSaveDoorPos(it);
-          } else renderCustomers();
-          return;
-        }
-        if (moved && nx !== null) {
-          var fx = Math.min(Math.max(Math.round(nx * 2) / 2, 0), Math.max(0, w - f.fw));
-          var fy = Math.min(Math.max(Math.round(ny * 2) / 2, 0), Math.max(0, d - f.fd));
-          b.style.left = (fx / w * 100) + '%'; b.style.top = (fy / d * 100) + '%';
-          nrSaveItemPos(it, fx, fy);
-        } else renderCustomers();
-      }
-      b.addEventListener('pointermove', mv); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
-      e.preventDefault();
-    });
+function wireNRElevCore(el, site) {
+  SCR.attachElevationInteractions(el, {
+    editable: true,
+    onDeviceSelect: function (id) { NR.devSel = id; renderCustomers(); },
+    onEmptyActivate: function (bot, top, clickedU) { var r = nrRackById(NR.rackId); if (r) nrOpenDeviceForm(r, 'switch', clickedU); },
+    onPorts: function (swId) { NR.swId = swId; NR.msg = ''; renderCustomers(); window.scrollTo(0, 0); }
   });
+  var add = $('nrAddDevice'); if (add) add.addEventListener('click', function () { var rack = nrRackById(NR.rackId); if (rack) nrOpenDeviceForm(rack, 'switch', nrFirstFit(rack, 1) || 1); });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-nrpal]'), function (b) { b.addEventListener('click', function () { var rack = nrRackById(NR.rackId); if (rack) nrOpenDeviceForm(rack, b.getAttribute('data-nrpal'), nrFirstFit(rack, 1) || 1); }); });
+  var sv = $('nrDevSave'); if (sv) sv.addEventListener('click', nrSaveDevStrip);
+  var up = $('nrDevUp'); if (up) up.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d) nrMoveDev(d, 1); });
+  var dn = $('nrDevDn'); if (dn) dn.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d) nrMoveDev(d, -1); });
+  var rm = $('nrDevRemove'); if (rm) rm.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d) nrOpenConfirm({ mode: 'dev-remove', id: d.id, name: d.name }); });
+  var op = $('nrDevPorts'); if (op) op.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d && d.switch_id) { NR.swId = d.switch_id; NR.msg = ''; renderCustomers(); window.scrollTo(0, 0); } });
 }
 
 function wireNRElevPorts(el, site) {
@@ -4188,24 +4668,7 @@ function wireNRElevPorts(el, site) {
     Array.prototype.forEach.call(el.querySelectorAll('[data-nrport]'), function (b) { b.addEventListener('click', function () { var sw = nrSwitchById(NR.swId); if (sw) nrOpenPortForm(sw, parseInt(b.getAttribute('data-nrport'), 10)); }); });
     return;
   }
-  var add = $('nrAddDevice'); if (add) add.addEventListener('click', function () { var rack = nrRackById(NR.rackId); if (rack) nrOpenDeviceForm(rack, 'switch', nrFirstFit(rack, 1) || 1); });
-  Array.prototype.forEach.call(el.querySelectorAll('[data-nrpal]'), function (b) { b.addEventListener('click', function () { var rack = nrRackById(NR.rackId); if (rack) nrOpenDeviceForm(rack, b.getAttribute('data-nrpal'), nrFirstFit(rack, 1) || 1); }); });
-  Array.prototype.forEach.call(el.querySelectorAll('[data-nrdev]'), function (dv) { dv.addEventListener('click', function () { NR.devSel = dv.getAttribute('data-nrdev'); renderCustomers(); }); });
-  Array.prototype.forEach.call(el.querySelectorAll('[data-nrports]'), function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); NR.swId = b.getAttribute('data-nrports'); NR.msg = ''; renderCustomers(); window.scrollTo(0, 0); }); });
-  Array.prototype.forEach.call(el.querySelectorAll('[data-nrempty]'), function (em) {
-    em.addEventListener('click', function (e) {
-      var rack = nrRackById(NR.rackId); if (!rack) return;
-      var parts = em.getAttribute('data-nrempty').split(':'), bot = parseInt(parts[0], 10), top = parseInt(parts[1], 10);
-      var rect = em.getBoundingClientRect();
-      var rows = top - bot + 1, idx = Math.min(rows - 1, Math.max(0, Math.floor((e.clientY - rect.top) / NR_ROW)));
-      nrOpenDeviceForm(rack, 'switch', top - idx);
-    });
-  });
-  var sv = $('nrDevSave'); if (sv) sv.addEventListener('click', nrSaveDevStrip);
-  var up = $('nrDevUp'); if (up) up.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d) nrMoveDev(d, 1); });
-  var dn = $('nrDevDn'); if (dn) dn.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d) nrMoveDev(d, -1); });
-  var rm = $('nrDevRemove'); if (rm) rm.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d) nrOpenConfirm({ mode: 'dev-remove', id: d.id, name: d.name }); });
-  var op = $('nrDevPorts'); if (op) op.addEventListener('click', function () { var d = nrDevById(NR.devSel); if (d && d.switch_id) { NR.swId = d.switch_id; NR.msg = ''; renderCustomers(); window.scrollTo(0, 0); } });
+  wireNRElevCore(el, site);
 }
 
 /* ================= dialogs ================= */
@@ -4318,10 +4781,7 @@ function nrSaveRackForm() {
 }
 function nrClampRack(rack) {
   var room = nrRoomById(rack.room_id); if (!room) return;
-  var rot = ((rack.map_rot || 0) % 180) !== 0;
-  var fw = rot ? Number(rack.fp_d) : Number(rack.fp_w), fd = rot ? Number(rack.fp_w) : Number(rack.fp_d);
-  rack.map_x = Math.min(Math.max(Number(rack.map_x) || 0, 0), Math.max(0, (Number(room.width_ft) || 14) - fw));
-  rack.map_y = Math.min(Math.max(Number(rack.map_y) || 0, 0), Math.max(0, (Number(room.depth_ft) || 10) - fd));
+  SCR.clampRack(rack, room);
 }
 function nrSaveRackPos(rack, x, y) {
   rack.map_x = x; rack.map_y = y; rack.updated_at = now().toISOString();
@@ -4329,8 +4789,9 @@ function nrSaveRackPos(rack, x, y) {
   sb.from('racks').update({ map_x: x, map_y: y, updated_at: rack.updated_at }).eq('id', rack.id).then(function (r) { if (r.error) nrFail(r.error); });
 }
 function nrRotateRack(rack) {
-  rack.map_rot = ((rack.map_rot || 0) + 90) % 360;
-  nrClampRack(rack);
+  var room = nrRoomById(rack.room_id); if (!room) return;
+  var g = SCR.rotateRackGeom(rack, room);
+  rack.map_rot = g.rot; rack.map_x = g.x; rack.map_y = g.y;
   rack.updated_at = now().toISOString();
   if (DEMO) { NR.msg = ''; renderCustomers(); return; }
   sb.from('racks').update({ map_rot: rack.map_rot, map_x: rack.map_x, map_y: rack.map_y, updated_at: rack.updated_at }).eq('id', rack.id).then(function (r) { if (r.error) nrFail(r.error); else renderCustomers(); });
@@ -4363,9 +4824,7 @@ function nrSetRackArchived(id) {
    in 90-degree steps, an edit dialog, and a soft archive. */
 function nrClampItem(it) {
   var room = nrRoomById(it.room_id); if (!room) return;
-  var f = nrItemFoot(it);
-  it.map_x = Math.min(Math.max(Number(it.map_x) || 0, 0), Math.max(0, (Number(room.width_ft) || 14) - f.fw));
-  it.map_y = Math.min(Math.max(Number(it.map_y) || 0, 0), Math.max(0, (Number(room.depth_ft) || 10) - f.fd));
+  SCR.clampItem(it, room);
 }
 function nrAddItem(type) {
   var room = nrRoomById(NR.roomId); if (!room) return;
@@ -4375,7 +4834,7 @@ function nrAddItem(type) {
     var dit = { id: jbGenId(), room_id: room.id, type: 'door', name: '', map_rot: 180, size_w: 3, size_d: 0.5, door_swing: 'in', door_hinge: 'left', sort: nrItemsOf(room.id).length + 1, deleted_at: null, created_at: dts, updated_at: dts };
     dit.map_x = (Number(room.width_ft) || 14) / 2 - 1.5; dit.map_y = Number(room.depth_ft) || 10;
     if (nrLayerCol()) dit.layer = 'below';
-    nrDoorSet(dit, room, 's', dit.map_x);
+    SCR.doorSet(dit, room, 's', dit.map_x);
     NR.selItem = dit.id; NR.selRack = null;
     if (DEMO) { D.roomItems.push(dit); NR.msg = 'Door added on the south wall — drag it along the walls.'; NR.err = false; renderCustomers(); return; }
     nrLive(sb.from('room_items').insert(dit), 'Door added on the south wall — drag it along the walls.');
@@ -4406,17 +4865,9 @@ function nrSaveItemPos(it, x, y) {
   sb.from('room_items').update({ map_x: x, map_y: y, updated_at: it.updated_at }).eq('id', it.id).then(function (r) { if (r.error) nrFail(r.error); });
 }
 function nrRotateItem(it) {
-  if (it.type === 'door') {
-    var room = nrRoomById(it.room_id); if (!room) return;
-    var order = ['n', 'e', 's', 'w'], cur = nrDoorWall(it);
-    nrDoorSet(it, room, order[(order.indexOf(cur) + 1) % 4], nrDoorSpan(it));
-    it.updated_at = now().toISOString();
-    if (DEMO) { NR.msg = ''; renderCustomers(); return; }
-    sb.from('room_items').update({ map_rot: it.map_rot, map_x: it.map_x, map_y: it.map_y, updated_at: it.updated_at }).eq('id', it.id).then(function (r) { if (r.error) nrFail(r.error); else renderCustomers(); });
-    return;
-  }
-  it.map_rot = ((it.map_rot || 0) + 90) % 360;
-  nrClampItem(it);
+  var room = nrRoomById(it.room_id); if (!room) return;
+  var g = SCR.rotateItemGeom(it, room);
+  it.map_rot = g.rot; it.map_x = g.x; it.map_y = g.y;
   it.updated_at = now().toISOString();
   if (DEMO) { NR.msg = ''; renderCustomers(); return; }
   sb.from('room_items').update({ map_rot: it.map_rot, map_x: it.map_x, map_y: it.map_y, updated_at: it.updated_at }).eq('id', it.id).then(function (r) { if (r.error) nrFail(r.error); else renderCustomers(); });
@@ -4441,7 +4892,7 @@ function nrOpenItemForm(it) {
     h += '<div class="jf-grid">' + nrField('nrItemLen', 'Length (ft)', it.size_w, ' type="number" min="0.5" step="0.5"') + nrField('nrItemWid', tray ? 'Width (ft)' : 'Depth (ft)', it.size_d, ' type="number" min="0.25" step="0.25"') + '</div>';
     if (tray) h += '<div class="nr-pal" style="margin-top:8px">' + [1, 1.5, 2].map(function (x) { return '<button type="button" data-nritemw="' + x + '">' + Math.round(x * 12) + ' in wide</button>'; }).join('') + '</div>';
   }
-  if (nrLayerCol()) h += '<div class="jf-field"><label class="flabel" for="nrItemLayer">Layer</label><select class="txtin" id="nrItemLayer"><option value="above"' + (nrItemLayer(it) === 'above' ? ' selected' : '') + '>Above racks — drawn over them; grabbable where it crosses a rack</option><option value="below"' + (nrItemLayer(it) === 'below' ? ' selected' : '') + '>Below racks — tucked under the rack blocks</option></select></div>';
+  if (nrLayerCol()) h += '<div class="jf-field"><label class="flabel" for="nrItemLayer">Layer</label><select class="txtin" id="nrItemLayer"><option value="above"' + (SCR.itemLayer(it) === 'above' ? ' selected' : '') + '>Above racks — drawn over them; grabbable where it crosses a rack</option><option value="below"' + (SCR.itemLayer(it) === 'below' ? ' selected' : '') + '>Below racks — tucked under the rack blocks</option></select></div>';
   h += '<p class="co-msg err hidden" id="nrErr" style="margin-top:12px"></p>';
   h += '<div class="cardfoot"><button class="btn ghost" id="nrCancel">Cancel</button><button class="btn" id="nrSave">Save changes</button></div>';
   nrShowForm(h);
@@ -4453,7 +4904,7 @@ function nrOpenItemForm(it) {
 function nrSaveItemForm() {
   var it = nrItemById(NR.form.id); if (!it) { nrCloseForm(); return; }
   var name = nrVal('nrItemName');
-  var layer = $('nrItemLayer') ? $('nrItemLayer').value : nrItemLayer(it);
+  var layer = $('nrItemLayer') ? $('nrItemLayer').value : SCR.itemLayer(it);
   var len = nrNum('nrItemLen', Number(it.size_w)), wid = nrNum('nrItemWid', Number(it.size_d));
   if (it.type === 'door') {
     if (!(len >= 1)) { nrFormFail('Width needs to be at least 1 ft.'); return; }
@@ -4463,13 +4914,13 @@ function nrSaveItemForm() {
     var droom = nrRoomById(it.room_id);
     if (DEMO) {
       it.name = name; it.size_w = len; it.door_swing = swing; it.door_hinge = hinge; it.layer = layer; it.updated_at = dts2;
-      if (droom) nrDoorSet(it, droom, nrDoorWall(it), nrDoorSpan(it));
+      if (droom) SCR.doorSet(it, droom, SCR.doorWall(it), SCR.doorSpan(it));
       nrDone('Door saved.');
       return;
     }
     var keepD = { x: it.map_x, y: it.map_y, r: it.map_rot, w: it.size_w };
     it.size_w = len;
-    if (droom) nrDoorSet(it, droom, nrDoorWall(it), nrDoorSpan(it));
+    if (droom) SCR.doorSet(it, droom, SCR.doorWall(it), SCR.doorSpan(it));
     var patchD = { name: name, size_w: len, door_swing: swing, door_hinge: hinge, map_x: it.map_x, map_y: it.map_y, map_rot: it.map_rot, updated_at: dts2 };
       if (nrLayerCol()) patchD.layer = layer;
     it.map_x = keepD.x; it.map_y = keepD.y; it.map_rot = keepD.r; it.size_w = keepD.w;
